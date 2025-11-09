@@ -1,0 +1,7 @@
+django
+djangorestframework
+psycopg2-binary        # For connecting to PostgreSQL
+python-dotenv          # To manage environment variables
+django-cors-headers    # To let React talk to Django
+gunicorn               # For production serving
+dj-database-url        # To easily parse the DB URL
