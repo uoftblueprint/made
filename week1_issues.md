@@ -152,4 +152,21 @@ Create a simple, public-facing UI for browsing the collection.
 
 ### **Issue 10 – [Frontend] Admin Dashboard Shell + Volunteer Application Review UI**
 **Goal:**  
-Build base admin dashbo
+Build base admin dashboard and connect volunteer-application review.
+
+**Tasks:**  
+- Protected Admin layout with navigation  
+- Volunteer Applications page fetching from `/api/volunteer-applications`  
+- Approve/Reject buttons triggering API calls and updating UI  
+- Display success/error toasts  
+
+**Acceptance Criteria:**  
+- Admin can log in and review applications  
+- UI updates dynamically after each action  
+- Non-admins blocked from dashboard  
+
+---
+
+✅ **Deliverable by end of Week 1:**  
+Fully authenticated backend + public catalogue + admin login and volunteer approval flow.  
+System supports user roles, application lifecycle, and item movement groundwork.
