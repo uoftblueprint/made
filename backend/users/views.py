@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 # from .models import User
 # from .serializers import UserSerializer, UserCreateSerializer
 
@@ -17,13 +18,13 @@ from rest_framework.response import Response
 #     queryset = User.objects.all()
 #     serializer_class = UserSerializer
 #     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-#     
+#
 #     def get_serializer_class(self):
 #         """Return appropriate serializer based on action."""
 #         if self.action == 'create':
 #             return UserCreateSerializer
 #         return UserSerializer
-#     
+#
 #     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
 #     def me(self, request):
 #         """

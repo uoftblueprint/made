@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 # from .models import Request
 
 # Create your serializers here.
@@ -12,12 +13,12 @@ from rest_framework import serializers
 #     """
 #     requester_username = serializers.CharField(source='requester.username', read_only=True)
 #     approved_by_username = serializers.CharField(source='approved_by.username', read_only=True)
-#     
+#
 #     class Meta:
 #         model = Request
 #         fields = '__all__'
 #         read_only_fields = ['id', 'created_at', 'updated_at', 'requester']
-#     
+#
 #     def validate(self, data):
 #         """Custom validation for the entire object."""
 #         # Add any cross-field validation here

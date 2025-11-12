@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 # from .models import InventoryItem
 # from .serializers import InventoryItemSerializer
 
@@ -20,11 +21,11 @@ from rest_framework.response import Response
 #     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
 #     search_fields = ['name', 'description', 'category']
 #     ordering_fields = ['name', 'quantity', 'created_at']
-#     
+#
 #     def perform_create(self, serializer):
 #         """Automatically set created_by to current user."""
 #         serializer.save(created_by=self.request.user)
-#     
+#
 #     @action(detail=False, methods=['get'])
 #     def low_stock(self, request):
 #         """
