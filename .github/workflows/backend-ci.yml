@@ -47,7 +47,6 @@ jobs:
     - name: Run migrations
       working-directory: ./backend
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
         DEBUG: 'True'
         CORS_ALLOWED_ORIGIN: 'http://localhost:5173'
       run: |
@@ -56,7 +55,6 @@ jobs:
     - name: Run tests with pytest
       working-directory: ./backend
       env:
-        DATABASE_URL: ${{ secrets.DATABASE_URL }}
         DEBUG: 'True'
         CORS_ALLOWED_ORIGIN: 'http://localhost:5173'
       run: |
