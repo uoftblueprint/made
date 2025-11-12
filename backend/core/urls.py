@@ -16,8 +16,18 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path('admin/', admin.site.urls),
+    
+    # API Routes - Uncomment when ready to use
+    # path('api/', include('users.urls')),
+    # path('api/inventory/', include('inventory.urls')),
+    # path('api/', include('requests.urls')),
 ]
+
+# Example API Structure:
+# /api/users/              - User management
+# /api/inventory/items/    - Inventory items
+# /api/requests/           - Request management
