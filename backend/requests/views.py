@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
 # from .models import Request
 # from .serializers import RequestSerializer
 
@@ -17,11 +18,11 @@ from rest_framework.response import Response
 #     queryset = Request.objects.all()
 #     serializer_class = RequestSerializer
 #     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-#     
+#
 #     def perform_create(self, serializer):
 #         """Automatically set requester to current user."""
 #         serializer.save(requester=self.request.user)
-#     
+#
 #     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
 #     def approve(self, request, pk=None):
 #         """
@@ -34,7 +35,7 @@ from rest_framework.response import Response
 #         request_obj.save()
 #         serializer = self.get_serializer(request_obj)
 #         return Response(serializer.data)
-#     
+#
 #     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
 #     def reject(self, request, pk=None):
 #         """

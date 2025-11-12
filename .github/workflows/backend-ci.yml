@@ -15,21 +15,6 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
     - name: Checkout code
@@ -62,18 +47,18 @@ jobs:
     - name: Run migrations
       working-directory: ./backend
       env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-        SECRET_KEY: test-secret-key-for-ci
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
         DEBUG: 'True'
+        CORS_ALLOWED_ORIGIN: 'http://localhost:5173'
       run: |
         python manage.py migrate
 
     - name: Run tests with pytest
       working-directory: ./backend
       env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
-        SECRET_KEY: test-secret-key-for-ci
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
         DEBUG: 'True'
+        CORS_ALLOWED_ORIGIN: 'http://localhost:5173'
       run: |
         pytest --cov=. --cov-report=xml --cov-report=term
 
