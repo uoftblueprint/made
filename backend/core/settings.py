@@ -81,8 +81,8 @@ WSGI_APPLICATION = "core.wsgi.application"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Supabase configuration via DATABASE_URL
-# For CI/testing, use SQLite if USE_SQLITE_FOR_TESTING is set
-if os.environ.get("USE_SQLITE_FOR_TESTING") == "True":
+# For CI/testing, use SQLite if USE_SQLITE_FOR_TESTING is set or DATABASE_URL is not available
+if os.environ.get("USE_SQLITE_FOR_TESTING") == "True" or not os.environ.get("DATABASE_URL"):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
