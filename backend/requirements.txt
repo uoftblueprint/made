@@ -5,3 +5,11 @@ python-dotenv          # To manage environment variables
 django-cors-headers    # To let React talk to Django
 gunicorn               # For production serving
 dj-database-url        # To easily parse the DB URL
+
+# Testing libraries
+pytest                 # Testing framework
+pytest-django          # Django integration for pytest
+pytest-cov             # Coverage reporting
+black                  # Code formatter
+flake8                 # Linting
+isort                  # Import sorting
