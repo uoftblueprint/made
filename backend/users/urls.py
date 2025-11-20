@@ -1,8 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,  # The built-in "Login" view
-    TokenRefreshView,  # The built-in "Refresh Session" view
+    TokenObtainPairView,
+    TokenRefreshView,
 )
 from users.views import (
     LogoutView,
@@ -27,8 +27,12 @@ urlpatterns = [
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
-    # User Routes
+
+    # User routes
     path("users/me/", UserProfileView.as_view(), name="user_profile"),
+
+    # Router-based routes
+    path("", include(router.urls)),
 ]
 
 # This will create the following endpoints:
