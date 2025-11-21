@@ -1,7 +1,7 @@
 import pytest
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient
+from django.test import Client
 from django.contrib.auth import get_user_model
 
 from .models import VolunteerApplication
@@ -59,7 +59,7 @@ def test_logout_blacklists_token(client):
 
 @pytest.mark.django_db
 def test_approve_application_sets_review_fields_and_creates_volunteer_user():
-    client = APIClient()
+    client = Client()
 
     application = VolunteerApplication.objects.create(
         name="Test Volunteer",
@@ -83,7 +83,7 @@ def test_approve_application_sets_review_fields_and_creates_volunteer_user():
 
 @pytest.mark.django_db
 def test_reject_application_sets_review_fields_and_does_not_create_user():
-    client = APIClient()
+    client = Client()
 
     application = VolunteerApplication.objects.create(
         name="Test Volunteer 2",
