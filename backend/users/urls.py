@@ -6,10 +6,10 @@ from .views import VolunteerApplicationAPIView
 
 
 router = DefaultRouter()
-router.register(r'volunteer-applications', VolunteerApplicationAPIView, basename='volunteer-application')
+router.register(r"volunteer-applications", VolunteerApplicationAPIView, basename="volunteer-application")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
 
 # This will create the following endpoints:
