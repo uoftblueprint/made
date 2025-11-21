@@ -68,9 +68,9 @@ def test_approve_application_sets_review_fields_and_creates_volunteer_user():
         status="PENDING",
     )
 
-    url = reverse("volunteer-application-detail", args=[application.id])
+    url = f"/api/volunteer-applications/{application.id}/"
 
-    response = client.patch(url, {"status": "APPROVED"}, format="json")
+    response = client.patch(url, {"status": "APPROVED"}, content_type="application/json")
     assert response.status_code in (200, 202)
 
     application.refresh_from_db()
@@ -92,9 +92,9 @@ def test_reject_application_sets_review_fields_and_does_not_create_user():
         status="PENDING",
     )
 
-    url = reverse("volunteer-application-detail", args=[application.id])
+    url = f"/api/volunteer-applications/{application.id}/"
 
-    response = client.patch(url, {"status": "REJECTED"}, format="json")
+    response = client.patch(url, {"status": "REJECTED"}, content_type="application/json")
     assert response.status_code in (200, 202)
 
     application.refresh_from_db()
