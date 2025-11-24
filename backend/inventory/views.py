@@ -1,38 +1,44 @@
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from .models import CollectionItem
+from .serializers import PublicCollectionItemSerializer
 
-# from .models import InventoryItem
-# from .serializers import InventoryItemSerializer
 
-# Create your views here.
-
-# Example: InventoryItem ViewSet
-# Uncomment and modify as needed
-#
-# class InventoryItemViewSet(viewsets.ModelViewSet):
-#     """
-#     ViewSet for managing inventory items.
-#     Provides full CRUD + filtering and search capabilities.
-#     """
-#     queryset = InventoryItem.objects.all()
-#     serializer_class = InventoryItemSerializer
-#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-#     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-#     search_fields = ['name', 'description', 'category']
-#     ordering_fields = ['name', 'quantity', 'created_at']
-#
-#     def perform_create(self, serializer):
-#         """Automatically set created_by to current user."""
-#         serializer.save(created_by=self.request.user)
-#
-#     @action(detail=False, methods=['get'])
-#     def low_stock(self, request):
-#         """
-#         Custom endpoint: GET /api/inventory/items/low_stock/
-#         Returns items with low quantity.
-#         """
-#         # Example: items with quantity less than 10
-#         low_items = self.queryset.filter(quantity__lt=10)
-#         serializer = self.get_serializer(low_items, many=True)
-#         return Response(serializer.data)
+class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Public-facing ViewSet for collection items.
+    Provides read-only access to public catalogue with filtering and search.
+    
+    Endpoints:
+    - GET /api/public/items/ - List all public items (with filtering/search)
+    - GET /api/public/items/{id}/ - Retrieve single public item
+    """
+    
+    queryset = CollectionItem.objects.filter(is_public_visible=True).select_related('current_location')
+    serializer_class = PublicCollectionItemSerializer
+    permission_classes = [permissions.AllowAny]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'item_code']
+    ordering_fields = ['title', 'platform', 'created_at']
+    
+    def get_queryset(self):
+        """
+        Filter queryset based on query parameters.
+        Supports filtering by platform and is_on_floor.
+        """
+        queryset = CollectionItem.objects.filter(is_public_visible=True).select_related('current_location')
+        
+        # Filter by platform if provided
+        platform = self.request.query_params.get('platform', None)
+        if platform:
+            queryset = queryset.filter(platform=platform)
+        
+        # Filter by is_on_floor if provided
+        is_on_floor = self.request.query_params.get('is_on_floor', None)
+        if is_on_floor is not None:
+            # Convert string to boolean
+            is_on_floor_bool = is_on_floor.lower() in ('true', '1', 'yes')
+            queryset = queryset.filter(is_on_floor=is_on_floor_bool)
+        
+        return queryset
