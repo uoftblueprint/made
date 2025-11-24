@@ -20,9 +20,9 @@ from django.urls import path, include
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # API Routes - Uncomment when ready to use
+    # API Routes
+    path('api/', include('inventory.urls')),
     path("api/", include("users.urls")),
-    # path('api/inventory/', include('inventory.urls')),
     # path('api/', include('requests.urls')),
 ]
 
