@@ -8,6 +8,9 @@ import HomePage from './pages/public/HomePage';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ManageVolunteers from './pages/admin/ManageVolunteers';
+import VolunteerApplication from './pages/public/VolunteerApplication';
+import SecureRoute from './components/SecureRoute.tsx';
 
 
 const queryClient = new QueryClient();
@@ -22,18 +25,12 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/logout" element={<LogoutPage />} />
-
+            <Route path="volunteer-sign-up" element={<VolunteerApplication />}/>
             {/* --- Admin Routes --- */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole="ADMIN">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            
-
+            <Route element={<SecureRoute />} >
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/volunteers" element={<ManageVolunteers />} />
+            </Route>
             {/* --- Catch-all 404 Route --- */}
             {/* <Route path="*" element={<NotFoundPage />} /> */}
           </Routes>
