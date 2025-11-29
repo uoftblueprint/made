@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .views import ItemMovementRequestViewSet, ItemHistoryViewSet
 
 # from .views import RequestViewSet
 
@@ -25,4 +26,12 @@ from rest_framework.routers import DefaultRouter
 # POST   /api/requests/{id}/approve/ - Custom action (if defined)
 # POST   /api/requests/{id}/reject/  - Custom action (if defined)
 
-urlpatterns = []
+# create a router and register viewsets
+router = DefaultRouter()
+router.register(r'movement-requests', ItemMovementRequestViewSet, basename='movement-request')
+router.register(r'item-history', ItemHistoryViewSet, basename='item-history')
+
+# wire the router URLs into urlpatterns
+urlpatterns = [
+    path('', include(router.urls)),
+]
