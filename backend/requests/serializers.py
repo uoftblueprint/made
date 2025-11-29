@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .models import ItemMovementRequest, ItemHistory
 
 # from .models import Request
 
@@ -23,3 +24,25 @@ from rest_framework import serializers
 #         """Custom validation for the entire object."""
 #         # Add any cross-field validation here
 #         return data
+
+class ItemMovementRequestSerializer(serializers.ModelSerializer):
+    requested_by_username = serializers.CharField(source='requested_by.username', read_only=True)
+    admin_username = serializers.CharField(source='admin.username', read_only=True)
+
+    class Meta:
+        model = ItemMovementRequest
+        fields = [
+            'id',
+            'item',
+            'requested_by',
+            'requested_by_username',
+            'from_location',
+            'to_location',
+            'status',
+            'admin',
+            'admin_username',
+            'admin_comment',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = ['id', 'status', 'admin', 'admin_comment', 'created_at', 'updated_at']
