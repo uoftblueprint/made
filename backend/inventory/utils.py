@@ -15,11 +15,37 @@ def get_current_location(item_id):
     - VERIFIED
     - LOCATION_CORRECTION
 
+    Algorithm:
+        Finds the most recent location-changing event (ordered by created_at descending)
+        and returns its to_location field. If no location-changing events exist, returns None.
+
     Args:
         item_id: The ID of the CollectionItem
 
     Returns:
-        Location object or None
+        Location object or None: The Location from the most recent location-changing event's
+        to_location field, or None if no location-changing events exist.
+
+    Edge Cases and Behavior:
+        - Multiple location-changing events: The function correctly handles multiple events
+          by selecting the most recent one (ordered by created_at descending). This is the
+          expected behavior as later events supersede earlier ones.
+
+        - INITIAL event with to_location=None: If the INITIAL event has a null to_location,
+          the function will return None. This may indicate incomplete data entry.
+
+        - Location-changing event with to_location=None: If any location-changing event
+          (INITIAL, ARRIVED, VERIFIED, or LOCATION_CORRECTION) has a null to_location,
+          the function will return None. This is unexpected for these event types and may
+          indicate a data integrity issue. These events should always have a to_location
+          set to represent the item's physical location.
+
+        - No location-changing events: Returns None. This is expected for items that have
+          only workflow events (MOVE_REQUESTED, MOVE_APPROVED, etc.) but no actual location
+          changes yet. However, every item should ideally have at least an INITIAL event.
+
+        - Invalid item_id: If the item_id doesn't exist, the query will return no results
+          and the function will return None. No exception is raised.
     """
     # Events that actually change the physical location
     LOCATION_CHANGING_EVENTS = ["INITIAL", "ARRIVED", "VERIFIED", "LOCATION_CORRECTION"]
