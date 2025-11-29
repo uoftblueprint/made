@@ -47,8 +47,12 @@ class TestGetCurrentLocation:
         """Most recent location-changing event should be returned."""
         base_time = timezone.now()
         ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a, created_at=base_time)
-        ItemHistory.objects.create(item=item, event_type="ARRIVED", to_location=location_b, created_at=base_time + timedelta(hours=1))
-        ItemHistory.objects.create(item=item, event_type="VERIFIED", to_location=location_c, created_at=base_time + timedelta(hours=2))
+        ItemHistory.objects.create(
+            item=item, event_type="ARRIVED", to_location=location_b, created_at=base_time + timedelta(hours=1)
+        )
+        ItemHistory.objects.create(
+            item=item, event_type="VERIFIED", to_location=location_c, created_at=base_time + timedelta(hours=2)
+        )
         assert get_current_location(item.id) == location_c
 
     def test_no_events_returns_none(self, item):
@@ -73,8 +77,16 @@ class TestGetCurrentLocation:
         """Test realistic workflow with mixed event types."""
         base_time = timezone.now()
         ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a, created_at=base_time)
-        ItemHistory.objects.create(item=item, event_type="MOVE_REQUESTED", to_location=location_b, created_at=base_time + timedelta(hours=1))
-        ItemHistory.objects.create(item=item, event_type="MOVE_APPROVED", to_location=location_b, created_at=base_time + timedelta(hours=2))
-        ItemHistory.objects.create(item=item, event_type="ARRIVED", to_location=location_b, created_at=base_time + timedelta(hours=3))
-        ItemHistory.objects.create(item=item, event_type="VERIFIED", to_location=location_c, created_at=base_time + timedelta(hours=4))
+        ItemHistory.objects.create(
+            item=item, event_type="MOVE_REQUESTED", to_location=location_b, created_at=base_time + timedelta(hours=1)
+        )
+        ItemHistory.objects.create(
+            item=item, event_type="MOVE_APPROVED", to_location=location_b, created_at=base_time + timedelta(hours=2)
+        )
+        ItemHistory.objects.create(
+            item=item, event_type="ARRIVED", to_location=location_b, created_at=base_time + timedelta(hours=3)
+        )
+        ItemHistory.objects.create(
+            item=item, event_type="VERIFIED", to_location=location_c, created_at=base_time + timedelta(hours=4)
+        )
         assert get_current_location(item.id) == location_c
