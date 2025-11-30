@@ -7,7 +7,7 @@ interface SearchBarProps {
     setFilters: React.Dispatch<React.SetStateAction<Partial<ItemFilter>>>;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) => {
+const CatalogueSearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) => {
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.trim();
@@ -100,4 +100,4 @@ const SearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) => {
   );
 }
 
-export default SearchBar;
+export default CatalogueSearchBar;
