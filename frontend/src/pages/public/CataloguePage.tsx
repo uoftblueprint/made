@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { useItems, useTestItems } from '../../actions';
 import type { ItemFilter } from '../../lib/filters';
 import SearchBar from '../../components/items/CatalogueSearchBar';
+import ItemList from '../../components/items/ItemList';
 
 const CataloguePage: React.FC = () => {
 
   const items = useTestItems();
+  const firstItem = items.at(0);
   const [filters, setFilters] = useState<ItemFilter>({
   search: null,
   platform: null,
@@ -23,10 +25,9 @@ const CataloguePage: React.FC = () => {
         <h2>Search & Filter</h2>
         <SearchBar filters={filters} setFilters={setFilters}></SearchBar>
       </div>
-
       <div className="catalog-results-section">
         <h2>Collection Items</h2>
-        <p><i>[A grid or list of CollectionItem components will be mapped and displayed here]</i></p>
+        {items && <ItemList items={items}/>}
       </div>
     </div>
   );
