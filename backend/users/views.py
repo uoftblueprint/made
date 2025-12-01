@@ -184,7 +184,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         if exists:
             return
 
-        temp_password = User.objects.make_random_password()
+        temp_password = secrets.token_urlsafe(12)
         User.objects.create_user(
             email=application.email,
             name=application.name,
