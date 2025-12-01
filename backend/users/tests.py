@@ -19,7 +19,7 @@ def test_create_user():
 
 
 @pytest.mark.django_db
-def test_approve_application_sets_review_fields_and_creates_volunteer_user():
+def test_approve_volunteer_application():
     client = Client()
 
     application = VolunteerApplication.objects.create(
@@ -43,7 +43,7 @@ def test_approve_application_sets_review_fields_and_creates_volunteer_user():
 
 
 @pytest.mark.django_db
-def test_reject_application_sets_review_fields_and_does_not_create_user():
+def test_reject_application():
     client = Client()
 
     application = VolunteerApplication.objects.create(
