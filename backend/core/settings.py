@@ -156,3 +156,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.TokenAuthentication",  # Or JWT
     ],
 }
+
+# Secret key fallback for pytest on github
+if not SECRET_KEY:
+    SECRET_KEY = "test-secret-key"
