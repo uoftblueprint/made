@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api';
-import type { Volunteer, VolunteerApplicationInput } from '../lib/types';
-import type { AxiosError } from 'axios';
+import type { Volunteer } from '../lib/types';
 
 export const useVolunteerApplications = () => {
   return useQuery<Volunteer[]>({
@@ -13,7 +12,7 @@ export const useVolunteerApplications = () => {
   });
 };
 
-export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onErrorCallback?: (error: unknown) => void) => {
+export const useUpdateVolunteerStatus = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, action }: { id: number; action: 'APPROVED' | 'REJECTED' }) => {
@@ -21,24 +20,6 @@ export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onError
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
-      onSuccessCallback?.();
     },
-    onError: (error) => {
-      onErrorCallback?.(error)
-    }
-  });
-};
-
-export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError ) => void) => {
-  return useMutation<void, AxiosError, VolunteerApplicationInput>({
-    mutationFn: async (applicationData) => {
-      await apiClient.post('/api/volunteer-applications/', applicationData)
-    },
-    onSuccess: () => {
-      onSuccessCallback?.();
-    },
-    onError: (error) => {
-      onErrorCallback?.(error)
-    }
   });
 };

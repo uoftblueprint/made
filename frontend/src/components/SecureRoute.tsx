@@ -1,8 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom';
 
 const isAuthenticated = (): boolean => {
-  const token = localStorage.getItem('authToken');
-  return true // placeholder authentication
+  const token = true
+  return token // placeholder authentication
 }
 
 const SecureRoute: React.FC = () => {

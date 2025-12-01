@@ -1,14 +1,14 @@
 import type { Volunteer } from "../../lib/types";
-import { sortVolunteersByStatus, sortByCreatedAt, sortByVolunteerName, searchByVolunteerName } from "../../utils/index.ts";
+import { sortVolunteersByStatus, sortByCreatedAt, sortByVolunteerName } from "../../utils/index.ts";
 
-const VolunteerList: React.FC<{ volunteers: Volunteer[], onApprove: (id:number) => void, onReject: (id:number) => void, sortedBy: string, searchBy: string }> = ({ volunteers, onApprove, onReject, sortedBy, searchBy }) => {
+const VolunteerList: React.FC<{ volunteers: Volunteer[], onApprove: (id:number) => void, onReject: (id:number) => void, sortedBy: string }> = ({ volunteers, onApprove, onReject, sortedBy }) => {
 
     if (!volunteers || volunteers.length === 0 ){
         return <p>No volunteer applications found.</p>
     }
 
     if (sortedBy == 'Status'){
-        const sorted = sortVolunteersByStatus(searchByVolunteerName(volunteers, searchBy));
+        const sorted = sortVolunteersByStatus(volunteers);
         return (<>
         <ul>
             <strong>Pending</strong>
