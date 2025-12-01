@@ -6,7 +6,7 @@ export interface User {
   access_expiry_date: string | null;
 }
 
-export interface VolunteerApplication {
+export interface Volunteer {
   id: number;
   name: string;
   email: string;
@@ -14,7 +14,7 @@ export interface VolunteerApplication {
   submitted_at: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   reviewed_at: string | null;
-  reviewer: string | null;
+  reviewed_by: string | null;
 }
 
 // TODO: place holder
