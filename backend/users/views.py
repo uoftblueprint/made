@@ -197,6 +197,6 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         old_status = serializer.instance.status
         application = serializer.save()
 
-        if old_status == "PENDING" and application.status in {"APPROVED", "REJECTED"}:
+        if old_status != application.status and application.status in {"APPROVED", "REJECTED"}:
             self._handle_review_metadata(application)
             self._handle_volunteer_user_creation(application)
