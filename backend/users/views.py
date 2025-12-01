@@ -6,6 +6,8 @@ from .serializers import UserRegistrationSerializer, UserSerializer, VolunteerAp
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
+import secrets
+
 from .models import VolunteerApplication
 
 
@@ -105,7 +107,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         if exists:
             return
 
-        temp_password = User.objects.make_random_password()
+        temp_password = secrets.token_urlsafe(12)
         User.objects.create_user(
             email=application.email,
             name=application.name,
