@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import HomePage from './pages/public/HomePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import CataloguePage from './pages/public/CataloguePage';
 
 
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ const App: React.FC = () => {
           <Routes>
             {/* --- Public Routes --- */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/catalogue" element={<CataloguePage/>} />
 
             {/* --- Admin Routes --- */}
             <Route path="/admin" element={<AdminDashboard />} />
