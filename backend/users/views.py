@@ -10,6 +10,7 @@ class RegisterView(generics.CreateAPIView):
     """
     Endpoint: POST /api/auth/register/
     """
+
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]  # Open to public
 
@@ -19,6 +20,7 @@ class UserProfileView(APIView):
     """
     Endpoint: GET /api/users/me/
     """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):

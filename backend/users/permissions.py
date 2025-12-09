@@ -5,25 +5,27 @@ class IsAdmin(permissions.BasePermission):
     """
     Allows access only to admims
     """
+
     def has_permission(self, request, view):
         # Logged in and ADMIN
-        return bool(request.user and request.user.is_authenticated and request.user.role == 'ADMIN')
+        return bool(request.user and request.user.is_authenticated and request.user.role == "ADMIN")
 
 
 class IsVolunteer(permissions.BasePermission):
     """
     Allows access to volunteers and admins
     """
+
     def has_permission(self, request, view):
         # Logged in and VOLUNTEER or ADMIN
-        return bool(request.user and request.user.is_authenticated and request.user.role in ['VOLUNTEER', 'ADMIN'])
+        return bool(request.user and request.user.is_authenticated and request.user.role in ["VOLUNTEER", "ADMIN"])
 
 
 class IsActiveAndNotExpired(permissions.BasePermission):
     """
     Global check: Is the user active? Has their access expired?
-    This should be applied to almost every view.
     """
+
     def has_permission(self, request, view):
         # 1. Standard authen check
         if not request.user or not request.user.is_authenticated:
