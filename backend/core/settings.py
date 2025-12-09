@@ -24,8 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-SECRET_KEY = "django-insecure-change-me-later-!!@#12345" #os.environ.get("SECRET_KEY")
-DEBUG = True#os.environ.get("DEBUG", "False") == "True"
+SECRET_KEY = "django-insecure-change-me-later-!!@#12345"  # os.environ.get("SECRET_KEY")
+DEBUG = os.environ.get("DEBUG") == "True"
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backend"]
 
@@ -147,7 +147,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),     # They can renew for 24 hours
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
