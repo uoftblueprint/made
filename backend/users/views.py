@@ -4,20 +4,20 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserRegistrationSerializer, UserSerializer
 
-# --- 1. Registration View ---
+
+# Register new account
 class RegisterView(generics.CreateAPIView):
     """
     Endpoint: POST /api/auth/register/
     """
     serializer_class = UserRegistrationSerializer
-    permission_classes = [permissions.AllowAny] # Open to public
+    permission_classes = [permissions.AllowAny]  # Open to public
 
 
-# --- 2. User Profile View (The "Me" endpoint) ---
+# User Profile to check own data
 class UserProfileView(APIView):
     """
     Endpoint: GET /api/users/me/
-    Returns details of the currently logged-in user.
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -26,7 +26,7 @@ class UserProfileView(APIView):
         return Response(serializer.data)
 
 
-# --- 3. Logout View (Your existing code) ---
+# Logout (Needs both refresh and access tokens)
 class LogoutView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
@@ -36,5 +36,5 @@ class LogoutView(APIView):
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response(status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
+        except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
