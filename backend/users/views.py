@@ -1,35 +1,42 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserRegistrationSerializer, UserSerializer
 
-# from .models import User
-# from .serializers import UserSerializer, UserCreateSerializer
 
-# Create your views here.
+# Register new account
+class RegisterView(generics.CreateAPIView):
+    """
+    Endpoint: POST /api/auth/register/
+    """
 
-# Example: User ViewSet
-# Uncomment and modify as needed
-#
-# class UserViewSet(viewsets.ModelViewSet):
-#     """
-#     ViewSet for managing users.
-#     Provides CRUD operations: list, create, retrieve, update, delete
-#     """
-#     queryset = User.objects.all()
-#     serializer_class = UserSerializer
-#     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-#
-#     def get_serializer_class(self):
-#         """Return appropriate serializer based on action."""
-#         if self.action == 'create':
-#             return UserCreateSerializer
-#         return UserSerializer
-#
-#     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
-#     def me(self, request):
-#         """
-#         Custom endpoint: GET /api/users/me/
-#         Returns the current authenticated user.
-#         """
-#         serializer = self.get_serializer(request.user)
-#         return Response(serializer.data)
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]  # Open to public
+
+
+# User Profile to check own data
+class UserProfileView(APIView):
+    """
+    Endpoint: GET /api/users/me/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
+# Logout (Needs both refresh and access tokens)
+class LogoutView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
