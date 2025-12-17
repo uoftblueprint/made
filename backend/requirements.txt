@@ -3,8 +3,6 @@ djangorestframework
 python-dotenv          # To manage environment variables
 django-cors-headers    # To let React talk to Django
 gunicorn               # For production serving
-psycopg2-binary        # PostgreSQL adapter for Supabase
-dj-database-url        # Parse DATABASE_URL for Supabase
 
 # Testing libraries
 pytest                 # Testing framework
