@@ -1,6 +1,4 @@
-from rest_framework import viewsets, permissions, filters, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import viewsets, permissions, filters
 from .models import CollectionItem
 from .serializers import PublicCollectionItemSerializer
 
@@ -38,8 +36,12 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
         # Filter by is_on_floor if provided
         is_on_floor = self.request.query_params.get("is_on_floor", None)
         if is_on_floor is not None:
-            # Convert string to boolean
-            is_on_floor_bool = is_on_floor.lower() in ("true", "1", "yes")
-            queryset = queryset.filter(is_on_floor=is_on_floor_bool)
+            # Normalize and convert string to boolean with explicit handling
+            is_on_floor_str = is_on_floor.strip().lower()
+            if is_on_floor_str in ("false", "0", "no"):
+                queryset = queryset.filter(is_on_floor=False)
+            elif is_on_floor_str in ("true", "1", "yes"):
+                queryset = queryset.filter(is_on_floor=True)
+            # Invalid value: skip filtering on is_on_floor (ignore invalid input)
 
         return queryset
