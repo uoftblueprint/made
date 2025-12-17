@@ -4,8 +4,8 @@ from .views import PublicCollectionItemViewSet
 
 # Create router for public catalogue endpoints
 router = DefaultRouter()
-router.register(r'items', PublicCollectionItemViewSet, basename='public-item')
+router.register(r"items", PublicCollectionItemViewSet, basename="public-item")
 
 urlpatterns = [
-    path('public/', include(router.urls)),
+    path("public/", include(router.urls)),
 ]
