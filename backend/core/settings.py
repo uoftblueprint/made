@@ -155,7 +155,3 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": False,
     "AUTH_HEADER_TYPES": ("Bearer",),  # Prefix
 }
-
-# Secret key fallback for pytest on github
-if not SECRET_KEY:
-    SECRET_KEY = "test-secret-key"
