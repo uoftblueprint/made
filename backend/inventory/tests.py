@@ -9,6 +9,7 @@ import json
 # PYTEST FIXTURES - Reusable test data
 # ============================================================================
 
+
 @pytest.fixture
 def client():
     """Django test client fixture."""
@@ -18,17 +19,13 @@ def client():
 @pytest.fixture
 def floor_location():
     """Create a floor location for tests."""
-    return Location.objects.create(
-        name="Main Floor", location_type="FLOOR", description="Main exhibition floor"
-    )
+    return Location.objects.create(name="Main Floor", location_type="FLOOR", description="Main exhibition floor")
 
 
 @pytest.fixture
 def storage_location():
     """Create a storage location for tests."""
-    return Location.objects.create(
-        name="Storage Room A", location_type="STORAGE", description="Storage area"
-    )
+    return Location.objects.create(name="Storage Room A", location_type="STORAGE", description="Storage area")
 
 
 @pytest.fixture
@@ -90,6 +87,7 @@ def test_data(client, floor_location, storage_location, public_item_snes, public
 # HELPER FUNCTIONS
 # ============================================================================
 
+
 def get_items_from_response(response):
     """Extract items from paginated or non-paginated response."""
     data = json.loads(response.content)
@@ -99,6 +97,7 @@ def get_items_from_response(response):
 # ============================================================================
 # TESTS FOR GET /api/public/items/ (List endpoint)
 # ============================================================================
+
 
 @pytest.mark.django_db
 def test_list_returns_public_items(test_data):
@@ -356,10 +355,10 @@ def test_list_pagination(test_data):
     """Test that pagination works correctly."""
     client = test_data["client"]
     floor_location = test_data["floor_location"]
-    
+
     # Count existing public items from fixtures
     existing_count = CollectionItem.objects.filter(is_public_visible=True).count()
-    
+
     # Create multiple items to test pagination
     for i in range(15):
         CollectionItem.objects.create(
@@ -406,6 +405,7 @@ def test_list_pagination(test_data):
 # ============================================================================
 # TESTS FOR GET /api/public/items/{id}/ (Detail endpoint)
 # ============================================================================
+
 
 @pytest.mark.django_db
 def test_retrieve_public_item(public_item_snes, client):
