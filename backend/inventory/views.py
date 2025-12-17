@@ -27,7 +27,8 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
         Filter queryset based on query parameters.
         Supports filtering by platform and is_on_floor.
         """
-        queryset = CollectionItem.objects.filter(is_public_visible=True).select_related("current_location")
+        # Get base queryset from parent class (uses self.queryset from line 18)
+        queryset = super().get_queryset()
 
         # Filter by platform if provided
         platform = self.request.query_params.get("platform", None)
