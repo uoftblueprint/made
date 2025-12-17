@@ -57,6 +57,7 @@ jobs:
       env:
         DEBUG: 'True'
         CORS_ALLOWED_ORIGIN: 'http://localhost:5173'
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
       run: |
         pytest --cov=. --cov-report=xml --cov-report=term
 
