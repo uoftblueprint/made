@@ -40,9 +40,10 @@ def get_current_location(item_id):
           indicate a data integrity issue. These events should always have a to_location
           set to represent the item's physical location.
 
-        - No location-changing events: Returns None. This is expected for items that have
-          only workflow events (MOVE_REQUESTED, MOVE_APPROVED, etc.) but no actual location
-          changes yet. However, every item should ideally have at least an INITIAL event.
+        - No location-changing events: Returns None only when there are no location-changing
+          events and no INITIAL event is present. This is expected for items that have only
+          workflow events (MOVE_REQUESTED, MOVE_APPROVED, etc.) but no actual location changes
+          yet. However, every item should ideally have at least an INITIAL event.
 
         - Invalid item_id: If the item_id doesn't exist, the query will return no results
           and the function will return None. No exception is raised.
