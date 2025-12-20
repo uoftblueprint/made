@@ -46,3 +46,8 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
         read_only_fields = ['id', 'status', 'admin', 'admin_comment', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        # volunteer = logged-in user
+        validated_data["requested_by"] = self.context["request"].user
+        return super().create(validated_data)
