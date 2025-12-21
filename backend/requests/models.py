@@ -89,7 +89,8 @@ class ItemMovementRequest(models.Model):
             acted_by=admin_user,
             notes=comment,
         )
-    
+
+
 class ItemHistory(models.Model):
     """
     Records actions performed on items, including moves.
