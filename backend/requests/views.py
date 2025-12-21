@@ -57,6 +57,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     viewSet for managing item movement requests.
     supports creation, listing, retrieval, approval, and rejection.
     """
+
     queryset = ItemMovementRequest.objects.all()
     serializer_class = ItemMovementRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -71,18 +72,18 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(requested_by=self.request.user)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
     def approve(self, request, pk=None):
         move_request = self.get_object()
-        comment = request.data.get('comment', '')
+        comment = request.data.get("comment", "")
         move_request.approve(admin_user=request.user, comment=comment)
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
     def reject(self, request, pk=None):
         move_request = self.get_object()
-        comment = request.data.get('comment', '')
+        comment = request.data.get("comment", "")
         move_request.reject(admin_user=request.user, comment=comment)
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)

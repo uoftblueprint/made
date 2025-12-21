@@ -25,27 +25,28 @@ from .models import ItemMovementRequest, ItemHistory
 #         # Add any cross-field validation here
 #         return data
 
+
 class ItemMovementRequestSerializer(serializers.ModelSerializer):
-    requested_by_username = serializers.CharField(source='requested_by.username', read_only=True)
-    admin_username = serializers.CharField(source='admin.username', read_only=True)
+    requested_by_username = serializers.CharField(source="requested_by.username", read_only=True)
+    admin_username = serializers.CharField(source="admin.username", read_only=True)
 
     class Meta:
         model = ItemMovementRequest
         fields = [
-            'id',
-            'item',
-            'requested_by',
-            'requested_by_username',
-            'from_location',
-            'to_location',
-            'status',
-            'admin',
-            'admin_username',
-            'admin_comment',
-            'created_at',
-            'updated_at',
+            "id",
+            "item",
+            "requested_by",
+            "requested_by_username",
+            "from_location",
+            "to_location",
+            "status",
+            "admin",
+            "admin_username",
+            "admin_comment",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ['id', 'status', 'admin', 'admin_comment', 'created_at', 'updated_at']
+        read_only_fields = ["id", "status", "admin", "admin_comment", "created_at", "updated_at"]
 
     def create(self, validated_data):
         # volunteer = logged-in user
