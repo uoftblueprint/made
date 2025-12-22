@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import ItemMovementRequest, ItemHistory
+from .models import ItemMovementRequest
 from .serializers import ItemMovementRequestSerializer
 
 # from .models import Request
@@ -54,8 +54,8 @@ from .serializers import ItemMovementRequestSerializer
 
 class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     """
-    viewSet for managing item movement requests.
-    supports creation, listing, retrieval, approval, and rejection.
+    ViewSet for managing item movement requests.
+    Supports creation, listing, retrieval, approval, and rejection.
     """
 
     queryset = ItemMovementRequest.objects.all()
@@ -63,10 +63,10 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # volunteers see only their own requests
+        # Volunteers see only their own requests
         user = self.request.user
         if user.is_staff:
-            return ItemMovementRequest.objects.all()  # admins see all
+            return ItemMovementRequest.objects.all()  # Admins see all
         return ItemMovementRequest.objects.filter(requested_by=user)
 
     def perform_create(self, serializer):
