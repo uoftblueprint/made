@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import ItemMovementRequest, ItemHistory
+from .models import ItemMovementRequest
+from inventory.models import ItemHistory
 
 # from .models import Request
 
@@ -46,9 +47,8 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "status", "admin", "admin_comment", "created_at", "updated_at"]
+        read_only_fields = ["id", "requested_by", "status", "admin", "admin_comment", "created_at", "updated_at"]
 
     def create(self, validated_data):
-        # volunteer = logged-in user
-        validated_data["requested_by"] = self.context["request"].user
+        # Volunteer is the logged-in user.
         return super().create(validated_data)

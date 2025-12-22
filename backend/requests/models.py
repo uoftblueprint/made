@@ -89,31 +89,3 @@ class ItemMovementRequest(models.Model):
             acted_by=admin_user,
             notes=comment,
         )
-
-
-class ItemHistory(models.Model):
-    """
-    Records actions performed on items, including moves.
-    """
-
-    ITEM_CHOICES = [
-        ("MOVE_REQUESTED", "Move Requested"),
-        ("MOVE_APPROVED", "Move Approved"),
-        ("MOVE_REJECTED", "Move Rejected"),
-        ("MOVE_CANCELLED", "Move Cancelled"),
-    ]
-
-    item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE)
-    item_type = models.CharField(max_length=50, choices=ITEM_CHOICES)
-    from_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    to_location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
-    movement_request = models.ForeignKey("ItemMovementRequest", on_delete=models.SET_NULL, null=True, blank=True)
-    acted_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
-    notes = models.TextField(blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-timestamp"]
-
-    def __str__(self):
-        return f"{self.item_type} for {self.item.item_code} at {self.timestamp}"
