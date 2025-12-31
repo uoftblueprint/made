@@ -2,7 +2,9 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserRegistrationSerializer, UserSerializer
+from .serializers import UserRegistrationSerializer, UserSerializer, UserUpdateSerializer
+from .models import User
+from .permissions import IsAdmin
 
 
 # Register new account
@@ -40,3 +42,28 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        queryset = User.objects.all()
+
+        role = self.request.query_params.get("role")
+        if role:
+            queryset = queryset.filter(role=role)
+
+        is_active = self.request.query_params.get("is_active")
+        if is_active is not None:
+            is_active_bool = is_active.lower() in ["true", "1", "yes"]
+            queryset = queryset.filter(is_active=is_active_bool)
+
+        return queryset
+
+
+class UserUpdateView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserUpdateSerializer
+    permission_classes = [IsAdmin]
