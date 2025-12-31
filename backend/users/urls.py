@@ -8,6 +8,8 @@ from users.views import (
     LogoutView,
     RegisterView,
     UserProfileView,
+    UserListView,
+    UserUpdateView,
     VolunteerApplicationAPIView,
 )
 
@@ -29,6 +31,8 @@ urlpatterns = [
     path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
     # User Routes
     path("users/me/", UserProfileView.as_view(), name="user_profile"),
+    path("users/", UserListView.as_view(), name="user_list"),
+    path("users/<int:pk>/", UserUpdateView.as_view(), name="user_update"),
 ]
 
 # This will create the following endpoints:

@@ -2,12 +2,10 @@ import pytest
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
-from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
 
-from .models import VolunteerApplication
-
-
-User = get_user_model()
+from .models import VolunteerApplication, User
 
 
 @pytest.mark.django_db
@@ -84,7 +82,7 @@ def test_login_success(client):
 @pytest.mark.django_db
 def test_logout_blacklists_token(client):
     """Test JWT Blacklist on logout"""
-    user = User.objects.create_user(email="logout@example.com", name="Logout User", password="password123")
+    User.objects.create_user(email="logout@example.com", name="Logout User", password="password123")
 
     # Login to get tokens
     login_url = "/api/auth/login/"
@@ -107,3 +105,167 @@ def test_logout_blacklists_token(client):
     )
 
     assert response.status_code == status.HTTP_205_RESET_CONTENT
+
+
+@pytest.mark.django_db
+def test_user_list_requires_admin(client):
+    """Test admin can list users, volunteer cannot."""
+    # Create admin and volunteer
+    User.objects.create_user(email="admin@example.com", name="Admin", password="adminpass", role="ADMIN")
+    User.objects.create_user(email="vol@example.com", name="Vol", password="volpass", role="VOLUNTEER")
+
+    # Login as volunteer
+    res_vol = client.post(
+        "/api/auth/login/", {"email": "vol@example.com", "password": "volpass"}, content_type="application/json"
+    )
+    access_vol = res_vol.data["access"]
+
+    # Volunteer should be forbidden
+    res_forbidden = client.get("/api/users/", HTTP_AUTHORIZATION=f"Bearer {access_vol}")
+    assert res_forbidden.status_code == status.HTTP_403_FORBIDDEN
+
+    # Login as admin
+    res_admin = client.post(
+        "/api/auth/login/", {"email": "admin@example.com", "password": "adminpass"}, content_type="application/json"
+    )
+    access_admin = res_admin.data["access"]
+
+    res_ok = client.get("/api/users/", HTTP_AUTHORIZATION=f"Bearer {access_admin}")
+    assert res_ok.status_code == status.HTTP_200_OK
+
+    data = res_ok.json()
+    results = data["results"] if isinstance(data, dict) and "results" in data else data
+    emails = [u["email"] for u in results]
+    assert {"admin@example.com", "vol@example.com"}.issubset(set(emails))
+
+
+@pytest.mark.django_db
+def test_user_list_filters(client):
+    """Filter users by role and active status."""
+    User.objects.create_user(email="a1@example.com", name="A1", password="x", role="ADMIN", is_active=True)
+    User.objects.create_user(email="v1@example.com", name="V1", password="x", role="VOLUNTEER", is_active=True)
+    User.objects.create_user(email="v2@example.com", name="V2", password="x", role="VOLUNTEER", is_active=False)
+
+    # Login as admin
+    res_admin = client.post("/api/auth/login/", {"email": "a1@example.com", "password": "x"}, content_type="application/json")
+    token = res_admin.data["access"]
+
+    # Role filter
+    res_role = client.get("/api/users/?role=VOLUNTEER", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res_role.status_code == status.HTTP_200_OK
+    data = res_role.json()
+    results = data["results"] if isinstance(data, dict) and "results" in data else data
+    assert all(u["role"] == "VOLUNTEER" for u in results)
+
+    res_role = client.get("/api/users/?role=ADMIN", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res_role.status_code == status.HTTP_200_OK
+    data = res_role.json()
+    results = data["results"] if isinstance(data, dict) and "results" in data else data
+    assert all(u["role"] == "ADMIN" for u in results)
+
+    # Active filter
+    res_active = client.get("/api/users/?is_active=true", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res_active.status_code == status.HTTP_200_OK
+    data = res_active.json()
+    results = data["results"] if isinstance(data, dict) and "results" in data else data
+    assert all(u["is_active"] is True for u in results)
+
+    res_inactive = client.get("/api/users/?is_active=false", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res_inactive.status_code == status.HTTP_200_OK
+    data = res_inactive.json()
+    results = data["results"] if isinstance(data, dict) and "results" in data else data
+    assert all(u["is_active"] is False for u in results)
+
+    res_invalid = client.get("/api/users/?role=INVALID_ROLE", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res_invalid.status_code == status.HTTP_200_OK
+    data = res_invalid.json()
+    results = data["results"] if isinstance(data, dict) and "results" in data else data
+    assert len(results) == 0
+
+
+@pytest.mark.django_db
+def test_user_update_is_active_and_expiry(client):
+    """Admin can update is_active and access_expires_at."""
+    User.objects.create_user(email="admin2@example.com", name="Admin2", password="adminpass", role="ADMIN")
+    target = User.objects.create_user(email="target@example.com", name="Target", password="pwd", role="VOLUNTEER")
+
+    res_admin = client.post(
+        "/api/auth/login/", {"email": "admin2@example.com", "password": "adminpass"}, content_type="application/json"
+    )
+    token = res_admin.data["access"]
+
+    expires_dt = timezone.now() + timedelta(days=7)
+    res_patch = client.patch(
+        f"/api/users/{target.id}/",
+        {"is_active": False, "access_expires_at": expires_dt.isoformat()},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert res_patch.status_code == status.HTTP_200_OK
+    target.refresh_from_db()
+    assert target.is_active is False
+    assert abs((target.access_expires_at - expires_dt).total_seconds()) < 1
+
+
+@pytest.mark.django_db
+def test_user_update_requires_admin(client):
+    """Volunteer cannot update users, only admin can."""
+    User.objects.create_user(email="admin3@example.com", name="Admin3", password="adminpass", role="ADMIN")
+    User.objects.create_user(email="vol2@example.com", name="Vol2", password="volpass", role="VOLUNTEER")
+    target = User.objects.create_user(email="target2@example.com", name="Target2", password="pwd", role="VOLUNTEER")
+
+    res_vol = client.post(
+        "/api/auth/login/", {"email": "vol2@example.com", "password": "volpass"}, content_type="application/json"
+    )
+    access_vol = res_vol.data["access"]
+
+    res_forbidden = client.patch(
+        f"/api/users/{target.id}/",
+        {"is_active": False},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {access_vol}",
+    )
+    assert res_forbidden.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+def test_admin_cannot_update_self(client):
+    """Admin cannot modify their own account to prevent accidental lockout."""
+    admin = User.objects.create_user(email="admin4@example.com", name="Admin4", password="adminpass", role="ADMIN")
+
+    res_login = client.post(
+        "/api/auth/login/", {"email": "admin4@example.com", "password": "adminpass"}, content_type="application/json"
+    )
+    access = res_login.data["access"]
+
+    # Attempt to deactivate own account
+    res_self_update = client.patch(
+        f"/api/users/{admin.id}/",
+        {"is_active": False},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {access}",
+    )
+    assert res_self_update.status_code == status.HTTP_403_FORBIDDEN
+    assert "cannot modify your own account" in res_self_update.data["detail"].lower()
+
+
+@pytest.mark.django_db
+def test_expired_user_blocked_by_middleware(client):
+    """Expired user gets 403."""
+    User.objects.create_user(
+        email="expired@example.com",
+        name="Expired",
+        password="expiredpass",
+        role="ADMIN",
+        is_active=True,
+        access_expires_at=timezone.now() - timedelta(days=1),
+    )
+
+    res_login = client.post(
+        "/api/auth/login/", {"email": "expired@example.com", "password": "expiredpass"}, content_type="application/json"
+    )
+    token = res_login.data["access"]
+
+    res_expired = client.get("/api/users/", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res_expired.status_code == status.HTTP_403_FORBIDDEN
