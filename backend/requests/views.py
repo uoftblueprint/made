@@ -75,6 +75,13 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
     def approve(self, request, pk=None):
         move_request = self.get_object()
+
+        if move_request.status != ItemMovementRequest.Status.WAITING_APPROVAL:
+            return Response(
+                {"detail": "This request has already been processed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         comment = request.data.get("comment", "")
         move_request.approve(admin_user=request.user, comment=comment)
         serializer = self.get_serializer(move_request)
@@ -83,6 +90,13 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
     def reject(self, request, pk=None):
         move_request = self.get_object()
+
+        if move_request.status != ItemMovementRequest.Status.WAITING_APPROVAL:
+            return Response(
+                {"detail": "This request has already been processed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         comment = request.data.get("comment", "")
         move_request.reject(admin_user=request.user, comment=comment)
         serializer = self.get_serializer(move_request)
