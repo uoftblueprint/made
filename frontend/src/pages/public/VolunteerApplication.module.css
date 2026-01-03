@@ -1,30 +1,26 @@
-.container{
+.container{ 
     display: flex; 
-    flex-direction: column;
+    flex-grow: 1; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: start; 
     padding: 1rem; 
-    flex-grow: 1;
 } 
 .form{ 
-    display: flex; 
-    flex-direction: column;
-    justify-content: space-around;
-    gap: 0.75rem;
+    display: flex; flex-direction: column; 
 } 
 
-.inputContainer {
-    display: flex;
-    flex-direction: column;
-}
+.inputBox{ 
+    margin-left: 5rem; 
+} 
 
 .inputRow { 
-    display: flex;
-    gap: 0.75rem;
+    display: flex; 
+    justify-content: space-between; 
 } 
 
-.inputBox {
-    flex-grow: 1;
-}
-
-.error {
-    margin: auto auto;
+.inputContainer { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
 }

@@ -2,11 +2,11 @@ import { useVolunteerApplications, useUpdateVolunteerStatus } from '../../action
 import { VolunteerList } from '../../components/items/index.ts';
 import { useState } from 'react'
 
-    const ManageVolunteers: React.FC = () => {
+    const ManageVolunteers = () => {
         const sortedByOptions = ['Status', 'Date Applied', 'Name'];
         const [sortBy, setSortBy] = useState<string>(sortedByOptions[0]);
+        const [searchCharacters, setSearchCharacters] = useState<string>('');
         const { data, isLoading, isError } = useVolunteerApplications();
-        console.log(data)
         const mutation = useUpdateVolunteerStatus();
         const onApprove = (id: number) => {
             mutation.mutate({id, action: "APPROVED"})
@@ -14,8 +14,6 @@ import { useState } from 'react'
         const onReject = (id: number) => {
             mutation.mutate({id, action: "REJECTED"})
         }
-        if (isLoading) return <div>Loading...</div>;
-        if (isError) return <div>Error loading volunteer applications.</div>;
 
         const onSort = () => {
             const currentIndex = sortedByOptions.indexOf(sortBy);
@@ -23,11 +21,15 @@ import { useState } from 'react'
             setSortBy(sortedByOptions[nextIndex]);
 
         }
+
+        if (isLoading) return <div>Loading...</div>;
+        if (isError) return <div>Error loading volunteer applications.</div>;
         return <>
         <h1>Volunteer Management Page</h1> 
         <h2>Sorted by: </h2>
         <button onClick={()=>onSort()}>{sortBy}</button>
-        <VolunteerList volunteers={data || []} onApprove={onApprove} onReject={onReject} sortedBy={sortBy} />
+        <input type='search' value={searchCharacters} onChange={(e)=>setSearchCharacters(e.target.value)}></input>
+        <VolunteerList volunteers={data || []} onApprove={onApprove} onReject={onReject} sortedBy={sortBy} searchBy={searchCharacters}/>
         </>
 
     }
