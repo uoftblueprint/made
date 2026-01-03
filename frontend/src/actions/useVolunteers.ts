@@ -12,7 +12,7 @@ export const useVolunteerApplications = () => {
   });
 };
 
-export const useUpdateVolunteerStatus = () => {
+export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onErrorCallback?: (error: unknown) => void) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, action }: { id: number; action: 'APPROVED' | 'REJECTED' }) => {
@@ -20,6 +20,10 @@ export const useUpdateVolunteerStatus = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
+      onSuccessCallback?.();
     },
+    onError: (error) => {
+      onErrorCallback?.(error)
+    }
   });
 };
