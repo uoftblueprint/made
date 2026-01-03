@@ -1,0 +1,26 @@
+.container{ 
+    display: flex; 
+    flex-grow: 1; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: start; 
+    padding: 1rem; 
+} 
+.form{ 
+    display: flex; flex-direction: column; 
+} 
+
+.inputBox{ 
+    margin-left: 5rem; 
+} 
+
+.inputRow { 
+    display: flex; 
+    justify-content: space-between; 
+} 
+
+.inputContainer { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+}
