@@ -26,3 +26,7 @@ export const sortByCreatedAt = (volunteers: Volunteer[]): Volunteer[] => {
 export const sortByVolunteerName = (volunteers: Volunteer[]): Volunteer[] => {
     return volunteers.sort((a, b) => a.name.localeCompare(b.name));
 }
+
+export const searchByVolunteerName = (volunteers: Volunteer[], searchCharacters: string): Volunteer[] =>{
+    return volunteers.filter(volunteer => volunteer.name.toLowerCase().startsWith(searchCharacters.toLowerCase()))
+}
