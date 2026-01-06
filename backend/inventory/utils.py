@@ -3,6 +3,7 @@ Utility functions for inventory management.
 """
 
 from .models import ItemHistory, Location
+from .constants import LOCATION_CHANGING_EVENTS
 
 
 def get_current_location(item_id):
@@ -48,9 +49,6 @@ def get_current_location(item_id):
         - Invalid item_id: If the item_id doesn't exist, the query will return no results
           and the function will return None. No exception is raised.
     """
-    # Events that actually change the physical location
-    LOCATION_CHANGING_EVENTS = ["INITIAL", "ARRIVED", "VERIFIED", "LOCATION_CORRECTION"]
-
     # Get the most recent location-changing event
     last_event = (
         ItemHistory.objects.filter(item_id=item_id, event_type__in=LOCATION_CHANGING_EVENTS).order_by("-created_at").first()
