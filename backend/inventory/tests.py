@@ -1,11 +1,9 @@
 import pytest
 from django.utils import timezone
 from datetime import timedelta
-from inventory.models import CollectionItem, Location, ItemHistory
 from inventory.utils import get_current_location
 from django.test import TestCase
 from django.core.management import call_command
-from django.core.exceptions import ObjectDoesNotExist
 from io import StringIO
 from .models import CollectionItem, Location, ItemHistory
 from users.models import User
