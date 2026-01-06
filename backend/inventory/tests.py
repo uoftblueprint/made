@@ -147,8 +147,8 @@ class ItemLocationTest(TestCase):
         self.assertEqual(self.item.current_location, self.location_floor)
         self.assertTrue(self.item.is_on_floor)
 
-    def test_signal_ignores_workflow_events(self):
-        """Test that signal doesn't trigger for workflow-only events."""
+    def test_signal_does_not_update_location_for_workflow_events(self):
+        """Test that signal triggers but doesn't update location for workflow-only events."""
         original_location = self.item.current_location
         original_is_on_floor = self.item.is_on_floor
 
