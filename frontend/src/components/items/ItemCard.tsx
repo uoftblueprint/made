@@ -3,11 +3,10 @@
 import type { PublicCollectionItem } from "../../lib/types"
 
 interface ItemCardProps {
-    item: PublicCollectionItem;
+  item: PublicCollectionItem;
 }
 
-const ItemCard: React.FC<ItemCardProps> = ({item}) => {
-    console.log(item)
+const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
   return (
     <div style={{
       border: "1px solid #ccc",
