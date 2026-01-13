@@ -13,6 +13,15 @@ export interface CollectionItem {
   description: string;
 }
 
+export interface PublicCollectionItem {
+  id: number;
+  item_code: string;
+  title: string;
+  platform: string;
+  description: string;
+  is_on_floor: boolean;
+}
+
 // TODO: place holder
 export interface ItemOnFloor {
   id: number;
