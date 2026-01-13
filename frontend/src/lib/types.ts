@@ -17,6 +17,12 @@ export interface Volunteer {
   reviewed_by: string | null;
 }
 
+export interface VolunteerApplicationInput {
+  name: string
+  email: string
+  motivation_text: string
+}
+
 // TODO: place holder
 export interface CollectionItem {
   id: number;
