@@ -1,13 +1,14 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework import generics, status, permissions, viewsets
+from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
 import secrets
 
 from .models import VolunteerApplication
-from .serializers import VolunteerApplicationSerializer
+from .serializers import VolunteerApplicationSerializer, UserRegistrationSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -28,10 +29,10 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         """Return appropriate serializer based on action."""
         if self.action == "create":
             return VolunteerApplicationSerializer
-        return VolunteerApplicationSerializer  # Can update this later, just for formality
+        return VolunteerApplicationSerializer
 
     def list(self, request, *args, **kwargs):
-        """List applications; restrict to admin users using role PLACEHOLDER."""
+        """List applications; restrict to admin users using role."""
         user = getattr(request, "user", None)
         if not (user is not None and getattr(user, "is_authenticated", False) and self._is_admin(user)):
             return Response({"detail": "Admin only"}, status=status.HTTP_403_FORBIDDEN)
@@ -39,7 +40,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def _is_admin(self, user):
-        """PLACEHOLDER check for admin users based on role."""
+        """Check for admin users based on role."""
         return getattr(user, "role", None) == "ADMIN"
 
     def _handle_review_metadata(self, application):
@@ -78,3 +79,38 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         if old_status != application.status and application.status in {"APPROVED", "REJECTED"}:
             self._handle_review_metadata(application)
             self._handle_volunteer_user_creation(application)
+
+# Register new account
+class RegisterView(generics.CreateAPIView):
+    """
+    Endpoint: POST /api/auth/register/
+    """
+
+    serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]  # Open to public
+
+# User Profile to check own data
+class UserProfileView(APIView):
+    """
+    Endpoint: GET /api/users/me/
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
+# Logout (Needs both refresh and access tokens)
+class LogoutView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response(status=status.HTTP_205_RESET_CONTENT)
+        except Exception:
+            return Response(status=status.HTTP_400_BAD_REQUEST)

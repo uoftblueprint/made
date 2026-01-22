@@ -1,0 +1,30 @@
+.container{
+    display: flex; 
+    flex-direction: column;
+    padding: 1rem; 
+    flex-grow: 1;
+} 
+.form{ 
+    display: flex; 
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 0.75rem;
+} 
+
+.inputContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputRow { 
+    display: flex;
+    gap: 0.75rem;
+} 
+
+.inputBox {
+    flex-grow: 1;
+}
+
+.error {
+    margin: auto auto;
+}

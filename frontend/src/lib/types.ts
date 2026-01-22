@@ -6,6 +6,23 @@ export interface User {
   access_expiry_date: string | null;
 }
 
+export interface Volunteer {
+  id: number;
+  name: string;
+  email: string;
+  motivation_text: string;
+  submitted_at: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+}
+
+export interface VolunteerApplicationInput {
+  name: string
+  email: string
+  motivation_text: string
+}
+
 // TODO: place holder
 export interface CollectionItem {
   id: number;
