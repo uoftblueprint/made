@@ -194,6 +194,7 @@ def test_reject_application():
 =======
 
 
+@pytest.mark.django_db
 def test_login_success(client):
     """Test JWT login success"""
     User.objects.create_user(email="login@example.com", name="Login User", password="password123")
