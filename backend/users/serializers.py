@@ -30,6 +30,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for the User model.
