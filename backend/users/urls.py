@@ -29,9 +29,6 @@ urlpatterns = [
     path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
     # User routes
     path("users/me/", UserProfileView.as_view(), name="user_profile"),
-
-    # Router-based routes
-    path("", include(router.urls)),
 ]
 
 # This will create the following endpoints:
