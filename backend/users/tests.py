@@ -64,6 +64,8 @@ def test_reject_application():
     assert application.reviewed_at is not None
 
     assert not User.objects.filter(email="reject@example.com").exists()
+
+
 def test_login_success(client):
     """Test JWT login success"""
     User.objects.create_user(email="login@example.com", name="Login User", password="password123")

@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User, VolunteerApplication
 
+
 class VolunteerApplicationSerializer(serializers.ModelSerializer):
     """
     Serializer for the VolunteerApplication model.
@@ -18,6 +19,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
         """Create a new volunteer application with PENDING status."""
         validated_data["status"] = "PENDING"
         return super().create(validated_data)
+
 
 class UserSerializer(serializers.ModelSerializer):
     """

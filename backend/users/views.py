@@ -8,11 +8,7 @@ from django.db import transaction
 import secrets
 
 from .models import VolunteerApplication
-from .serializers import (
-    VolunteerApplicationSerializer,
-    UserRegistrationSerializer,
-    UserSerializer
-)
+from .serializers import VolunteerApplicationSerializer, UserRegistrationSerializer, UserSerializer
 
 User = get_user_model()
 
