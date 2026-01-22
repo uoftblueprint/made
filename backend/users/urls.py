@@ -13,13 +13,11 @@ router.register(r"volunteer-applications", VolunteerApplicationAPIView, basename
 urlpatterns = [
     # Router URLs
     path("", include(router.urls)),
-
     # Auth Routes
     path("auth/register/", RegisterView.as_view(), name="auth_register"),
     path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
-
     # User Routes
     path("users/me/", UserProfileView.as_view(), name="user_profile"),
 ]
@@ -29,4 +27,3 @@ urlpatterns = [
 # GET    /api/volunteer-applications/          - List all applications
 # GET    /api/volunteer-applications/{id}/     - Retrieve a specific application (admin only)
 # PATCH  /api/volunteer-applications/{id}/     - Partial update
-
