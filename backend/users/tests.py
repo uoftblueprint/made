@@ -66,6 +66,7 @@ def test_reject_application():
     assert not User.objects.filter(email="reject@example.com").exists()
 
 
+@pytest.mark.django_db
 def test_login_success(client):
     """Test JWT login success"""
     User.objects.create_user(email="login@example.com", name="Login User", password="password123")
