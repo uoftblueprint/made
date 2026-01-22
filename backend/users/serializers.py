@@ -8,6 +8,7 @@ from .models import VolunteerApplication
 # Uncomment and modify as needed
 
 
+
 class UserSerializer(serializers.ModelSerializer):
     """
     Serializer for the User model.
