@@ -80,6 +80,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             self._handle_review_metadata(application)
             self._handle_volunteer_user_creation(application)
 
+
 # Register new account
 class RegisterView(generics.CreateAPIView):
     """
@@ -88,6 +89,7 @@ class RegisterView(generics.CreateAPIView):
 
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]  # Open to public
+
 
 # User Profile to check own data
 class UserProfileView(APIView):
