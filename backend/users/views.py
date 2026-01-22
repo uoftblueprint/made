@@ -127,6 +127,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             self._handle_volunteer_user_creation(application)
 
 
+
 # Register new account
 class RegisterView(generics.CreateAPIView):
     """
