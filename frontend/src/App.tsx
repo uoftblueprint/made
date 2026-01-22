@@ -8,9 +8,6 @@ import HomePage from './pages/public/HomePage';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import ManageVolunteers from './pages/admin/ManageVolunteers';
-import VolunteerApplication from './pages/public/VolunteerApplication';
-import SecureRoute from './components/SecureRoute.tsx';
 
 
 const queryClient = new QueryClient();
