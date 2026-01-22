@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         # Changed 'date_joined' to 'created_at'
         # Also added 'role' so frontend can see if ADMIN or VOLUNTEER
-        fields = ["id", "name", "email", "created_at", "role"]
+        fields = ["id", "name", "email", "created_at", "role", "is_active", "access_expires_at"]
         read_only_fields = ["id", "created_at", "role"]
 
 
@@ -42,3 +42,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             role="VOLUNTEER",  # Default role for new signups, should this be configurable
         )
         return user
+
+
+class UserUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer for updating user is_active and access_expires_at.
+    Only these fields can be updated by admins.
+    """
+
+    class Meta:
+        model = User
+        fields = ["is_active", "access_expires_at"]

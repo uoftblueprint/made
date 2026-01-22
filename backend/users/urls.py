@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,  # The built-in "Login" view
     TokenRefreshView,  # The built-in "Refresh Session" view
 )
-from users.views import LogoutView, RegisterView, UserProfileView
+from users.views import LogoutView, RegisterView, UserProfileView, UserListView, UserUpdateView
 
 
 urlpatterns = [
@@ -15,4 +15,6 @@ urlpatterns = [
     path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
     # User Routes
     path("users/me/", UserProfileView.as_view(), name="user_profile"),
+    path("users/", UserListView.as_view(), name="user_list"),
+    path("users/<int:pk>/", UserUpdateView.as_view(), name="user_update"),
 ]
