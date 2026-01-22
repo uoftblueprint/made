@@ -1,4 +1,5 @@
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, viewsets
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,7 +10,11 @@ from django.db import transaction
 import secrets
 
 from .models import VolunteerApplication
-
+from .serializers import (
+    VolunteerApplicationSerializer,
+    UserRegistrationSerializer,
+    UserSerializer
+)
 
 User = get_user_model()
 # =========================
@@ -73,10 +78,10 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         """Return appropriate serializer based on action."""
         if self.action == "create":
             return VolunteerApplicationSerializer
-        return VolunteerApplicationSerializer  # Can update this later, just for formality
+        return VolunteerApplicationSerializer
 
     def list(self, request, *args, **kwargs):
-        """List applications; restrict to admin users using role PLACEHOLDER."""
+        """List applications; restrict to admin users using role."""
         user = getattr(request, "user", None)
         if not (user is not None and getattr(user, "is_authenticated", False) and self._is_admin(user)):
             return Response({"detail": "Admin only"}, status=status.HTTP_403_FORBIDDEN)
@@ -84,7 +89,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def _is_admin(self, user):
-        """PLACEHOLDER check for admin users based on role."""
+        """Check for admin users based on role."""
         return getattr(user, "role", None) == "ADMIN"
 
     def _handle_review_metadata(self, application):
