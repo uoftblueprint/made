@@ -1,5 +1,12 @@
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import logging
+
+from .constants import LOCATION_CHANGING_EVENTS
+
+logger = logging.getLogger(__name__)
 
 
 class Location(models.Model):
@@ -143,3 +150,19 @@ class ItemHistory(models.Model):
 
     def __str__(self):
         return f"{self.item.item_code} - {self.get_event_type_display()} at {self.created_at}"
+
+
+@receiver(post_save, sender=ItemHistory)
+def update_item_location_on_history_change(sender, instance, created, **kwargs):
+    """
+    Update item location when a new history event is created.
+    Only triggers for location-changing events (INITIAL, ARRIVED, VERIFIED, LOCATION_CORRECTION).
+    """
+    if created and instance.event_type in LOCATION_CHANGING_EVENTS:
+        # Use try/except to prevent cascading failures
+        try:
+            item: CollectionItem = instance.item
+            item.update_location_from_history()
+        except Exception as e:
+            # Log error but don't raise to prevent disrupting the original save
+            logger.error(f"Failed to update item location for item {instance.item_id}: {e}")
