@@ -6,14 +6,9 @@ from rest_framework_simplejwt.views import (
 )
 from users.views import LogoutView, RegisterView, UserProfileView, VolunteerApplicationAPIView
 
-# Router setup
-router = DefaultRouter()
-router.register(
-    r"volunteer-applications",
-    VolunteerApplicationAPIView,
-    basename="volunteer-application",
-)
 
+router = DefaultRouter()
+router.register(r"volunteer-applications", VolunteerApplicationAPIView, basename="volunteer-application")
 
 urlpatterns = [
     # Router URLs
