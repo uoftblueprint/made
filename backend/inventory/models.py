@@ -124,16 +124,36 @@ class ItemHistory(models.Model):
 
     event_type = models.CharField(max_length=30, choices=EVENT_TYPE_CHOICES)
 
-    from_location = models.ForeignKey(Location, on_delete=models.PROTECT, null=True, blank=True, related_name="history_from")
-    to_location = models.ForeignKey(Location, on_delete=models.PROTECT, null=True, blank=True, related_name="history_to")
+    from_location = models.ForeignKey(
+        Location,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="history_from",
+    )
+    to_location = models.ForeignKey(
+        Location,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="history_to",
+    )
 
     # Optional link back to movement request for traceability
     movement_request = models.ForeignKey(
-        "requests.ItemMovementRequest", on_delete=models.SET_NULL, null=True, blank=True, related_name="history_events"
+        "requests.ItemMovementRequest",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="history_events",
     )
 
     acted_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="item_actions"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="item_actions",
     )
 
     notes = models.TextField(blank=True)

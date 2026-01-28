@@ -1,5 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.utils import timezone
 
 
@@ -92,7 +96,11 @@ class VolunteerApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(
-        "User", on_delete=models.SET_NULL, null=True, blank=True, related_name="reviewed_applications"
+        "User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_applications",
     )
 
     class Meta:

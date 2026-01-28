@@ -18,7 +18,9 @@ class ItemMovementRequest(models.Model):
 
     item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE, related_name="movement_requests")
     requested_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="movement_requests_created"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="movement_requests_created",
     )
 
     from_location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="movement_requests_from")

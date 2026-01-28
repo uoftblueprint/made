@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -32,14 +31,18 @@ class Migration(migrations.Migration):
             model_name="itemmovementrequest",
             name="from_location",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, related_name="movement_requests_from", to="inventory.location"
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="movement_requests_from",
+                to="inventory.location",
             ),
         ),
         migrations.AddField(
             model_name="itemmovementrequest",
             name="item",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="movement_requests", to="inventory.collectionitem"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="movement_requests",
+                to="inventory.collectionitem",
             ),
         ),
         migrations.AddField(
@@ -55,12 +58,16 @@ class Migration(migrations.Migration):
             model_name="itemmovementrequest",
             name="to_location",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, related_name="movement_requests_to", to="inventory.location"
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="movement_requests_to",
+                to="inventory.location",
             ),
         ),
         migrations.AddIndex(
             model_name="itemmovementrequest",
-            index=models.Index(fields=["status", "created_at"], name="item_moveme_status_ef3594_idx"),
+            index=models.Index(
+                fields=["status", "created_at"], name="item_moveme_status_ef3594_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="itemmovementrequest",

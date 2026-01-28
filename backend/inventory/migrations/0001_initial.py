@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = []
@@ -14,9 +13,27 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Box",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("box_code", models.CharField(help_text="Scannable code", max_length=100, unique=True)),
-                ("label", models.CharField(blank=True, help_text="Human-friendly label", max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "box_code",
+                    models.CharField(
+                        help_text="Scannable code", max_length=100, unique=True
+                    ),
+                ),
+                (
+                    "label",
+                    models.CharField(
+                        blank=True, help_text="Human-friendly label", max_length=255
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
             ],
@@ -29,7 +46,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ItemHistory",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 (
                     "event_type",
                     models.CharField(
@@ -58,12 +83,31 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="Location",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("name", models.CharField(help_text="e.g., 'Shelf A1', 'Floor - Main Exhibit'", max_length=255)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="e.g., 'Shelf A1', 'Floor - Main Exhibit'",
+                        max_length=255,
+                    ),
+                ),
                 (
                     "location_type",
                     models.CharField(
-                        choices=[("FLOOR", "Floor"), ("STORAGE", "Storage"), ("EVENT", "Event"), ("OTHER", "Other")],
+                        choices=[
+                            ("FLOOR", "Floor"),
+                            ("STORAGE", "Storage"),
+                            ("EVENT", "Event"),
+                            ("OTHER", "Other"),
+                        ],
                         max_length=30,
                     ),
                 ),
@@ -79,13 +123,39 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="CollectionItem",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                ("item_code", models.CharField(help_text="Barcode / scanned code", max_length=100, unique=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "item_code",
+                    models.CharField(
+                        help_text="Barcode / scanned code", max_length=100, unique=True
+                    ),
+                ),
                 ("title", models.CharField(max_length=255)),
-                ("platform", models.CharField(blank=True, help_text="e.g., 'SNES', 'PS2'", max_length=100)),
+                (
+                    "platform",
+                    models.CharField(
+                        blank=True, help_text="e.g., 'SNES', 'PS2'", max_length=100
+                    ),
+                ),
                 ("description", models.TextField(blank=True)),
-                ("is_public_visible", models.BooleanField(default=True, help_text="For public catalogue")),
-                ("is_on_floor", models.BooleanField(default=False, help_text="Redundant but fast for queries")),
+                (
+                    "is_public_visible",
+                    models.BooleanField(default=True, help_text="For public catalogue"),
+                ),
+                (
+                    "is_on_floor",
+                    models.BooleanField(
+                        default=False, help_text="Redundant but fast for queries"
+                    ),
+                ),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 ("updated_at", models.DateTimeField(auto_now=True)),
                 (

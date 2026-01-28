@@ -4,11 +4,20 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,  # The built-in "Login" view
     TokenRefreshView,  # The built-in "Refresh Session" view
 )
-from users.views import LogoutView, RegisterView, UserProfileView, VolunteerApplicationAPIView
+from users.views import (
+    LogoutView,
+    RegisterView,
+    UserProfileView,
+    VolunteerApplicationAPIView,
+)
 
 
 router = DefaultRouter()
-router.register(r"volunteer-applications", VolunteerApplicationAPIView, basename="volunteer-application")
+router.register(
+    r"volunteer-applications",
+    VolunteerApplicationAPIView,
+    basename="volunteer-application",
+)
 
 urlpatterns = [
     # Router URLs

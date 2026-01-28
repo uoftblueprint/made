@@ -90,7 +90,9 @@ def test_logout_blacklists_token(client):
     # Login to get tokens
     login_url = "/api/auth/login/"
     login_res = client.post(
-        login_url, {"email": "logout@example.com", "password": "password123"}, content_type="application/json"
+        login_url,
+        {"email": "logout@example.com", "password": "password123"},
+        content_type="application/json",
     )
 
     access = login_res.data["access"]
@@ -99,7 +101,10 @@ def test_logout_blacklists_token(client):
     # Call Logout with the Authorization header manually added to avoid conftest
     logout_url = "/api/auth/logout/"
     response = client.post(
-        logout_url, {"refresh": refresh}, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {access}"
+        logout_url,
+        {"refresh": refresh},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {access}",
     )
 
     assert response.status_code == status.HTTP_205_RESET_CONTENT
