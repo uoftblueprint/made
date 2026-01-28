@@ -28,7 +28,9 @@ from inventory.models import ItemHistory
 
 
 class ItemMovementRequestSerializer(serializers.ModelSerializer):
-    requested_by_username = serializers.CharField(source="requested_by.username", read_only=True)
+    requested_by_username = serializers.CharField(
+        source="requested_by.username", read_only=True
+    )
     admin_username = serializers.CharField(source="admin.username", read_only=True)
 
     class Meta:
@@ -47,7 +49,15 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "requested_by", "status", "admin", "admin_comment", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "requested_by",
+            "status",
+            "admin",
+            "admin_comment",
+            "created_at",
+            "updated_at",
+        ]
 
     def create(self, validated_data):
         # Volunteer is the logged-in user.

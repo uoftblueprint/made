@@ -6,9 +6,22 @@ from .models import ItemMovementRequest
 class ItemMovementRequestAdmin(admin.ModelAdmin):
     """Admin interface for ItemMovementRequest model."""
 
-    list_display = ["id", "item", "requested_by", "from_location", "to_location", "status", "created_at"]
+    list_display = [
+        "id",
+        "item",
+        "requested_by",
+        "from_location",
+        "to_location",
+        "status",
+        "created_at",
+    ]
     list_filter = ["status", "created_at"]
-    search_fields = ["item__item_code", "item__title", "requested_by__name", "admin_comment"]
+    search_fields = [
+        "item__item_code",
+        "item__title",
+        "requested_by__name",
+        "admin_comment",
+    ]
     readonly_fields = ["created_at", "updated_at"]
 
     fieldsets = (

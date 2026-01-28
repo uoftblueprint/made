@@ -26,36 +26,63 @@ def location_c(db):
 
 @pytest.fixture
 def item(db, location_a):
-    return CollectionItem.objects.create(item_code="TEST001", title="Test Item", current_location=location_a)
+    return CollectionItem.objects.create(
+        item_code="TEST001", title="Test Item", current_location=location_a
+    )
 
 
 @pytest.mark.django_db
 class TestGetCurrentLocation:
     """Tests for get_current_location algorithm validating location-changing events."""
 
-    @pytest.mark.parametrize("event_type", ["INITIAL", "ARRIVED", "VERIFIED", "LOCATION_CORRECTION"])
-    def test_location_changing_events_update_location(self, item, location_a, location_b, event_type):
+    @pytest.mark.parametrize(
+        "event_type", ["INITIAL", "ARRIVED", "VERIFIED", "LOCATION_CORRECTION"]
+    )
+    def test_location_changing_events_update_location(
+        self, item, location_a, location_b, event_type
+    ):
         """Location-changing events should update the current location."""
-        ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a)
-        ItemHistory.objects.create(item=item, event_type=event_type, to_location=location_b)
+        ItemHistory.objects.create(
+            item=item, event_type="INITIAL", to_location=location_a
+        )
+        ItemHistory.objects.create(
+            item=item, event_type=event_type, to_location=location_b
+        )
         assert get_current_location(item.id) == location_b
 
     def test_workflow_events_ignored(self, item, location_a, location_b):
         """Workflow-only events should be ignored."""
-        ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a)
+        ItemHistory.objects.create(
+            item=item, event_type="INITIAL", to_location=location_a
+        )
         for event in ["MOVE_REQUESTED", "MOVE_APPROVED", "MOVE_REJECTED", "IN_TRANSIT"]:
-            ItemHistory.objects.create(item=item, event_type=event, to_location=location_b)
+            ItemHistory.objects.create(
+                item=item, event_type=event, to_location=location_b
+            )
         assert get_current_location(item.id) == location_a
 
-    def test_most_recent_location_changing_event_wins(self, item, location_a, location_b, location_c):
+    def test_most_recent_location_changing_event_wins(
+        self, item, location_a, location_b, location_c
+    ):
         """Most recent location-changing event should be returned."""
         base_time = timezone.now()
-        ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a, created_at=base_time)
         ItemHistory.objects.create(
-            item=item, event_type="ARRIVED", to_location=location_b, created_at=base_time + timedelta(hours=1)
+            item=item,
+            event_type="INITIAL",
+            to_location=location_a,
+            created_at=base_time,
         )
         ItemHistory.objects.create(
-            item=item, event_type="VERIFIED", to_location=location_c, created_at=base_time + timedelta(hours=2)
+            item=item,
+            event_type="ARRIVED",
+            to_location=location_b,
+            created_at=base_time + timedelta(hours=1),
+        )
+        ItemHistory.objects.create(
+            item=item,
+            event_type="VERIFIED",
+            to_location=location_c,
+            created_at=base_time + timedelta(hours=2),
         )
         assert get_current_location(item.id) == location_c
 
@@ -65,7 +92,9 @@ class TestGetCurrentLocation:
 
     def test_only_workflow_events_returns_none(self, item, location_a):
         """If only workflow events exist, return None."""
-        ItemHistory.objects.create(item=item, event_type="MOVE_REQUESTED", to_location=location_a)
+        ItemHistory.objects.create(
+            item=item, event_type="MOVE_REQUESTED", to_location=location_a
+        )
         assert get_current_location(item.id) is None
 
     def test_null_location_returns_none(self, item):
@@ -80,18 +109,35 @@ class TestGetCurrentLocation:
     def test_complex_workflow_flow(self, item, location_a, location_b, location_c):
         """Test realistic workflow with mixed event types."""
         base_time = timezone.now()
-        ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a, created_at=base_time)
         ItemHistory.objects.create(
-            item=item, event_type="MOVE_REQUESTED", to_location=location_b, created_at=base_time + timedelta(hours=1)
+            item=item,
+            event_type="INITIAL",
+            to_location=location_a,
+            created_at=base_time,
         )
         ItemHistory.objects.create(
-            item=item, event_type="MOVE_APPROVED", to_location=location_b, created_at=base_time + timedelta(hours=2)
+            item=item,
+            event_type="MOVE_REQUESTED",
+            to_location=location_b,
+            created_at=base_time + timedelta(hours=1),
         )
         ItemHistory.objects.create(
-            item=item, event_type="ARRIVED", to_location=location_b, created_at=base_time + timedelta(hours=3)
+            item=item,
+            event_type="MOVE_APPROVED",
+            to_location=location_b,
+            created_at=base_time + timedelta(hours=2),
         )
         ItemHistory.objects.create(
-            item=item, event_type="VERIFIED", to_location=location_c, created_at=base_time + timedelta(hours=4)
+            item=item,
+            event_type="ARRIVED",
+            to_location=location_b,
+            created_at=base_time + timedelta(hours=3),
+        )
+        ItemHistory.objects.create(
+            item=item,
+            event_type="VERIFIED",
+            to_location=location_c,
+            created_at=base_time + timedelta(hours=4),
         )
         assert get_current_location(item.id) == location_c
 
@@ -100,17 +146,33 @@ class ItemLocationTest(TestCase):
     """Test the item location functionality."""
 
     def setUp(self):
-        self.user = User.objects.create_user(email="test@example.com", name="Test User", password="testpass", role="VOLUNTEER")
-        self.location_storage = Location.objects.create(name="Storage A", location_type="STORAGE")
-        self.location_floor = Location.objects.create(name="Main Floor", location_type="FLOOR")
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            name="Test User",
+            password="testpass",
+            role="VOLUNTEER",
+        )
+        self.location_storage = Location.objects.create(
+            name="Storage A", location_type="STORAGE"
+        )
+        self.location_floor = Location.objects.create(
+            name="Main Floor", location_type="FLOOR"
+        )
         self.item = CollectionItem.objects.create(
-            item_code="TEST001", title="Test Item", current_location=self.location_storage
+            item_code="TEST001",
+            title="Test Item",
+            current_location=self.location_storage,
         )
 
     def test_update_location_from_history_initial_event(self):
         """Test location update with INITIAL event."""
         # Create INITIAL history event
-        ItemHistory.objects.create(item=self.item, event_type="INITIAL", to_location=self.location_storage, acted_by=self.user)
+        ItemHistory.objects.create(
+            item=self.item,
+            event_type="INITIAL",
+            to_location=self.location_storage,
+            acted_by=self.user,
+        )
 
         # Update location using model method
         self.item.update_location_from_history()
@@ -121,9 +183,14 @@ class ItemLocationTest(TestCase):
     def test_update_location_from_history_floor_move(self):
         """Test location update when item moves to floor."""
         # Create events
-        ItemHistory.objects.create(item=self.item, event_type="INITIAL", to_location=self.location_storage)
         ItemHistory.objects.create(
-            item=self.item, event_type="ARRIVED", from_location=self.location_storage, to_location=self.location_floor
+            item=self.item, event_type="INITIAL", to_location=self.location_storage
+        )
+        ItemHistory.objects.create(
+            item=self.item,
+            event_type="ARRIVED",
+            from_location=self.location_storage,
+            to_location=self.location_floor,
         )
 
         self.item.update_location_from_history()
@@ -135,7 +202,10 @@ class ItemLocationTest(TestCase):
         """Test that signal updates item location for location-changing events."""
         # Create ARRIVED event - should trigger signal
         ItemHistory.objects.create(
-            item=self.item, event_type="ARRIVED", to_location=self.location_floor, from_location=self.location_storage
+            item=self.item,
+            event_type="ARRIVED",
+            to_location=self.location_floor,
+            from_location=self.location_storage,
         )
 
         # Refresh item from database
@@ -152,7 +222,10 @@ class ItemLocationTest(TestCase):
 
         # Create MOVE_REQUESTED event - should NOT trigger signal
         ItemHistory.objects.create(
-            item=self.item, event_type="MOVE_REQUESTED", to_location=self.location_floor, from_location=self.location_storage
+            item=self.item,
+            event_type="MOVE_REQUESTED",
+            to_location=self.location_floor,
+            from_location=self.location_storage,
         )
 
         # Refresh item from database
@@ -167,8 +240,12 @@ class RebuildItemLocationsCommandTest(TestCase):
     """Test the management command."""
 
     def setUp(self):
-        self.location = Location.objects.create(name="Test Location", location_type="STORAGE")
-        self.item = CollectionItem.objects.create(item_code="TEST001", title="Test Item", current_location=self.location)
+        self.location = Location.objects.create(
+            name="Test Location", location_type="STORAGE"
+        )
+        self.item = CollectionItem.objects.create(
+            item_code="TEST001", title="Test Item", current_location=self.location
+        )
 
     def test_command_all_items(self):
         """Test command rebuilds all items."""

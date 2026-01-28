@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("inventory", "0002_initial"),
         ("requests", "0002_initial"),
@@ -17,7 +16,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="ItemHistory",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 (
                     "item_type",
                     models.CharField(
@@ -35,7 +42,10 @@ class Migration(migrations.Migration):
                 (
                     "acted_by",
                     models.ForeignKey(
-                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
@@ -48,11 +58,20 @@ class Migration(migrations.Migration):
                         to="inventory.location",
                     ),
                 ),
-                ("item", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="inventory.collectionitem")),
+                (
+                    "item",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="inventory.collectionitem",
+                    ),
+                ),
                 (
                     "movement_request",
                     models.ForeignKey(
-                        blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to="requests.itemmovementrequest"
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="requests.itemmovementrequest",
                     ),
                 ),
                 (

@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
@@ -31,7 +30,9 @@ class Migration(migrations.Migration):
             model_name="itemhistory",
             name="item",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, related_name="history", to="inventory.collectionitem"
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="history",
+                to="inventory.collectionitem",
             ),
         ),
         migrations.AddField(
@@ -71,34 +72,48 @@ class Migration(migrations.Migration):
             model_name="collectionitem",
             name="current_location",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, related_name="current_items", to="inventory.location"
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="current_items",
+                to="inventory.location",
             ),
         ),
         migrations.AddField(
             model_name="box",
             name="location",
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.PROTECT, related_name="boxes", to="inventory.location"
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="boxes",
+                to="inventory.location",
             ),
         ),
         migrations.AddIndex(
             model_name="itemhistory",
-            index=models.Index(fields=["item", "created_at"], name="item_histor_item_id_a1a0cf_idx"),
+            index=models.Index(
+                fields=["item", "created_at"], name="item_histor_item_id_a1a0cf_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="itemhistory",
-            index=models.Index(fields=["event_type"], name="item_histor_event_t_c3c664_idx"),
+            index=models.Index(
+                fields=["event_type"], name="item_histor_event_t_c3c664_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="collectionitem",
-            index=models.Index(fields=["item_code"], name="collection__item_co_0ec579_idx"),
+            index=models.Index(
+                fields=["item_code"], name="collection__item_co_0ec579_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="collectionitem",
-            index=models.Index(fields=["is_on_floor"], name="collection__is_on_f_16940e_idx"),
+            index=models.Index(
+                fields=["is_on_floor"], name="collection__is_on_f_16940e_idx"
+            ),
         ),
         migrations.AddIndex(
             model_name="collectionitem",
-            index=models.Index(fields=["is_public_visible"], name="collection__is_publ_95b87b_idx"),
+            index=models.Index(
+                fields=["is_public_visible"], name="collection__is_publ_95b87b_idx"
+            ),
         ),
     ]

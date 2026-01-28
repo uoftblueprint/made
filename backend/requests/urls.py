@@ -41,7 +41,9 @@ from rest_framework.routers import DefaultRouter
 from .views import ItemMovementRequestViewSet
 
 router = DefaultRouter()
-router.register(r"movement-requests", ItemMovementRequestViewSet, basename="movement-request")
+router.register(
+    r"movement-requests", ItemMovementRequestViewSet, basename="movement-request"
+)
 
 urlpatterns = [
     path("", include(router.urls)),
