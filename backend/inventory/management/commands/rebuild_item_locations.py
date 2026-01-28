@@ -37,6 +37,8 @@ class Command(BaseCommand):
                     item.update_location_from_history()
                     updated_count += 1
                 except Exception as e:
-                    self.stdout.write(self.style.ERROR(f"Error updating item {item.id}: {e}"))
+                    self.stdout.write(
+                        self.style.ERROR(f"Error updating item {item.id}: {e}")
+                    )
 
             self.stdout.write(self.style.SUCCESS(f"Updated {updated_count} items"))

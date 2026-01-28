@@ -7,7 +7,14 @@ from .models import User, VolunteerApplication
 class UserAdmin(BaseUserAdmin):
     """Admin interface for User model."""
 
-    list_display = ["email", "name", "role", "is_active", "access_expires_at", "created_at"]
+    list_display = [
+        "email",
+        "name",
+        "role",
+        "is_active",
+        "access_expires_at",
+        "created_at",
+    ]
     list_filter = ["role", "is_active", "is_staff", "created_at"]
     search_fields = ["email", "name"]
     ordering = ["-created_at"]
@@ -15,7 +22,10 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {"fields": ("email", "password")}),
         ("Personal Info", {"fields": ("name", "role")}),
-        ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "access_expires_at")}),
+        (
+            "Permissions",
+            {"fields": ("is_active", "is_staff", "is_superuser", "access_expires_at")},
+        ),
         ("Important dates", {"fields": ("last_login", "created_at", "updated_at")}),
     )
 
@@ -24,7 +34,15 @@ class UserAdmin(BaseUserAdmin):
             None,
             {
                 "classes": ("wide",),
-                "fields": ("email", "name", "role", "password1", "password2", "is_active", "access_expires_at"),
+                "fields": (
+                    "email",
+                    "name",
+                    "role",
+                    "password1",
+                    "password2",
+                    "is_active",
+                    "access_expires_at",
+                ),
             },
         ),
     )

@@ -16,15 +16,25 @@ class ItemMovementRequest(models.Model):
         ("CANCELLED", "Cancelled"),
     ]
 
-    item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE, related_name="movement_requests")
+    item = models.ForeignKey(
+        CollectionItem, on_delete=models.CASCADE, related_name="movement_requests"
+    )
     requested_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="movement_requests_created"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="movement_requests_created",
     )
 
-    from_location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="movement_requests_from")
-    to_location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="movement_requests_to")
+    from_location = models.ForeignKey(
+        Location, on_delete=models.PROTECT, related_name="movement_requests_from"
+    )
+    to_location = models.ForeignKey(
+        Location, on_delete=models.PROTECT, related_name="movement_requests_to"
+    )
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="WAITING_APPROVAL")
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default="WAITING_APPROVAL"
+    )
 
     admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,
