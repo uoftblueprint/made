@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import User, VolunteerApplication
 
-
 class VolunteerApplicationSerializer(serializers.ModelSerializer):
     """
     Serializer for the VolunteerApplication model.
