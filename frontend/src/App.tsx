@@ -8,6 +8,7 @@ import HomePage from './pages/public/HomePage';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import CataloguePage from './pages/public/CataloguePage';
 
 
 const queryClient = new QueryClient();
@@ -20,6 +21,7 @@ const App: React.FC = () => {
           <Routes>
             {/* --- Public Routes --- */}
             <Route path="/" element={<HomePage />} />
+            <Route path="/catalogue" element={<CataloguePage/>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/logout" element={<LogoutPage />} />
 
