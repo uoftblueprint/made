@@ -45,9 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    access_expires_at = models.DateTimeField(
-        null=True, blank=True, help_text="Null = no expiry (for admins etc.)"
-    )
+    access_expires_at = models.DateTimeField(null=True, blank=True, help_text="Null = no expiry (for admins etc.)")
     is_active = models.BooleanField(default=True)
 
     # Required for Django admin
@@ -91,9 +89,7 @@ class VolunteerApplication(models.Model):
 
     name = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
-    motivation_text = models.TextField(
-        blank=True, help_text="Why they want to help, etc."
-    )
+    motivation_text = models.TextField(blank=True, help_text="Why they want to help, etc.")
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
 

@@ -8,11 +8,7 @@ class IsAdmin(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Logged in and ADMIN
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role == "ADMIN"
-        )
+        return bool(request.user and request.user.is_authenticated and request.user.role == "ADMIN")
 
 
 class IsVolunteer(permissions.BasePermission):
@@ -22,11 +18,7 @@ class IsVolunteer(permissions.BasePermission):
 
     def has_permission(self, request, view):
         # Logged in and VOLUNTEER or ADMIN
-        return bool(
-            request.user
-            and request.user.is_authenticated
-            and request.user.role in ["VOLUNTEER", "ADMIN"]
-        )
+        return bool(request.user and request.user.is_authenticated and request.user.role in ["VOLUNTEER", "ADMIN"])
 
 
 class IsActiveAndNotExpired(permissions.BasePermission):
