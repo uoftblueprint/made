@@ -22,6 +22,8 @@ const App: React.FC = () => {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/logout" element={<LogoutPage />} />
+            <Route path="/volunteer-sign-up" element={<VolunteerApplication />}/>            <Route path="/login" element={<LoginPage />} />
+            <Route path="/logout" element={<LogoutPage />} />
 
             {/* --- Admin Routes --- */}
             <Route

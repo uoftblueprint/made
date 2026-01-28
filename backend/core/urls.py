@@ -19,11 +19,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    # path("admin/", admin.site.urls),
-    # path("api/requests/", include("requests.urls")),
+    path("admin/", admin.site.urls),
     # API Routes
+    path('api/', include('inventory.urls')),
     path("api/", include("users.urls")),
-    # path('api/inventory/', include('inventory.urls')),
     # path('api/', include('requests.urls')),
 ]
 
