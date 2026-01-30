@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/", include("users.urls")),
     # path('api/inventory/', include('inventory.urls')),
     # path('api/', include('requests.urls')),
+    path("api/", include("inventory.urls")),
 ]
 
 # Example API Structure:
