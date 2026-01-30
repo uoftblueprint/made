@@ -1,26 +1,46 @@
 from rest_framework import serializers
+from .models import CollectionItem, Location
 
-# from .models import InventoryItem
 
-# Create your serializers here.
+class LocationSerializer(serializers.ModelSerializer):
+    """
+    Nested serializer for Location model.
+    Used to show location details in public API responses.
+    """
 
-# Example: InventoryItem Serializer
-# Uncomment and modify as needed
-#
-# class InventoryItemSerializer(serializers.ModelSerializer):
-#     """
-#     Serializer for the InventoryItem model.
-#     Handles conversion between model instances and JSON.
-#     """
-#     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
-#
-#     class Meta:
-#         model = InventoryItem
-#         fields = '__all__'  # Or specify: ['id', 'name', 'quantity', ...]
-#         read_only_fields = ['id', 'created_at', 'updated_at', 'created_by']
-#
-#     def validate_quantity(self, value):
-#         """Custom validation for quantity field."""
-#         if value < 0:
-#             raise serializers.ValidationError("Quantity cannot be negative.")
-#         return value
+    location_type_display = serializers.CharField(source="get_location_type_display", read_only=True)
+
+    class Meta:
+        model = Location
+        fields = ["id", "name", "location_type", "location_type_display", "description"]
+        read_only_fields = ["id", "name", "location_type", "location_type_display", "description"]
+
+
+class PublicCollectionItemSerializer(serializers.ModelSerializer):
+    """
+    Serializer for public-facing collection items.
+    Exposes read-only collection data without internal fields.
+    """
+
+    current_location = LocationSerializer(read_only=True)
+
+    class Meta:
+        model = CollectionItem
+        fields = [
+            "id",
+            "item_code",
+            "title",
+            "platform",
+            "description",
+            "is_on_floor",
+            "current_location",
+        ]
+        read_only_fields = [
+            "id",
+            "item_code",
+            "title",
+            "platform",
+            "description",
+            "is_on_floor",
+            "current_location",
+        ]

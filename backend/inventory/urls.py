@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from .views import PublicCollectionItemViewSet
 
 # from .views import InventoryItemViewSet
 
@@ -24,4 +25,9 @@ from rest_framework.routers import DefaultRouter
 # DELETE /api/inventory/items/{id}/      - Delete an item
 # GET    /api/inventory/items/low_stock/ - Custom action (if defined)
 
-urlpatterns = []
+router = DefaultRouter()
+router.register(r"items", PublicCollectionItemViewSet, basename="public-item")
+
+urlpatterns = [
+    path("public/", include(router.urls)),
+]
