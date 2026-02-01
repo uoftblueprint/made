@@ -7,14 +7,9 @@ from django.utils import timezone
 from django.db import transaction
 import secrets
 
-from .models import VolunteerApplication
-from .serializers import (
-    VolunteerApplicationSerializer,
-    UserRegistrationSerializer,
-    UserSerializer,
-)
-
-User = get_user_model()
+from .permissions import IsAdmin
+from .models import VolunteerApplication, User
+from .serializers import VolunteerApplicationSerializer, UserRegistrationSerializer, UserSerializer, UserUpdateSerializer
 
 
 class VolunteerApplicationAPIView(viewsets.ModelViewSet):
@@ -123,3 +118,40 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserListView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAdmin]
+
+    def get_queryset(self):
+        queryset = User.objects.all()
+
+        role = self.request.query_params.get("role")
+        if role:
+            valid_roles = [choice[0] for choice in User.ROLE_CHOICES]
+            if role not in valid_roles:
+                return User.objects.none()
+            queryset = queryset.filter(role=role)
+
+        is_active = self.request.query_params.get("is_active")
+        if is_active is not None:
+            is_active_bool = is_active.lower() in ["true", "1", "yes"]
+            queryset = queryset.filter(is_active=is_active_bool)
+
+        return queryset
+
+
+class UserUpdateView(generics.UpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserUpdateSerializer
+    permission_classes = [IsAdmin]
+
+    def update(self, request, *args, **kwargs):
+        """Prevent users from modifying their own account."""
+        instance = self.get_object()
+
+        if instance.id == request.user.id:
+            return Response({"detail": "You cannot modify your own account."}, status=status.HTTP_403_FORBIDDEN)
+
+        return super().update(request, *args, **kwargs)
