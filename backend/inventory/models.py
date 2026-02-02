@@ -141,7 +141,7 @@ class ItemHistory(models.Model):
 
     # Optional link back to movement request for traceability
     movement_request = models.ForeignKey(
-        "requests.ItemMovementRequest",
+        "movements.ItemMovementRequest",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
