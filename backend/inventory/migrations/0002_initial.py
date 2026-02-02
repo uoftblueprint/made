@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("inventory", "0001_initial"),
-        ("requests", "0001_initial"),
+        ("movements", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 null=True,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="history_events",
-                to="requests.itemmovementrequest",
+                to="movements.itemmovementrequest",
             ),
         ),
         migrations.AddField(
