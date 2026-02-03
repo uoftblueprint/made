@@ -65,7 +65,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/admin'));
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/admin', { replace: true }));
   });
 
   it('logs in VOLUNTEER and redirects to /', async () => {
@@ -78,7 +78,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'password123' } });
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/', { replace: true }));
   });
 
   it('shows error on invalid credentials', async () => {
@@ -90,7 +90,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'wrong' } });
     fireEvent.click(screen.getByRole('button', { name: /login/i }));
 
-    await waitFor(() => expect(screen.getByText(/invalid credentials/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument());
     expect(navigateMock).not.toHaveBeenCalled();
   });
 
@@ -100,7 +100,7 @@ describe('LoginPage', () => {
 
     renderWithProviders(<LoginPage />);
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/admin'));
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/admin', { replace: true }));
   });
 
   it('redirects already authenticated VOLUNTEER away from login page', async () => {
@@ -109,6 +109,6 @@ describe('LoginPage', () => {
 
     renderWithProviders(<LoginPage />);
 
-    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(navigateMock).toHaveBeenCalledWith('/', { replace: true }));
   });
 });
