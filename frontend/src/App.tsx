@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CataloguePage from './pages/public/CataloguePage';
+import VolunteerApplication from './pages/public/VolunteerApplication';
 
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App: React.FC = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/catalogue" element={<CataloguePage/>} />
             <Route path="/logout" element={<LogoutPage />} />
+            <Route path="/volunteer_application" element={<VolunteerApplication />} />
 
             {/* --- Admin Routes --- */}
             <Route
