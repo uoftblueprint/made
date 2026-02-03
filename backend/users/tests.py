@@ -28,7 +28,7 @@ def test_approve_volunteer_application():
         status="PENDING",
     )
 
-    url = f"/api/volunteer-applications/{application.id}/"
+    url = f"/api/users/volunteer-applications/{application.id}/"
 
     response = client.patch(url, {"status": "APPROVED"}, content_type="application/json")
     assert response.status_code in (200, 202)
@@ -52,7 +52,7 @@ def test_reject_application():
         status="PENDING",
     )
 
-    url = f"/api/volunteer-applications/{application.id}/"
+    url = f"/api/users/volunteer-applications/{application.id}/"
 
     response = client.patch(url, {"status": "REJECTED"}, content_type="application/json")
     assert response.status_code in (200, 202)
@@ -121,7 +121,7 @@ def test_user_list_requires_admin(client):
     access_vol = res_vol.data["access"]
 
     # Volunteer should be forbidden
-    res_forbidden = client.get("/api/users/", HTTP_AUTHORIZATION=f"Bearer {access_vol}")
+    res_forbidden = client.get("/api/users/list/", HTTP_AUTHORIZATION=f"Bearer {access_vol}")
     assert res_forbidden.status_code == status.HTTP_403_FORBIDDEN
 
     # Login as admin
@@ -130,7 +130,7 @@ def test_user_list_requires_admin(client):
     )
     access_admin = res_admin.data["access"]
 
-    res_ok = client.get("/api/users/", HTTP_AUTHORIZATION=f"Bearer {access_admin}")
+    res_ok = client.get("/api/users/list/", HTTP_AUTHORIZATION=f"Bearer {access_admin}")
     assert res_ok.status_code == status.HTTP_200_OK
 
     data = res_ok.json()
@@ -151,32 +151,32 @@ def test_user_list_filters(client):
     token = res_admin.data["access"]
 
     # Role filter
-    res_role = client.get("/api/users/?role=VOLUNTEER", HTTP_AUTHORIZATION=f"Bearer {token}")
+    res_role = client.get("/api/users/list/?role=VOLUNTEER", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res_role.status_code == status.HTTP_200_OK
     data = res_role.json()
     results = data["results"] if isinstance(data, dict) and "results" in data else data
     assert all(u["role"] == "VOLUNTEER" for u in results)
 
-    res_role = client.get("/api/users/?role=ADMIN", HTTP_AUTHORIZATION=f"Bearer {token}")
+    res_role = client.get("/api/users/list/?role=ADMIN", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res_role.status_code == status.HTTP_200_OK
     data = res_role.json()
     results = data["results"] if isinstance(data, dict) and "results" in data else data
     assert all(u["role"] == "ADMIN" for u in results)
 
     # Active filter
-    res_active = client.get("/api/users/?is_active=true", HTTP_AUTHORIZATION=f"Bearer {token}")
+    res_active = client.get("/api/users/list/?is_active=true", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res_active.status_code == status.HTTP_200_OK
     data = res_active.json()
     results = data["results"] if isinstance(data, dict) and "results" in data else data
     assert all(u["is_active"] is True for u in results)
 
-    res_inactive = client.get("/api/users/?is_active=false", HTTP_AUTHORIZATION=f"Bearer {token}")
+    res_inactive = client.get("/api/users/list/?is_active=false", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res_inactive.status_code == status.HTTP_200_OK
     data = res_inactive.json()
     results = data["results"] if isinstance(data, dict) and "results" in data else data
     assert all(u["is_active"] is False for u in results)
 
-    res_invalid = client.get("/api/users/?role=INVALID_ROLE", HTTP_AUTHORIZATION=f"Bearer {token}")
+    res_invalid = client.get("/api/users/list/?role=INVALID_ROLE", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res_invalid.status_code == status.HTTP_200_OK
     data = res_invalid.json()
     results = data["results"] if isinstance(data, dict) and "results" in data else data
