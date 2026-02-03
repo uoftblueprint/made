@@ -109,7 +109,7 @@ def get_items_from_response(response):
 def test_list_returns_public_items(test_data):
     """Test that list endpoint returns only public items."""
     client = test_data["client"]
-    response = client.get("/api/public/items/")
+    response = client.get("/api/inventory/public/items/")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -125,7 +125,7 @@ def test_list_returns_public_items(test_data):
 def test_list_excludes_hidden_items(test_data):
     """Test that items with is_public_visible=False never appear."""
     client = test_data["client"]
-    response = client.get("/api/public/items/")
+    response = client.get("/api/inventory/public/items/")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -141,7 +141,7 @@ def test_list_excludes_hidden_items(test_data):
 def test_list_filter_by_platform(test_data):
     """Test filtering by platform parameter."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?platform=SNES")
+    response = client.get("/api/inventory/public/items/?platform=SNES")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -155,7 +155,7 @@ def test_list_filter_by_platform(test_data):
 def test_list_filter_by_is_on_floor(test_data):
     """Test filtering by is_on_floor parameter."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=true")
+    response = client.get("/api/inventory/public/items/?is_on_floor=true")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -169,7 +169,7 @@ def test_list_filter_by_is_on_floor(test_data):
 def test_list_filter_by_is_on_floor_false(test_data):
     """Test filtering by is_on_floor=false."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=false")
+    response = client.get("/api/inventory/public/items/?is_on_floor=false")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -183,7 +183,7 @@ def test_list_filter_by_is_on_floor_false(test_data):
 def test_list_filter_by_is_on_floor_using_one(test_data):
     """Test filtering by is_on_floor=1 (alternative true representation)."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=1")
+    response = client.get("/api/inventory/public/items/?is_on_floor=1")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -198,7 +198,7 @@ def test_list_filter_by_is_on_floor_using_one(test_data):
 def test_list_filter_by_is_on_floor_using_yes(test_data):
     """Test filtering by is_on_floor=yes (alternative true representation)."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=yes")
+    response = client.get("/api/inventory/public/items/?is_on_floor=yes")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -213,7 +213,7 @@ def test_list_filter_by_is_on_floor_using_yes(test_data):
 def test_list_filter_by_is_on_floor_using_zero(test_data):
     """Test filtering by is_on_floor=0 (alternative false representation)."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=0")
+    response = client.get("/api/inventory/public/items/?is_on_floor=0")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -228,7 +228,7 @@ def test_list_filter_by_is_on_floor_using_zero(test_data):
 def test_list_filter_by_is_on_floor_using_no(test_data):
     """Test filtering by is_on_floor=no (alternative false representation)."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=no")
+    response = client.get("/api/inventory/public/items/?is_on_floor=no")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -243,7 +243,7 @@ def test_list_filter_by_is_on_floor_using_no(test_data):
 def test_list_filter_by_is_on_floor_invalid_value_ignored(test_data):
     """Test that invalid is_on_floor values are ignored (no filtering applied)."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=maybe")
+    response = client.get("/api/inventory/public/items/?is_on_floor=maybe")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -260,7 +260,7 @@ def test_list_filter_by_is_on_floor_invalid_value_ignored(test_data):
 def test_list_filter_by_is_on_floor_invalid_value_returns_all(test_data):
     """Test that invalid is_on_floor values return all items (no filtering)."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?is_on_floor=invalid")
+    response = client.get("/api/inventory/public/items/?is_on_floor=invalid")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -277,7 +277,7 @@ def test_list_filter_by_is_on_floor_invalid_value_returns_all(test_data):
 def test_list_search_by_title(test_data):
     """Test text search by title."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?search=mario")
+    response = client.get("/api/inventory/public/items/?search=mario")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -290,7 +290,7 @@ def test_list_search_by_title(test_data):
 def test_list_search_by_description(test_data):
     """Test text search by description."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?search=adventure")
+    response = client.get("/api/inventory/public/items/?search=adventure")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -303,7 +303,7 @@ def test_list_search_by_description(test_data):
 def test_list_search_by_item_code(test_data):
     """Test text search by item_code."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?search=PS2001")
+    response = client.get("/api/inventory/public/items/?search=PS2001")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -316,7 +316,7 @@ def test_list_search_by_item_code(test_data):
 def test_list_combines_filters(test_data):
     """Test that multiple filters can be combined."""
     client = test_data["client"]
-    response = client.get("/api/public/items/?platform=SNES&is_on_floor=true")
+    response = client.get("/api/inventory/public/items/?platform=SNES&is_on_floor=true")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -331,7 +331,7 @@ def test_list_no_auth_required(test_data):
     """Test that public endpoint doesn't require authentication."""
     client = test_data["client"]
     # Don't authenticate the client
-    response = client.get("/api/public/items/")
+    response = client.get("/api/inventory/public/items/")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -342,7 +342,7 @@ def test_list_no_auth_required(test_data):
 def test_list_includes_location_data(test_data):
     """Test that location data is included in response."""
     client = test_data["client"]
-    response = client.get("/api/public/items/")
+    response = client.get("/api/inventory/public/items/")
 
     assert response.status_code == status.HTTP_200_OK
     items = get_items_from_response(response)
@@ -377,7 +377,7 @@ def test_list_pagination(test_data):
         )
 
     # Test Page 1
-    response = client.get("/api/public/items/")
+    response = client.get("/api/inventory/public/items/")
     assert response.status_code == status.HTTP_200_OK
     data = json.loads(response.content)
 
@@ -393,7 +393,7 @@ def test_list_pagination(test_data):
     page1_ids = [item["id"] for item in data["results"]]
 
     # Test Page 2
-    response2 = client.get("/api/public/items/?page=2")
+    response2 = client.get("/api/inventory/public/items/?page=2")
     assert response2.status_code == status.HTTP_200_OK
     data2 = json.loads(response2.content)
 
@@ -416,7 +416,7 @@ def test_list_pagination(test_data):
 @pytest.mark.django_db
 def test_retrieve_public_item(public_item_snes, client):
     """Test retrieving a single public item."""
-    response = client.get(f"/api/public/items/{public_item_snes.id}/")
+    response = client.get(f"/api/inventory/public/items/{public_item_snes.id}/")
 
     assert response.status_code == status.HTTP_200_OK
     data = json.loads(response.content)
@@ -430,7 +430,7 @@ def test_retrieve_public_item(public_item_snes, client):
 @pytest.mark.django_db
 def test_retrieve_hidden_item_returns_404(hidden_item, client):
     """Test that hidden items return 404 even if ID is known."""
-    response = client.get(f"/api/public/items/{hidden_item.id}/")
+    response = client.get(f"/api/inventory/public/items/{hidden_item.id}/")
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -438,7 +438,7 @@ def test_retrieve_hidden_item_returns_404(hidden_item, client):
 @pytest.mark.django_db
 def test_retrieve_includes_location_details(public_item_snes, floor_location, client):
     """Test that location details are included in detail view."""
-    response = client.get(f"/api/public/items/{public_item_snes.id}/")
+    response = client.get(f"/api/inventory/public/items/{public_item_snes.id}/")
 
     assert response.status_code == status.HTTP_200_OK
     data = json.loads(response.content)
@@ -454,7 +454,7 @@ def test_retrieve_includes_location_details(public_item_snes, floor_location, cl
 def test_retrieve_no_auth_required(public_item_snes, client):
     """Test that detail endpoint doesn't require authentication."""
     # Don't authenticate the client
-    response = client.get(f"/api/public/items/{public_item_snes.id}/")
+    response = client.get(f"/api/inventory/public/items/{public_item_snes.id}/")
 
     assert response.status_code == status.HTTP_200_OK
     data = json.loads(response.content)
@@ -464,7 +464,7 @@ def test_retrieve_no_auth_required(public_item_snes, client):
 @pytest.mark.django_db
 def test_retrieve_nonexistent_item_returns_404(client):
     """Test that retrieving non-existent item returns 404."""
-    response = client.get("/api/public/items/99999/")
+    response = client.get("/api/inventory/public/items/99999/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
