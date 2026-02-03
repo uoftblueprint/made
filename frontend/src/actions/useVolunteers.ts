@@ -32,13 +32,16 @@ export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onError
 export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError ) => void) => {
   return useMutation<void, AxiosError, VolunteerApplicationInput>({
     mutationFn: async (applicationData) => {
-      await apiClient.post('/api/volunteer-applications/', applicationData)
+      console.log("Sending data:", applicationData);
+      await apiClient.post('/volunteer-applications/', applicationData);
     },
     onSuccess: () => {
+      console.log("Volunteer application submitted successfully!");
       onSuccessCallback?.();
     },
     onError: (error) => {
-      onErrorCallback?.(error)
-    }
+      console.error("Error submitting volunteer application:", error);
+      onErrorCallback?.(error);
+    },
   });
 };
