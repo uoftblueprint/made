@@ -22,17 +22,17 @@ router.register(
 )
 
 urlpatterns = [
-    # Router URLs
-    path("", include(router.urls)),
-    # Auth Routes
-    path("auth/register/", RegisterView.as_view(), name="auth_register"),
-    path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
-    # User Routes
-    path("users/me/", UserProfileView.as_view(), name="user_profile"),
-    path("users/", UserListView.as_view(), name="user_list"),
-    path("users/<int:pk>/", UserUpdateView.as_view(), name="user_update"),
+    # # Router URLs
+    # path("", include(router.urls)),
+    # # Auth Routes
+    # path("auth/register/", RegisterView.as_view(), name="auth_register"),
+    # path("auth/login/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    # path("auth/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # path("auth/logout/", LogoutView.as_view(), name="auth_logout"),
+    # # User Routes
+    # path("users/me/", UserProfileView.as_view(), name="user_profile"),
+    # path("users/", UserListView.as_view(), name="user_list"),
+    # path("users/<int:pk>/", UserUpdateView.as_view(), name="user_update"),
 ]
 
 # This will create the following endpoints:
