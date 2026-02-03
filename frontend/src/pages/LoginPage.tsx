@@ -39,67 +39,64 @@ const LoginPage = () => {
   }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setError('');
+    e.preventDefault();
+    setError('');
 
-  try {
-    await login(email, password); 
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error("Login failed:", err.message);
-      
-      // Use the interface instead of 'any'
-      const apiError = err as ApiError;
-      const errorMessage = apiError.response?.data?.detail || 'Invalid email or password.';
-      
-      setError(errorMessage);
+    try {
+      await login(email, password);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const apiError = err as ApiError;
+        const errorMessage = apiError.response?.data?.detail || 'Invalid email or password.';
+
+        setError(errorMessage);
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="login-container">
-        <h1>Login</h1>
+      <h1>Login</h1>
 
-        {error && (
-          <div className="error-message" role="alert" aria-live="polite">
-            {error}
-          </div>
-        )}
+      {error && (
+        <div className="error-message" role="alert" aria-live="polite">
+          {error}
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoggingIn}
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoggingIn}
-            />
-          </div>
-
-          <button
-            type="submit"
+      <form onSubmit={handleSubmit} className="login-form">
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             disabled={isLoggingIn}
-            className="login-button"
-          >
-            {isLoggingIn ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            disabled={isLoggingIn}
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoggingIn}
+          className="login-button"
+        >
+          {isLoggingIn ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
     </div>
   );
 };
