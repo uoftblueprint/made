@@ -43,7 +43,7 @@ const App: React.FC = () => {
             {/* --- Catch-all 404 Route --- */}
             {/* <Route path="*" element={<NotFoundPage />} /> */}
           </Routes>
-          <Footer/>
+          <Footer />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

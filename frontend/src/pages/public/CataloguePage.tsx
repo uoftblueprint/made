@@ -13,7 +13,7 @@ const CataloguePage: React.FC = () => {
   });
 
   const { data: items = [], isLoading, isError } = useItems(filters);
-  console.log(items);
+
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Welcome to the Collection Catalog</h1>

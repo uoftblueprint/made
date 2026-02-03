@@ -17,7 +17,7 @@ export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onError
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, action }: { id: number; action: 'APPROVED' | 'REJECTED' }) => {
-      await apiClient.patch(`/api/volunteer-applications/${id}/`, { status: action });
+      await apiClient.patch(`/users/volunteer-applications/${id}/`, { status: action });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
@@ -29,18 +29,15 @@ export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onError
   });
 };
 
-export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError ) => void) => {
+export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError) => void) => {
   return useMutation<void, AxiosError, VolunteerApplicationInput>({
     mutationFn: async (applicationData) => {
-      console.log("Sending data:", applicationData);
-      await apiClient.post('/volunteer-applications/', applicationData);
+      await apiClient.post('/users/volunteer-applications/', applicationData);
     },
     onSuccess: () => {
-      console.log("Volunteer application submitted successfully!");
       onSuccessCallback?.();
     },
     onError: (error) => {
-      console.error("Error submitting volunteer application:", error);
       onErrorCallback?.(error);
     },
   });
