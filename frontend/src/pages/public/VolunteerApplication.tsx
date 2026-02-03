@@ -18,14 +18,24 @@ const VolunteerApplication = () => {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const isValid = validEmail(email) && validName(firstName) && validName(lastName) && validPhoneNumber(phoneNumber) && motivationText.length > 0
-        if (!isValid) return
+        if (!isValid) {
+            setSubmitError("Please fix the errors in the form above before submission.");
+            return;
+        }
         const name = firstName + " " + lastName;
         const applicationData = { name, email, "motivation_text": motivationText }
         setIsSubmitting(true)
         createVolunteerMutation.mutate(applicationData, {
             onSuccess: () => {
-                setSubmitError('')
-                setIsSubmitting(false)
+                setSubmitError('');
+                setIsSubmitting(false);
+                // Clear the form after successful submission
+                setFirstName('');
+                setLastName('');
+                setEmail('');
+                setPhoneNumber('');
+                setMotivationText('');
+                alert("Application submitted successfully!"); // TODO: change later to redirect
             },
             onError: (error: AxiosError) =>{
                 setIsSubmitting(false)
