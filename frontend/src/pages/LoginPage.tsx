@@ -10,28 +10,37 @@ const LoginPage = () => {
   const { login, isLoggingIn, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      navigate(user.role === 'ADMIN' ? '/admin' : '/');
-    }
-  }, [isAuthenticated, user, navigate]);
+  // useEffect(() => {
+  //   if (isAuthenticated && user) {
+  //     navigate(user.role === 'ADMIN' ? '/admin' : '/');
+  //   }
+  // }, [isAuthenticated, user, navigate]);
+
+  // useEffect(() => {
+  //   if (hasSubmitted && isAuthenticated && user) {
+  //     navigate(user.role === 'ADMIN' ? '/admin' : '/');
+  //   }
+  // }, [hasSubmitted, isAuthenticated, user, navigate]);
 
   useEffect(() => {
-    if (hasSubmitted && isAuthenticated && user) {
-      navigate(user.role === 'ADMIN' ? '/admin' : '/');
+    if (isAuthenticated && user) {
+      const destination = user.role === 'ADMIN' ? '/admin' : '/';
+      // replace: true prevents the user from going "back" into the login redirect loop
+      navigate(destination, { replace: true });
     }
-  }, [hasSubmitted, isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setHasSubmitted(true);
 
     try {
-      await login(email, password);
-    } catch (err) {
-      const errorMessage = 
-        err instanceof Error ? err.message : 'Login failed. Please check your credentials.';
+      await login(email, password); 
+      
+      setHasSubmitted(true);
+    } catch (err: any) {
+      console.error("Login failed:", err);
+      const errorMessage = err.response?.data?.detail || 'Invalid email or password.';
       setError(errorMessage);
       setHasSubmitted(false);
     }
