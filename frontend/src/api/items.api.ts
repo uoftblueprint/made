@@ -12,7 +12,7 @@ export const itemsApi = {
     if (params?.search) queryParams.search = params.search;
     if (params?.ordering) queryParams.ordering = params.ordering;
 
-    const response = await apiClient.get<PublicCollectionItem[]>('/public/items/', { params: queryParams });
-    return response.data;
+    const response = await apiClient.get('/public/items/', { params: queryParams });
+    return response.data.results; // Extract the `results` field
   }
 };

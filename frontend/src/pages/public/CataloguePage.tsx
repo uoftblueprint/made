@@ -13,6 +13,7 @@ const CataloguePage: React.FC = () => {
   });
 
   const { data: items = [], isLoading, isError } = useItems(filters);
+  console.log(items);
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Welcome to the Collection Catalog</h1>
@@ -24,7 +25,7 @@ const CataloguePage: React.FC = () => {
       <div className="catalog-results-section">
         <h2>Collection Items</h2>
         {isLoading && <p>Loading items...</p>}
-        {isError && <p>Failed to load items.</p>}Expand commentComment on line R27Resolved
+        {isError && <p>Failed to load items.</p>}
         {!isLoading && items?.length === 0 && <p>No items found.</p>}
         {items && items.length > 0 && <ItemList items={items} />}
       </div>
