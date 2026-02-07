@@ -2,6 +2,8 @@ import FeatureCard from '../../components/common/FeatureCard';
 import {ActivityRow} from '../../components/common/ActivityRow'
 import StatisticBox from '../../components/common/StatisticBox';
 import Button from '../../components/common/Button';
+import { useAuth } from '../../contexts';
+import './AdminDashboard.css';
 
 const AdminDashboard: React.FC = () => {
   const handleExportToCSV = () => {
@@ -14,6 +16,8 @@ const AdminDashboard: React.FC = () => {
   const handleCreateContainer = () => {
 
   }
+
+  const { user } = useAuth();
 
   return (
     <div>

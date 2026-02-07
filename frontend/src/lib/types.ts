@@ -37,6 +37,7 @@ export interface PublicCollectionItem {
   platform: string;
   description: string;
   is_on_floor: boolean;
+  location_name?: string;
 }
 
 // TODO: place holder

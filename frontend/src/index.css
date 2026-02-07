@@ -106,10 +106,8 @@
 /* ----- Reset / normalize ----- */
 *, *::before, *::after {
   box-sizing: border-box;
-}
-
-html {
-  font-size: 16px;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -123,5 +121,28 @@ body {
 button {
   cursor: pointer;
   transition: background-color 0.2s ease;
-  
+}
+
+button:hover {
+  background-color: #930701; /* hover accent */
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  font-family: var(--font-sans);
+  color: var(--color-primary);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #A50A02;
+  }
+  button {
+    /* optional light theme button override */
+    background-color: var(--color-accent);
+  }
 }
