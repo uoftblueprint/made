@@ -10,6 +10,7 @@ import HomePage from './pages/public/HomePage';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminCataloguePage from './pages/admin/AdminCataloguePage';
 import CataloguePage from './pages/public/CataloguePage';
 import VolunteerApplication from './pages/public/VolunteerApplication';
 
@@ -36,6 +37,14 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute requiredRole="ADMIN">
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/catalogue"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <AdminCataloguePage />
                 </ProtectedRoute>
               }
             />
