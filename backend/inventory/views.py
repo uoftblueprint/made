@@ -1,6 +1,39 @@
 from rest_framework import viewsets, permissions, filters
-from .models import CollectionItem
-from .serializers import PublicCollectionItemSerializer
+from users.permissions import IsVolunteer
+from .models import Box, CollectionItem
+from .serializers import (
+    BoxDetailSerializer,
+    BoxSerializer,
+    CollectionItemSerializer,
+    PublicCollectionItemSerializer,
+)
+
+
+class CollectionItemViewSet(viewsets.ModelViewSet):
+    """
+    Internal ViewSet for collection items.
+    Supports update of item box assignment via PATCH.
+    """
+
+    queryset = CollectionItem.objects.all().select_related("box", "current_location")
+    serializer_class = CollectionItemSerializer
+    permission_classes = [IsVolunteer]
+
+
+class BoxViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for boxes.
+    - GET /api/boxes/ - List all boxes
+    - GET /api/boxes/{id}/ - Retrieve box with items
+    """
+
+    queryset = Box.objects.all().prefetch_related("items")
+    permission_classes = [IsVolunteer]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return BoxDetailSerializer
+        return BoxSerializer
 
 
 class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):

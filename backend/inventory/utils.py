@@ -2,7 +2,7 @@
 Utility functions for inventory management.
 """
 
-from .models import ItemHistory, Location
+from .models import ItemHistory
 from .constants import LOCATION_CHANGING_EVENTS
 
 

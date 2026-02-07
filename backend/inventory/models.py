@@ -44,6 +44,7 @@ class Box(models.Model):
 
     box_code = models.CharField(max_length=100, unique=True, help_text="Scannable code")
     label = models.CharField(max_length=255, blank=True, help_text="Human-friendly label")
+    description = models.TextField(blank=True)
     location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="boxes")
 
     created_at = models.DateTimeField(auto_now_add=True)

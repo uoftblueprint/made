@@ -18,7 +18,7 @@ class BoxAdmin(admin.ModelAdmin):
 
     list_display = ["box_code", "label", "location", "created_at"]
     list_filter = ["location", "created_at"]
-    search_fields = ["box_code", "label"]
+    search_fields = ["box_code", "label", "description"]
     readonly_fields = ["created_at", "updated_at"]
 
 
