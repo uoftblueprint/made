@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-
-from .models import CollectionItem, Location
+from .models import Box, CollectionItem, Location
 
 
 class LocationSerializer(serializers.ModelSerializer):
@@ -16,6 +15,59 @@ class LocationSerializer(serializers.ModelSerializer):
         model = Location
         fields = ["id", "name", "location_type", "location_type_display", "description"]
         read_only_fields = ["id", "name", "location_type", "location_type_display", "description"]
+
+
+class BoxSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Box
+        fields = ["id", "box_code", "label", "description", "location"]
+        read_only_fields = ["id"]
+
+
+class CollectionItemSummarySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CollectionItem
+        fields = ["id", "item_code", "title", "platform"]
+        read_only_fields = ["id", "item_code", "title", "platform"]
+
+
+class BoxDetailSerializer(serializers.ModelSerializer):
+    items = CollectionItemSummarySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Box
+        fields = ["id", "box_code", "label", "description", "location", "items"]
+        read_only_fields = ["id", "box_code", "label", "description", "location", "items"]
+
+
+class CollectionItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CollectionItem
+        fields = [
+            "id",
+            "item_code",
+            "title",
+            "platform",
+            "description",
+            "box",
+            "current_location",
+            "is_public_visible",
+            "is_on_floor",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "item_code",
+            "title",
+            "platform",
+            "description",
+            "current_location",
+            "is_public_visible",
+            "is_on_floor",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class PublicCollectionItemSerializer(serializers.ModelSerializer):
@@ -74,6 +126,8 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
             "current_location",
             "is_public_visible",
             "is_on_floor",
+            "box",
+            "current_location"
         ]
         read_only_fields = ["id"]
         extra_kwargs = {

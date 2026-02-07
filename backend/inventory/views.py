@@ -2,8 +2,56 @@ from rest_framework import viewsets, permissions, filters, status
 from rest_framework.response import Response
 from users.permissions import IsAdmin, IsVolunteer
 
-from .models import CollectionItem
-from .serializers import PublicCollectionItemSerializer, AdminCollectionItemSerializer
+from users.permissions import IsVolunteer
+from .models import Box, CollectionItem
+from .serializers import (
+    BoxDetailSerializer,
+    BoxSerializer,
+    CollectionItemSerializer,
+    PublicCollectionItemSerializer, AdminCollectionItemSerializer,
+)
+
+
+class CollectionItemViewSet(viewsets.ModelViewSet):
+    """
+    Internal ViewSet for collection items.
+    Supports update of item box assignment via PATCH.
+    """
+
+    queryset = CollectionItem.objects.all().select_related("box", "current_location")
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return AdminCollectionItemSerializer
+        return CollectionItemSerializer
+    
+    def get_permissions(self):
+        # Match the Admin view: only Admins should be able to trigger 'destroy'
+        if self.action == "destroy":
+            return [IsAdmin()]
+        return [IsVolunteer()]
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_public_visible = False
+        instance.save(update_fields=["is_public_visible", "updated_at"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class BoxViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet for boxes.
+    - GET /api/boxes/ - List all boxes
+    - GET /api/boxes/{id}/ - Retrieve box with items
+    """
+
+    queryset = Box.objects.all().prefetch_related("items")
+    permission_classes = [IsVolunteer]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return BoxDetailSerializer
+        return BoxSerializer
 
 
 class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):

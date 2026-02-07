@@ -2,8 +2,9 @@ import json
 import pytest
 
 from django.test import TestCase, Client
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import status
-from inventory.models import CollectionItem, Location, ItemHistory
+from inventory.models import Box, CollectionItem, Location, ItemHistory
 from django.utils import timezone
 from datetime import timedelta
 from inventory.utils import get_current_location
@@ -978,3 +979,61 @@ class RebuildItemLocationsCommandTest(TestCase):
 
         output = out.getvalue()
         self.assertIn(f"Updated item {self.item.id}", output)
+
+
+class BoxEndpointsTest(TestCase):
+    """Test box list/detail endpoints and item box assignment."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="boxuser@example.com",
+            name="Box User",
+            password="testpass",
+            role="VOLUNTEER",
+        )
+        token = AccessToken.for_user(self.user)
+        self.client = Client(HTTP_AUTHORIZATION=f"Bearer {token}")
+        self.location = Location.objects.create(name="Storage Z", location_type="STORAGE")
+        self.box_a = Box.objects.create(box_code="BOX001", label="Box A", description="First box", location=self.location)
+        self.box_b = Box.objects.create(box_code="BOX002", label="Box B", description="", location=self.location)
+        self.item_a = CollectionItem.objects.create(
+            item_code="ITEM001",
+            title="Item One",
+            current_location=self.location,
+            box=self.box_a,
+        )
+        self.item_b = CollectionItem.objects.create(
+            item_code="ITEM002",
+            title="Item Two",
+            current_location=self.location,
+        )
+
+    def test_list_boxes(self):
+        response = self.client.get("/api/boxes/")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = json.loads(response.content)
+        results = data.get("results", data)
+        box_codes = [box["box_code"] for box in results]
+        assert "BOX001" in box_codes
+        assert "BOX002" in box_codes
+
+    def test_box_detail_includes_items(self):
+        response = self.client.get(f"/api/boxes/{self.box_a.id}/")
+
+        assert response.status_code == status.HTTP_200_OK
+        data = json.loads(response.content)
+        item_codes = [item["item_code"] for item in data["items"]]
+        assert "ITEM001" in item_codes
+        assert "ITEM002" not in item_codes
+
+    def test_patch_item_box_updates_box_id(self):
+        response = self.client.patch(
+            f"/api/inventory/items/{self.item_b.id}/",
+            data=json.dumps({"box": self.box_b.id}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        self.item_b.refresh_from_db()
+        assert self.item_b.box_id == self.box_b.id
