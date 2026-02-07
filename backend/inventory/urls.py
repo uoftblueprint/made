@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PublicCollectionItemViewSet, AdminCollectionItemViewSet
+from .views import CollectionItemViewSet, PublicCollectionItemViewSet, AdminCollectionItemViewSet
 
 # from .views import InventoryItemViewSet
 
@@ -29,9 +29,12 @@ from .views import PublicCollectionItemViewSet, AdminCollectionItemViewSet
 # DELETE /api/inventory/items/{id}/     - Soft delete (admin only)
 
 router = DefaultRouter()
-router.register(r"public/items", PublicCollectionItemViewSet, basename="public-item")
-router.register(r"items", AdminCollectionItemViewSet, basename="admin-item")
+router.register(r"items", CollectionItemViewSet, basename="item")
+
+public_router = DefaultRouter()
+public_router.register(r"items", PublicCollectionItemViewSet, basename="public-item")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("public/", include(public_router.urls)),
 ]
