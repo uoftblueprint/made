@@ -4,6 +4,7 @@ import pytest
 from django.test import TestCase, Client
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import status
+from rest_framework_simplejwt.tokens import AccessToken
 from inventory.models import Box, CollectionItem, Location, ItemHistory
 from django.utils import timezone
 from datetime import timedelta
@@ -979,7 +980,6 @@ class RebuildItemLocationsCommandTest(TestCase):
 
         output = out.getvalue()
         self.assertIn(f"Updated item {self.item.id}", output)
-
 
 class BoxEndpointsTest(TestCase):
     """Test box list/detail endpoints and item box assignment."""
