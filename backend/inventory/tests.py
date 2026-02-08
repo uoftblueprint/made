@@ -115,20 +115,32 @@ def get_admin_token(client):
     """Login as admin and return access token."""
     res = client.post(
         "/api/auth/login/",
-        {"email": "admin@inventory.com", "password": "adminpass"},
+        data=json.dumps({"email": "admin@inventory.com", "password": "adminpass"}),
         content_type="application/json",
     )
-    return res.data["access"] if res.status_code == 200 else None
+    if res.status_code != 200:
+        return None
+    try:
+        data = json.loads(res.content)
+    except (TypeError, ValueError):
+        return None
+    return data.get("access")
 
 
 def get_volunteer_token(client):
     """Login as volunteer and return access token."""
     res = client.post(
         "/api/auth/login/",
-        {"email": "volunteer@inventory.com", "password": "volpass"},
+        data=json.dumps({"email": "volunteer@inventory.com", "password": "volpass"}),
         content_type="application/json",
     )
-    return res.data["access"] if res.status_code == 200 else None
+    if res.status_code != 200:
+        return None
+    try:
+        data = json.loads(res.content)
+    except (TypeError, ValueError):
+        return None
+    return data.get("access")
 
 
 # ============================================================================
