@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions, filters
 from .models import CollectionItem
-from .serializers import PublicCollectionItemSerializer
+from .serializers import PublicCollectionItemSerializer, AdminCollectionItemSerializer
 
 
 class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
@@ -53,5 +53,5 @@ class AdminCollectionItemViewSet(viewsets.ModelViewSet):
     Supports POST, PUT, PATCH, DELETE.
     """
 
-    queryset = CollectionItem.objects.all()
-    serializer_class = PublicCollectionItemSerializer
+    queryset = CollectionItem.objects.all().select_related("current_location")
+    serializer_class = AdminCollectionItemSerializer

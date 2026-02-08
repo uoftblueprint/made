@@ -44,3 +44,39 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
             "is_on_floor",
             "current_location",
         ]
+
+
+class AdminCollectionItemSerializer(serializers.ModelSerializer):
+    """
+    Writable serializer for admin/volunteer create and update.
+    Accepts item_code, title, platform, description, current_location (ID), is_public_visible, is_on_floor.
+    Returns nested current_location object in responses.
+    """
+
+    current_location = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), required=True
+    )
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.current_location:
+            ret["current_location"] = LocationSerializer(instance.current_location).data
+        return ret
+
+    class Meta:
+        model = CollectionItem
+        fields = [
+            "id",
+            "item_code",
+            "title",
+            "platform",
+            "description",
+            "current_location",
+            "is_public_visible",
+            "is_on_floor",
+        ]
+        read_only_fields = ["id"]
+        extra_kwargs = {
+            "item_code": {"required": True},
+            "title": {"required": True},
+        }
