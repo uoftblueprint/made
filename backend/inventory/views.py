@@ -1,4 +1,6 @@
 from rest_framework import viewsets, permissions, filters
+from users.permissions import IsVolunteer
+
 from .models import CollectionItem
 from .serializers import PublicCollectionItemSerializer, AdminCollectionItemSerializer
 
@@ -51,7 +53,9 @@ class AdminCollectionItemViewSet(viewsets.ModelViewSet):
     """
     Admin/volunteer ViewSet for managing collection items.
     Supports POST, PUT, PATCH, DELETE.
+    Only accessible to users with ADMIN or VOLUNTEER role.
     """
 
     queryset = CollectionItem.objects.all().select_related("current_location")
     serializer_class = AdminCollectionItemSerializer
+    permission_classes = [IsVolunteer]
