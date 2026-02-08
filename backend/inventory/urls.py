@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import PublicCollectionItemViewSet
+from .views import PublicCollectionItemViewSet, AdminCollectionItemViewSet
 
 # from .views import InventoryItemViewSet
 
@@ -26,8 +26,9 @@ from .views import PublicCollectionItemViewSet
 # GET    /api/inventory/items/low_stock/ - Custom action (if defined)
 
 router = DefaultRouter()
-router.register(r"items", PublicCollectionItemViewSet, basename="public-item")
+router.register(r"public/items", PublicCollectionItemViewSet, basename="public-item")
+router.register(r"items", AdminCollectionItemViewSet, basename="admin-item")
 
 urlpatterns = [
-    path("public/", include(router.urls)),
+    path("", include(router.urls)),
 ]
