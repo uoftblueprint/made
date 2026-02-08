@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.response import Response
 from users.permissions import IsVolunteer
 
 from .models import CollectionItem
@@ -59,3 +60,10 @@ class AdminCollectionItemViewSet(viewsets.ModelViewSet):
     queryset = CollectionItem.objects.all().select_related("current_location")
     serializer_class = AdminCollectionItemSerializer
     permission_classes = [IsVolunteer]
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete: set is_public_visible=False instead of removing from DB."""
+        instance = self.get_object()
+        instance.is_public_visible = False
+        instance.save(update_fields=["is_public_visible", "updated_at"])
+        return Response(status=status.HTTP_204_NO_CONTENT)
