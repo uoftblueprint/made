@@ -1,4 +1,6 @@
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
 from .models import CollectionItem, Location
 
 
@@ -77,6 +79,14 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
         extra_kwargs = {
-            "item_code": {"required": True},
+            "item_code": {
+                "required": True,
+                "validators": [
+                    UniqueValidator(
+                        queryset=CollectionItem.objects.all(),
+                        message="A collection item with this barcode/UUID already exists.",
+                    )
+                ],
+            },
             "title": {"required": True},
         }
