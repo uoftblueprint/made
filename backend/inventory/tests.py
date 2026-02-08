@@ -981,6 +981,7 @@ class RebuildItemLocationsCommandTest(TestCase):
         output = out.getvalue()
         self.assertIn(f"Updated item {self.item.id}", output)
 
+
 class BoxEndpointsTest(TestCase):
     """Test box list/detail endpoints and item box assignment."""
 
