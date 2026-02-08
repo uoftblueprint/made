@@ -45,3 +45,13 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
             # Invalid value: skip filtering on is_on_floor (ignore invalid input)
 
         return queryset
+
+
+class AdminCollectionItemViewSet(viewsets.ModelViewSet):
+    """
+    Admin/volunteer ViewSet for managing collection items.
+    Supports POST, PUT, PATCH, DELETE.
+    """
+
+    queryset = CollectionItem.objects.all()
+    serializer_class = PublicCollectionItemSerializer
