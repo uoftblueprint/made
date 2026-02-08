@@ -55,9 +55,7 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
     Returns nested current_location object in responses.
     """
 
-    current_location = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(), required=True
-    )
+    current_location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), required=True)
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
