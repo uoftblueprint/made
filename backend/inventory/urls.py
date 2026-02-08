@@ -16,14 +16,17 @@ from .views import PublicCollectionItemViewSet, AdminCollectionItemViewSet
 #     path('', include(router.urls)),
 # ]
 
-# This will create the following endpoints:
+# Public catalogue (read-only, no auth):
+# GET    /api/inventory/public/items/       - List public items (filter/search)
+# GET    /api/inventory/public/items/{id}/ - Retrieve public item detail
+#
+# Admin/volunteer CRUD (auth required):
 # GET    /api/inventory/items/           - List all items
 # POST   /api/inventory/items/           - Create a new item
 # GET    /api/inventory/items/{id}/      - Retrieve a specific item
-# PUT    /api/inventory/items/{id}/      - Update an item
-# PATCH  /api/inventory/items/{id}/      - Partial update
-# DELETE /api/inventory/items/{id}/      - Delete an item
-# GET    /api/inventory/items/low_stock/ - Custom action (if defined)
+# PUT    /api/inventory/items/{id}/      - Full update
+# PATCH  /api/inventory/items/{id}/     - Partial update
+# DELETE /api/inventory/items/{id}/     - Soft delete (admin only)
 
 router = DefaultRouter()
 router.register(r"public/items", PublicCollectionItemViewSet, basename="public-item")
