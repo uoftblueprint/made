@@ -608,6 +608,43 @@ def test_post_invalid_data_missing_title_rejected(client, volunteer_user, storag
     assert "title" in data
 
 
+@pytest.mark.django_db
+def test_post_duplicate_item_code_rejected(client, volunteer_user, storage_location):
+    """Creating an item with duplicate barcode/UUID returns 400 with validation message."""
+    token = get_volunteer_token(client)
+
+    # Insert first item into test DB
+    CollectionItem.objects.create(
+        item_code="DUP001",
+        title="First Item",
+        platform="SNES",
+        current_location=storage_location,
+        is_public_visible=True,
+        is_on_floor=False,
+    )
+
+    # Try to create another item with same barcode
+    payload = {
+        "item_code": "DUP001",
+        "title": "Duplicate Item",
+        "platform": "PS2",
+        "current_location": storage_location.id,
+        "is_public_visible": True,
+        "is_on_floor": False,
+    }
+    response = client.post(
+        "/api/inventory/items/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = json.loads(response.content)
+    assert "item_code" in data
+    assert "A collection item with this barcode/UUID already exists." in str(data["item_code"])
+
+
 # ============================================================================
 # TESTS FOR PUT/PATCH /api/inventory/items/{id}/ (Edit metadata - admin/volunteer)
 # ============================================================================
