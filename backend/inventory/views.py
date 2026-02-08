@@ -54,7 +54,8 @@ class AdminCollectionItemViewSet(viewsets.ModelViewSet):
     """
     Admin/volunteer ViewSet for managing collection items.
     Supports POST, PUT, PATCH, DELETE.
-    Only accessible to users with ADMIN xor VOLUNTEER role depending on operation.
+    Only accessible to users with ADMIN or Volunteers role depending on operation with 
+    destory being Admin Only
     """
 
     queryset = CollectionItem.objects.all().select_related("current_location")
