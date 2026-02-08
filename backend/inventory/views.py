@@ -1,6 +1,9 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.response import Response
+from users.permissions import IsAdmin, IsVolunteer
+
 from .models import CollectionItem
-from .serializers import PublicCollectionItemSerializer
+from .serializers import PublicCollectionItemSerializer, AdminCollectionItemSerializer
 
 
 class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,3 +48,27 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
             # Invalid value: skip filtering on is_on_floor (ignore invalid input)
 
         return queryset
+
+
+class AdminCollectionItemViewSet(viewsets.ModelViewSet):
+    """
+    Admin/volunteer ViewSet for managing collection items.
+    Supports POST, PUT, PATCH, DELETE.
+    Only accessible to users with ADMIN xor VOLUNTEER role depending on operation.
+    """
+
+    queryset = CollectionItem.objects.all().select_related("current_location")
+    serializer_class = AdminCollectionItemSerializer
+    permission_classes = [IsVolunteer]
+
+    def get_permissions(self):
+        if self.action == "destroy":
+            return [IsAdmin()]
+        return [IsVolunteer()]
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete: set is_public_visible=False instead of removing from DB."""
+        instance = self.get_object()
+        instance.is_public_visible = False
+        instance.save(update_fields=["is_public_visible", "updated_at"])
+        return Response(status=status.HTTP_204_NO_CONTENT)

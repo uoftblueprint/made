@@ -89,6 +89,48 @@ def test_data(client, floor_location, storage_location, public_item_snes, public
     }
 
 
+@pytest.fixture
+def admin_user():
+    """Create admin user for testing."""
+    return User.objects.create_user(
+        email="admin@inventory.com",
+        name="Admin User",
+        password="adminpass",
+        role="ADMIN",
+    )
+
+
+@pytest.fixture
+def volunteer_user():
+    """Create volunteer user for testing."""
+    return User.objects.create_user(
+        email="volunteer@inventory.com",
+        name="Volunteer User",
+        password="volpass",
+        role="VOLUNTEER",
+    )
+
+
+def get_admin_token(client):
+    """Login as admin and return access token."""
+    res = client.post(
+        "/api/auth/login/",
+        {"email": "admin@inventory.com", "password": "adminpass"},
+        content_type="application/json",
+    )
+    return res.data["access"] if res.status_code == 200 else None
+
+
+def get_volunteer_token(client):
+    """Login as volunteer and return access token."""
+    res = client.post(
+        "/api/auth/login/",
+        {"email": "volunteer@inventory.com", "password": "volpass"},
+        content_type="application/json",
+    )
+    return res.data["access"] if res.status_code == 200 else None
+
+
 # ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
@@ -466,6 +508,204 @@ def test_retrieve_nonexistent_item_returns_404(client):
     """Test that retrieving non-existent item returns 404."""
     response = client.get("/api/inventory/public/items/99999/")
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+# ============================================================================
+# TESTS FOR POST /api/inventory/items/ (Create - admin/volunteer)
+# ============================================================================
+
+
+@pytest.mark.django_db
+def test_post_create_item_success(client, volunteer_user, storage_location):
+    """Test volunteer can create a new item via POST."""
+    token = get_volunteer_token(client)
+    assert token is not None
+
+    payload = {
+        "item_code": "NEW001",
+        "title": "New Game",
+        "platform": "SNES",
+        "description": "A new addition",
+        "current_location": storage_location.id,
+        "is_public_visible": True,
+        "is_on_floor": False,
+    }
+    response = client.post(
+        "/api/inventory/items/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert response.status_code == status.HTTP_201_CREATED
+    data = json.loads(response.content)
+    assert data["item_code"] == "NEW001"
+    assert data["title"] == "New Game"
+    assert data["platform"] == "SNES"
+    assert CollectionItem.objects.filter(item_code="NEW001").exists()
+
+
+@pytest.mark.django_db
+def test_post_create_item_appears_immediately_in_list(client, volunteer_user, storage_location):
+    """New items created via API appear immediately in lists (acceptance criteria)."""
+    token = get_volunteer_token(client)
+
+    payload = {
+        "item_code": "IMMEDIATE001",
+        "title": "Immediate Item",
+        "platform": "PS2",
+        "current_location": storage_location.id,
+        "is_public_visible": True,
+        "is_on_floor": False,
+    }
+    create_res = client.post(
+        "/api/inventory/items/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+    assert create_res.status_code == status.HTTP_201_CREATED
+
+    list_res = client.get("/api/inventory/public/items/")
+    assert list_res.status_code == status.HTTP_200_OK
+    items = get_items_from_response(list_res)
+    item_codes = [item["item_code"] for item in items]
+    assert "IMMEDIATE001" in item_codes
+
+
+@pytest.mark.django_db
+def test_post_invalid_data_missing_title_rejected(client, volunteer_user, storage_location):
+    """Invalid data (e.g., missing title) is rejected (acceptance criteria)."""
+    token = get_volunteer_token(client)
+
+    payload = {
+        "item_code": "NO_TITLE001",
+        "platform": "SNES",
+        "current_location": storage_location.id,
+        "is_public_visible": True,
+    }
+    response = client.post(
+        "/api/inventory/items/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    data = json.loads(response.content)
+    assert "title" in data
+
+
+# ============================================================================
+# TESTS FOR PUT/PATCH /api/inventory/items/{id}/ (Edit metadata - admin/volunteer)
+# ============================================================================
+
+
+@pytest.mark.django_db
+def test_put_edit_metadata_success(client, volunteer_user, public_item_snes, floor_location):
+    """Test volunteer can edit metadata (fix typo, change platform) via PATCH."""
+    token = get_volunteer_token(client)
+
+    payload = {
+        "title": "Super Mario World - Fixed",
+        "platform": "SNES",
+        "description": "Updated notes",
+        "current_location": floor_location.id,
+        "is_public_visible": True,
+        "is_on_floor": True,
+    }
+    response = client.patch(
+        f"/api/inventory/items/{public_item_snes.id}/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = json.loads(response.content)
+    assert data["title"] == "Super Mario World - Fixed"
+    assert data["description"] == "Updated notes"
+
+    public_item_snes.refresh_from_db()
+    assert public_item_snes.title == "Super Mario World - Fixed"
+
+
+@pytest.mark.django_db
+def test_put_partial_update_only_description(client, volunteer_user, public_item_snes):
+    """Test PATCH can update only description without sending other required fields."""
+    token = get_volunteer_token(client)
+    original_title = public_item_snes.title
+
+    payload = {"description": "Fixed typo in notes"}
+    response = client.patch(
+        f"/api/inventory/items/{public_item_snes.id}/",
+        data=json.dumps(payload),
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    data = json.loads(response.content)
+    assert data["title"] == original_title
+    assert data["description"] == "Fixed typo in notes"
+
+
+# ============================================================================
+# TESTS FOR DELETE /api/inventory/items/{id}/ (Soft delete - admin only)
+# ============================================================================
+
+
+@pytest.mark.django_db
+def test_delete_soft_delete_success(client, admin_user, public_item_snes):
+    """Test admin can soft delete (archive) an item via DELETE."""
+    token = get_admin_token(client)
+    item_id = public_item_snes.id
+
+    response = client.delete(
+        f"/api/inventory/items/{item_id}/",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    public_item_snes.refresh_from_db()
+    assert public_item_snes.is_public_visible is False
+    assert CollectionItem.objects.filter(id=item_id).exists()
+
+
+@pytest.mark.django_db
+def test_delete_archived_hidden_from_public_but_in_db(client, admin_user, public_item_snes):
+    """Archived items hidden from Public Catalogue but remain in database (acceptance criteria)."""
+    token = get_admin_token(client)
+    item_id = public_item_snes.id
+    item_code = public_item_snes.item_code
+
+    response = client.delete(
+        f"/api/inventory/items/{item_id}/",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    public_res = client.get("/api/inventory/public/items/")
+    items = get_items_from_response(public_res)
+    item_codes_list = [item["item_code"] for item in items]
+    assert item_code not in item_codes_list
+
+    assert CollectionItem.objects.filter(id=item_id).exists()
+    archived = CollectionItem.objects.get(id=item_id)
+    assert archived.is_public_visible is False
+
+
+@pytest.mark.django_db
+def test_delete_volunteer_forbidden(client, volunteer_user, public_item_snes):
+    """DELETE should only be accessible to admins, not volunteers."""
+    token = get_volunteer_token(client)
+    response = client.delete(
+        f"/api/inventory/items/{public_item_snes.id}/",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    public_item_snes.refresh_from_db()
+    assert public_item_snes.is_public_visible is True
 
 
 @pytest.mark.django_db
