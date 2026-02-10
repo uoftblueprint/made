@@ -1,4 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Reset / normalize */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: "Helvetica Neue", ui-sans-serif, system-ui;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light dark;
+  background-color: var(--color-background-gray);
+}
+
+/* Optional CSS variables for JS usage */
 :root {
+  --color-primary: #0F172A;
+  --color-accent: #A50A02;
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-error: #E61304;
+  --color-background-gray: #F8FAFC;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--color-accent);
+}
+a:hover {
+  color: #A50A02; /* slightly darker accent */
+}
+
+/* Buttons */
+button {
+  @apply rounded-lg border border-transparent px-lg py-sm font-sans font-medium bg-accent text-white cursor-pointer;
+}
+button:hover {
+  @apply border-accent;
+}
+
+/* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -65,4 +113,4 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
+} */
