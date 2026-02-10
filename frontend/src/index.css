@@ -2,115 +2,76 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Reset / normalize */
+/* ----- CSS Variables ----- */
+:root {
+  --color-accent: #A50A02;
+  --color-background-gray: #F8FAFC;
+  --color-primary: #0F172A;
+  --font-sans: "Helvetica Neue", ui-sans-serif, system-ui;
+}
+
+/* ----- Reset / normalize ----- */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  font-family: "Helvetica Neue", ui-sans-serif, system-ui;
+body {
+  font-family: var(--font-sans);
   line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-weight: 400;
   color-scheme: light dark;
   background-color: var(--color-background-gray);
+  display: block;
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
 }
 
-/* Optional CSS variables for JS usage */
-:root {
-  --color-primary: #0F172A;
-  --color-accent: #A50A02;
-  --color-success: #059669;
-  --color-warning: #D97706;
-  --color-error: #E61304;
-  --color-background-gray: #F8FAFC;
-}
-
-/* Links */
+/* ----- Links ----- */
 a {
   text-decoration: none;
   font-weight: 500;
   color: var(--color-accent);
 }
 a:hover {
-  color: #A50A02; /* slightly darker accent */
+  color: #930701; /* slightly darker accent */
 }
 
-/* Buttons */
+/* ----- Buttons ----- */
 button {
-  @apply rounded-lg border border-transparent px-lg py-sm font-sans font-medium bg-accent text-white cursor-pointer;
-}
-button:hover {
-  @apply border-accent;
-}
-
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
+  background-color: var(--color-accent);
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.5rem;
+  font-family: var(--font-sans);
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+button:hover {
+  background-color: #930701; /* hover accent */
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  font-family: var(--font-sans);
+  color: var(--color-primary);
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
     background-color: #ffffff;
   }
   a:hover {
-    color: #747bff;
+    color: #A50A02;
   }
   button {
-    background-color: #f9f9f9;
+    /* optional light theme button override */
+    background-color: var(--color-accent);
   }
-} */
+}
