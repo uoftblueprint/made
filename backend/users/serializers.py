@@ -40,8 +40,22 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         # Changed 'date_joined' to 'created_at'
         # Also added 'role' so frontend can see if ADMIN or VOLUNTEER
-        fields = ["id", "name", "email", "created_at", "role", "is_active", "access_expires_at"]
-        read_only_fields = ["id", "created_at", "role", "is_active", "access_expires_at"]
+        fields = [
+            "id",
+            "name",
+            "email",
+            "created_at",
+            "role",
+            "is_active",
+            "access_expires_at",
+        ]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "role",
+            "is_active",
+            "access_expires_at",
+        ]
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

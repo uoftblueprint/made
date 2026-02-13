@@ -1,9 +1,18 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from users.views import UserProfileView, UserListView, UserUpdateView, VolunteerApplicationAPIView
+from users.views import (
+    UserProfileView,
+    UserListView,
+    UserUpdateView,
+    VolunteerApplicationAPIView,
+)
 
 router = DefaultRouter()
-router.register(r"volunteer-applications", VolunteerApplicationAPIView, basename="volunteer-application")
+router.register(
+    r"volunteer-applications",
+    VolunteerApplicationAPIView,
+    basename="volunteer-application",
+)
 
 urlpatterns = [
     path("", include(router.urls)),  # This handles /api/users/volunteer-applications/

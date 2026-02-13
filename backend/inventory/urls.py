@@ -1,6 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CollectionItemViewSet, PublicCollectionItemViewSet, AdminCollectionItemViewSet
+from .views import (
+    CollectionItemViewSet,
+    PublicCollectionItemViewSet,
+    AdminCollectionItemViewSet,
+)
 
 # from .views import InventoryItemViewSet
 
