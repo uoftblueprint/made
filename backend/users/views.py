@@ -9,7 +9,12 @@ import secrets
 
 from .permissions import IsAdmin
 from .models import VolunteerApplication, User
-from .serializers import VolunteerApplicationSerializer, UserRegistrationSerializer, UserSerializer, UserUpdateSerializer
+from .serializers import (
+    VolunteerApplicationSerializer,
+    UserRegistrationSerializer,
+    UserSerializer,
+    UserUpdateSerializer,
+)
 
 
 class VolunteerApplicationAPIView(viewsets.ModelViewSet):
@@ -33,7 +38,11 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         """List applications; restrict to admin users using role."""
         user = getattr(request, "user", None)
-        if not (user is not None and getattr(user, "is_authenticated", False) and self._is_admin(user)):
+        if not (
+            user is not None
+            and getattr(user, "is_authenticated", False)
+            and self._is_admin(user)
+        ):
             return Response({"detail": "Admin only"}, status=status.HTTP_403_FORBIDDEN)
 
         return super().list(request, *args, **kwargs)
@@ -48,7 +57,11 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             application.reviewed_at = timezone.now()
 
         user = getattr(self.request, "user", None)
-        if user is not None and getattr(user, "is_authenticated", False) and application.reviewed_by is None:
+        if (
+            user is not None
+            and getattr(user, "is_authenticated", False)
+            and application.reviewed_by is None
+        ):
             application.reviewed_by = user
 
         application.save()
@@ -152,6 +165,9 @@ class UserUpdateView(generics.UpdateAPIView):
         instance = self.get_object()
 
         if instance.id == request.user.id:
-            return Response({"detail": "You cannot modify your own account."}, status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "You cannot modify your own account."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         return super().update(request, *args, **kwargs)

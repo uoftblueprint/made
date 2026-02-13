@@ -22,7 +22,9 @@ class Location(models.Model):
         ("OTHER", "Other"),
     ]
 
-    name = models.CharField(max_length=255, help_text="e.g., 'Shelf A1', 'Floor - Main Exhibit'")
+    name = models.CharField(
+        max_length=255, help_text="e.g., 'Shelf A1', 'Floor - Main Exhibit'"
+    )
     location_type = models.CharField(max_length=30, choices=LOCATION_TYPE_CHOICES)
     description = models.TextField(blank=True)
 
@@ -43,9 +45,13 @@ class Box(models.Model):
     """
 
     box_code = models.CharField(max_length=100, unique=True, help_text="Scannable code")
-    label = models.CharField(max_length=255, blank=True, help_text="Human-friendly label")
+    label = models.CharField(
+        max_length=255, blank=True, help_text="Human-friendly label"
+    )
     description = models.TextField(blank=True)
-    location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="boxes")
+    location = models.ForeignKey(
+        Location, on_delete=models.PROTECT, related_name="boxes"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -64,16 +70,28 @@ class CollectionItem(models.Model):
     Main collection table - each game/object in the collection.
     """
 
-    item_code = models.CharField(max_length=100, unique=True, help_text="Barcode / scanned code")
+    item_code = models.CharField(
+        max_length=100, unique=True, help_text="Barcode / scanned code"
+    )
     title = models.CharField(max_length=255)
-    platform = models.CharField(max_length=100, blank=True, help_text="e.g., 'SNES', 'PS2'")
+    platform = models.CharField(
+        max_length=100, blank=True, help_text="e.g., 'SNES', 'PS2'"
+    )
     description = models.TextField(blank=True)
 
-    box = models.ForeignKey(Box, on_delete=models.SET_NULL, null=True, blank=True, related_name="items")
-    current_location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="current_items")
+    box = models.ForeignKey(
+        Box, on_delete=models.SET_NULL, null=True, blank=True, related_name="items"
+    )
+    current_location = models.ForeignKey(
+        Location, on_delete=models.PROTECT, related_name="current_items"
+    )
 
-    is_public_visible = models.BooleanField(default=True, help_text="For public catalogue")
-    is_on_floor = models.BooleanField(default=False, help_text="Redundant but fast for queries")
+    is_public_visible = models.BooleanField(
+        default=True, help_text="For public catalogue"
+    )
+    is_on_floor = models.BooleanField(
+        default=False, help_text="Redundant but fast for queries"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -121,7 +139,9 @@ class ItemHistory(models.Model):
         ("LOCATION_CORRECTION", "Location Correction"),
     ]
 
-    item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE, related_name="history")
+    item = models.ForeignKey(
+        CollectionItem, on_delete=models.CASCADE, related_name="history"
+    )
 
     event_type = models.CharField(max_length=30, choices=EVENT_TYPE_CHOICES)
 
@@ -186,4 +206,6 @@ def update_item_location_on_history_change(sender, instance, created, **kwargs):
             item.update_location_from_history()
         except Exception as e:
             # Log error but don't raise to prevent disrupting the original save
-            logger.error(f"Failed to update item location for item {instance.item_id}: {e}")
+            logger.error(
+                f"Failed to update item location for item {instance.item_id}: {e}"
+            )

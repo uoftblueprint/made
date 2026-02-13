@@ -8,7 +8,8 @@ from .serializers import (
     BoxDetailSerializer,
     BoxSerializer,
     CollectionItemSerializer,
-    PublicCollectionItemSerializer, AdminCollectionItemSerializer,
+    PublicCollectionItemSerializer,
+    AdminCollectionItemSerializer,
 )
 
 
@@ -24,13 +25,13 @@ class CollectionItemViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return AdminCollectionItemSerializer
         return CollectionItemSerializer
-    
+
     def get_permissions(self):
         # Match the Admin view: only Admins should be able to trigger 'destroy'
         if self.action == "destroy":
             return [IsAdmin()]
         return [IsVolunteer()]
-    
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         instance.is_public_visible = False
@@ -64,7 +65,9 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
     - GET /api/public/items/{id}/ - Retrieve single public item
     """
 
-    queryset = CollectionItem.objects.filter(is_public_visible=True).select_related("current_location")
+    queryset = CollectionItem.objects.filter(is_public_visible=True).select_related(
+        "current_location"
+    )
     serializer_class = PublicCollectionItemSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]

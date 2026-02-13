@@ -15,7 +15,9 @@ class CheckUserAccessMiddleware(MiddlewareMixin):
                     user, _ = user_auth
                     if not user.has_active_access():
                         return JsonResponse(
-                            {"detail": "Your access has expired or been deactivated. Please contact an administrator."},
+                            {
+                                "detail": "Your access has expired or been deactivated. Please contact an administrator."
+                            },
                             status=403,
                         )
             except AuthenticationFailed:
@@ -25,7 +27,10 @@ class CheckUserAccessMiddleware(MiddlewareMixin):
         if request.user.is_authenticated:
             if not request.user.has_active_access():
                 return JsonResponse(
-                    {"detail": "Your access has expired or been deactivated. Please contact an administrator."}, status=403
+                    {
+                        "detail": "Your access has expired or been deactivated. Please contact an administrator."
+                    },
+                    status=403,
                 )
 
         return None

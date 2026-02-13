@@ -27,13 +27,17 @@ def client():
 @pytest.fixture
 def floor_location():
     """Create a floor location for tests."""
-    return Location.objects.create(name="Main Floor", location_type="FLOOR", description="Main exhibition floor")
+    return Location.objects.create(
+        name="Main Floor", location_type="FLOOR", description="Main exhibition floor"
+    )
 
 
 @pytest.fixture
 def storage_location():
     """Create a storage location for tests."""
-    return Location.objects.create(name="Storage Room A", location_type="STORAGE", description="Storage area")
+    return Location.objects.create(
+        name="Storage Room A", location_type="STORAGE", description="Storage area"
+    )
 
 
 @pytest.fixture
@@ -79,7 +83,14 @@ def hidden_item(floor_location):
 
 
 @pytest.fixture
-def test_data(client, floor_location, storage_location, public_item_snes, public_item_ps2, hidden_item):
+def test_data(
+    client,
+    floor_location,
+    storage_location,
+    public_item_snes,
+    public_item_ps2,
+    hidden_item,
+):
     """Fixture that creates all test data and returns a dict with everything."""
     return {
         "client": client,
@@ -560,7 +571,9 @@ def test_post_create_item_success(client, volunteer_user, storage_location):
 
 
 @pytest.mark.django_db
-def test_post_create_item_appears_immediately_in_list(client, volunteer_user, storage_location):
+def test_post_create_item_appears_immediately_in_list(
+    client, volunteer_user, storage_location
+):
     """New items created via API appear immediately in lists (acceptance criteria)."""
     token = get_volunteer_token(client)
 
@@ -588,7 +601,9 @@ def test_post_create_item_appears_immediately_in_list(client, volunteer_user, st
 
 
 @pytest.mark.django_db
-def test_post_invalid_data_missing_title_rejected(client, volunteer_user, storage_location):
+def test_post_invalid_data_missing_title_rejected(
+    client, volunteer_user, storage_location
+):
     """Invalid data (e.g., missing title) is rejected (acceptance criteria)."""
     token = get_volunteer_token(client)
 
@@ -644,7 +659,9 @@ def test_post_duplicate_item_code_rejected(client, volunteer_user, storage_locat
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     data = json.loads(response.content)
     assert "item_code" in data
-    assert "A collection item with this barcode/UUID already exists." in str(data["item_code"])
+    assert "A collection item with this barcode/UUID already exists." in str(
+        data["item_code"]
+    )
 
 
 # ============================================================================
@@ -653,7 +670,9 @@ def test_post_duplicate_item_code_rejected(client, volunteer_user, storage_locat
 
 
 @pytest.mark.django_db
-def test_put_edit_metadata_success(client, volunteer_user, public_item_snes, floor_location):
+def test_put_edit_metadata_success(
+    client, volunteer_user, public_item_snes, floor_location
+):
     """Test volunteer can edit metadata (fix typo, change platform) via PATCH."""
     token = get_volunteer_token(client)
 
@@ -724,7 +743,9 @@ def test_delete_soft_delete_success(client, admin_user, public_item_snes):
 
 
 @pytest.mark.django_db
-def test_delete_archived_hidden_from_public_but_in_db(client, admin_user, public_item_snes):
+def test_delete_archived_hidden_from_public_but_in_db(
+    client, admin_user, public_item_snes
+):
     """Archived items hidden from Public Catalogue but remain in database (acceptance criteria)."""
     token = get_admin_token(client)
     item_id = public_item_snes.id
@@ -777,23 +798,39 @@ class TestGetCurrentLocation:
 
     @pytest.fixture
     def item(db, location_a):
-        return CollectionItem.objects.create(item_code="TEST001", title="Test Item", current_location=location_a)
+        return CollectionItem.objects.create(
+            item_code="TEST001", title="Test Item", current_location=location_a
+        )
 
-    @pytest.mark.parametrize("event_type", ["INITIAL", "ARRIVED", "VERIFIED", "LOCATION_CORRECTION"])
-    def test_location_changing_events_update_location(self, item, location_a, location_b, event_type):
+    @pytest.mark.parametrize(
+        "event_type", ["INITIAL", "ARRIVED", "VERIFIED", "LOCATION_CORRECTION"]
+    )
+    def test_location_changing_events_update_location(
+        self, item, location_a, location_b, event_type
+    ):
         """Location-changing events should update the current location."""
-        ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a)
-        ItemHistory.objects.create(item=item, event_type=event_type, to_location=location_b)
+        ItemHistory.objects.create(
+            item=item, event_type="INITIAL", to_location=location_a
+        )
+        ItemHistory.objects.create(
+            item=item, event_type=event_type, to_location=location_b
+        )
         assert get_current_location(item.id) == location_b
 
     def test_workflow_events_ignored(self, item, location_a, location_b):
         """Workflow-only events should be ignored."""
-        ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location_a)
+        ItemHistory.objects.create(
+            item=item, event_type="INITIAL", to_location=location_a
+        )
         for event in ["MOVE_REQUESTED", "MOVE_APPROVED", "MOVE_REJECTED", "IN_TRANSIT"]:
-            ItemHistory.objects.create(item=item, event_type=event, to_location=location_b)
+            ItemHistory.objects.create(
+                item=item, event_type=event, to_location=location_b
+            )
         assert get_current_location(item.id) == location_a
 
-    def test_most_recent_location_changing_event_wins(self, item, location_a, location_b, location_c):
+    def test_most_recent_location_changing_event_wins(
+        self, item, location_a, location_b, location_c
+    ):
         """Most recent location-changing event should be returned."""
         base_time = timezone.now()
         ItemHistory.objects.create(
@@ -822,7 +859,9 @@ class TestGetCurrentLocation:
 
     def test_only_workflow_events_returns_none(self, item, location_a):
         """If only workflow events exist, return None."""
-        ItemHistory.objects.create(item=item, event_type="MOVE_REQUESTED", to_location=location_a)
+        ItemHistory.objects.create(
+            item=item, event_type="MOVE_REQUESTED", to_location=location_a
+        )
         assert get_current_location(item.id) is None
 
     def test_null_location_returns_none(self, item):
@@ -880,8 +919,12 @@ class ItemLocationTest(TestCase):
             password="testpass",
             role="VOLUNTEER",
         )
-        self.location_storage = Location.objects.create(name="Storage A", location_type="STORAGE")
-        self.location_floor = Location.objects.create(name="Main Floor", location_type="FLOOR")
+        self.location_storage = Location.objects.create(
+            name="Storage A", location_type="STORAGE"
+        )
+        self.location_floor = Location.objects.create(
+            name="Main Floor", location_type="FLOOR"
+        )
         self.item = CollectionItem.objects.create(
             item_code="TEST001",
             title="Test Item",
@@ -907,7 +950,9 @@ class ItemLocationTest(TestCase):
     def test_update_location_from_history_floor_move(self):
         """Test location update when item moves to floor."""
         # Create events
-        ItemHistory.objects.create(item=self.item, event_type="INITIAL", to_location=self.location_storage)
+        ItemHistory.objects.create(
+            item=self.item, event_type="INITIAL", to_location=self.location_storage
+        )
         ItemHistory.objects.create(
             item=self.item,
             event_type="ARRIVED",
@@ -962,8 +1007,12 @@ class RebuildItemLocationsCommandTest(TestCase):
     """Test the management command."""
 
     def setUp(self):
-        self.location = Location.objects.create(name="Test Location", location_type="STORAGE")
-        self.item = CollectionItem.objects.create(item_code="TEST001", title="Test Item", current_location=self.location)
+        self.location = Location.objects.create(
+            name="Test Location", location_type="STORAGE"
+        )
+        self.item = CollectionItem.objects.create(
+            item_code="TEST001", title="Test Item", current_location=self.location
+        )
 
     def test_command_all_items(self):
         """Test command rebuilds all items."""
@@ -994,9 +1043,18 @@ class BoxEndpointsTest(TestCase):
         )
         token = AccessToken.for_user(self.user)
         self.client = Client(HTTP_AUTHORIZATION=f"Bearer {token}")
-        self.location = Location.objects.create(name="Storage Z", location_type="STORAGE")
-        self.box_a = Box.objects.create(box_code="BOX001", label="Box A", description="First box", location=self.location)
-        self.box_b = Box.objects.create(box_code="BOX002", label="Box B", description="", location=self.location)
+        self.location = Location.objects.create(
+            name="Storage Z", location_type="STORAGE"
+        )
+        self.box_a = Box.objects.create(
+            box_code="BOX001",
+            label="Box A",
+            description="First box",
+            location=self.location,
+        )
+        self.box_b = Box.objects.create(
+            box_code="BOX002", label="Box B", description="", location=self.location
+        )
         self.item_a = CollectionItem.objects.create(
             item_code="ITEM001",
             title="Item One",

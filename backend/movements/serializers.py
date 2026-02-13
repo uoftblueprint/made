@@ -28,7 +28,9 @@ from inventory.models import ItemHistory
 
 
 class ItemMovementRequestSerializer(serializers.ModelSerializer):
-    requested_by_username = serializers.CharField(source="requested_by.username", read_only=True)
+    requested_by_username = serializers.CharField(
+        source="requested_by.username", read_only=True
+    )
     admin_username = serializers.CharField(source="admin.username", read_only=True)
 
     class Meta:
