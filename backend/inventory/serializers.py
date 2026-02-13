@@ -9,12 +9,20 @@ class LocationSerializer(serializers.ModelSerializer):
     Used to show location details in public API responses.
     """
 
-    location_type_display = serializers.CharField(source="get_location_type_display", read_only=True)
+    location_type_display = serializers.CharField(
+        source="get_location_type_display", read_only=True
+    )
 
     class Meta:
         model = Location
         fields = ["id", "name", "location_type", "location_type_display", "description"]
-        read_only_fields = ["id", "name", "location_type", "location_type_display", "description"]
+        read_only_fields = [
+            "id",
+            "name",
+            "location_type",
+            "location_type_display",
+            "description",
+        ]
 
 
 class BoxSerializer(serializers.ModelSerializer):
@@ -37,7 +45,14 @@ class BoxDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Box
         fields = ["id", "box_code", "label", "description", "location", "items"]
-        read_only_fields = ["id", "box_code", "label", "description", "location", "items"]
+        read_only_fields = [
+            "id",
+            "box_code",
+            "label",
+            "description",
+            "location",
+            "items",
+        ]
 
 
 class CollectionItemSerializer(serializers.ModelSerializer):
@@ -107,7 +122,9 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
     Returns nested current_location object in responses.
     """
 
-    current_location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), required=True)
+    current_location = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(), required=True
+    )
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -127,7 +144,7 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
             "is_public_visible",
             "is_on_floor",
             "box",
-            "current_location"
+            "current_location",
         ]
         read_only_fields = ["id"]
         extra_kwargs = {
