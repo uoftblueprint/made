@@ -12,12 +12,10 @@ import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CataloguePage from './pages/public/CataloguePage';
 import VolunteerManagement from './pages/admin/ManageVolunteers';
-import HelloWorld from "./pages/HelloWorld"; // to be removed
 
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
-  return <HelloWorld />; // to be removed
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
