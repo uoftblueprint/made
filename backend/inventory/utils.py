@@ -51,11 +51,7 @@ def get_current_location(item_id):
     """
     # Get the most recent location-changing event
     last_event = (
-        ItemHistory.objects.filter(
-            item_id=item_id, event_type__in=LOCATION_CHANGING_EVENTS
-        )
-        .order_by("-created_at")
-        .first()
+        ItemHistory.objects.filter(item_id=item_id, event_type__in=LOCATION_CHANGING_EVENTS).order_by("-created_at").first()
     )
 
     if last_event:
@@ -91,9 +87,7 @@ def is_item_in_transit(item_id):
     Returns:
         Boolean
     """
-    last_event = (
-        ItemHistory.objects.filter(item_id=item_id).order_by("-created_at").first()
-    )
+    last_event = ItemHistory.objects.filter(item_id=item_id).order_by("-created_at").first()
 
     if last_event:
         return last_event.event_type == "IN_TRANSIT"
