@@ -9,9 +9,7 @@ class LocationSerializer(serializers.ModelSerializer):
     Used to show location details in public API responses.
     """
 
-    location_type_display = serializers.CharField(
-        source="get_location_type_display", read_only=True
-    )
+    location_type_display = serializers.CharField(source="get_location_type_display", read_only=True)
 
     class Meta:
         model = Location
@@ -122,9 +120,7 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
     Returns nested current_location object in responses.
     """
 
-    current_location = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(), required=True
-    )
+    current_location = serializers.PrimaryKeyRelatedField(queryset=Location.objects.all(), required=True)
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
