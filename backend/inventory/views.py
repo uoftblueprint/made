@@ -65,9 +65,7 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
     - GET /api/public/items/{id}/ - Retrieve single public item
     """
 
-    queryset = CollectionItem.objects.filter(is_public_visible=True).select_related(
-        "current_location"
-    )
+    queryset = CollectionItem.objects.filter(is_public_visible=True).select_related("current_location")
     serializer_class = PublicCollectionItemSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
