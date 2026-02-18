@@ -242,7 +242,7 @@ const AdminCataloguePage: React.FC = () => {
                 {/* Empty State */}
                 {!isLoading && !error && items.length === 0 && (
                     <div className="catalogue-empty-state">
-                        <p>No items found. Click "+ Add New Item" to add your first item.</p>
+                        <p>No items found. Click add item button to add first item.</p>
                     </div>
                 )}
             </div>
