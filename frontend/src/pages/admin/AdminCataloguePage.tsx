@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { AddItemModal, EditItemModal, DeleteItemDialog } from '../../components/items';
 import { itemsApi } from '../../api/items.api';
@@ -47,8 +47,10 @@ const AdminCataloguePage: React.FC = () => {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
+    const initialFetchDone = useRef(false);
+
     // Fetch items from API
-    const fetchItems = async () => {
+    const fetchItems = useCallback(async () => {
         setIsLoading(true);
         setError(null);
         try {
@@ -60,19 +62,22 @@ const AdminCataloguePage: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [searchQuery]);
 
+    // Initial fetch on mount
     useEffect(() => {
         fetchItems();
-    }, []);
+        initialFetchDone.current = true;
+    }, [fetchItems]);
 
-    // Debounced search
+    // Debounced search (skip the first render since the above effect handles it)
     useEffect(() => {
+        if (!initialFetchDone.current) return;
         const timer = setTimeout(() => {
             fetchItems();
         }, 300);
         return () => clearTimeout(timer);
-    }, [searchQuery]);
+    }, [fetchItems]);
 
     const handleAddSuccess = () => {
         fetchItems();
@@ -237,7 +242,7 @@ const AdminCataloguePage: React.FC = () => {
                 {/* Empty State */}
                 {!isLoading && !error && items.length === 0 && (
                     <div className="catalogue-empty-state">
-                        <p>No items found. Click "+ Add New Item" to add your first item.</p>
+                        <p>No items found. Click add item button to add first item.</p>
                     </div>
                 )}
             </div>
