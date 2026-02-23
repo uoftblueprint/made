@@ -11,9 +11,12 @@ import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCataloguePage from './pages/admin/AdminCataloguePage';
+import ManageVolunteers from './pages/admin/ManageVolunteers';
+import BoxManagementPage from './pages/admin/BoxManagementPage';
+import ItemDetailsPage from './pages/admin/ItemDetailsPage';
+import RequestsPage from './pages/admin/RequestsPage';
 import CataloguePage from './pages/public/CataloguePage';
 import VolunteerApplication from './pages/public/VolunteerApplication';
-
 
 const queryClient = new QueryClient();
 
@@ -45,6 +48,38 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute requiredRole="ADMIN">
                   <AdminCataloguePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/catalogue/:id"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <ItemDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/volunteers"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <ManageVolunteers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/boxes"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <BoxManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/requests"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <RequestsPage />
                 </ProtectedRoute>
               }
             />

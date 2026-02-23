@@ -1,14 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api';
-import type { Volunteer, VolunteerApplicationInput } from '../lib/types';
+import type { Volunteer, VolunteerApplicationInput, VolunteerStats, VolunteerOptions } from '../lib/types';
 import type { AxiosError } from 'axios';
 
 export const useVolunteerApplications = () => {
   return useQuery<Volunteer[]>({
     queryKey: ['volunteerApplications'],
     queryFn: async () => {
-      const response = await apiClient.get('/api/volunteer-applications/');
-      return response?.data;
+      const response = await apiClient.get('/users/volunteer-applications/');
+      return response?.data?.results ?? response?.data ?? [];
     },
   });
 };
@@ -39,6 +39,26 @@ export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallba
     },
     onError: (error) => {
       onErrorCallback?.(error);
+    },
+  });
+};
+
+export const useVolunteerStats = () => {
+  return useQuery<VolunteerStats>({
+    queryKey: ['volunteerStats'],
+    queryFn: async () => {
+      const response = await apiClient.get('/users/volunteer-stats/');
+      return response?.data;
+    },
+  });
+};
+
+export const useVolunteerOptions = () => {
+  return useQuery<VolunteerOptions>({
+    queryKey: ['volunteerOptions'],
+    queryFn: async () => {
+      const response = await apiClient.get('/users/volunteer-options/');
+      return response?.data;
     },
   });
 };

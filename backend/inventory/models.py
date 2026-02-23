@@ -64,10 +64,64 @@ class CollectionItem(models.Model):
     Main collection table - each game/object in the collection.
     """
 
+    ITEM_TYPE_CHOICES = [
+        ("SOFTWARE", "Software"),
+        ("HARDWARE", "Hardware"),
+        ("NON_ELECTRONIC", "Non-Electronic"),
+    ]
+
+    CONDITION_CHOICES = [
+        ("EXCELLENT", "Excellent"),
+        ("GOOD", "Good"),
+        ("FAIR", "Fair"),
+        ("POOR", "Poor"),
+    ]
+
+    COMPLETENESS_CHOICES = [
+        ("YES", "Yes"),
+        ("NO", "No"),
+        ("UNKNOWN", "Unknown"),
+    ]
+
+    STATUS_CHOICES = [
+        ("AVAILABLE", "Available"),
+        ("IN_TRANSIT", "In Transit"),
+        ("CHECKED_OUT", "Checked Out"),
+        ("MAINTENANCE", "Maintenance"),
+    ]
+
     item_code = models.CharField(max_length=100, unique=True, help_text="Barcode / scanned code")
     title = models.CharField(max_length=255)
     platform = models.CharField(max_length=100, blank=True, help_text="e.g., 'SNES', 'PS2'")
     description = models.TextField(blank=True)
+
+    item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default="SOFTWARE")
+    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default="GOOD", help_text="Physical condition of the item")
+    is_complete = models.CharField(max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is complete with all parts")
+    is_functional = models.CharField(max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is functional (for hardware)")
+    working_condition = models.BooleanField(default=True, help_text="Whether the item is in working condition")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="AVAILABLE")
+    date_of_entry = models.DateField(null=True, blank=True, help_text="Date the item was added to the collection")
+
+    # Software-specific fields
+    creator_publisher = models.CharField(max_length=255, blank=True, help_text="Creator or publisher of the item")
+    release_year = models.CharField(max_length=20, blank=True, help_text="Year of release")
+    version_edition = models.CharField(max_length=100, blank=True, help_text="Version or edition")
+    media_type = models.CharField(max_length=100, blank=True, help_text="Type of media (e.g., CD, Cartridge)")
+
+    # Hardware-specific fields
+    manufacturer = models.CharField(max_length=255, blank=True, help_text="Manufacturer of the hardware")
+    model_number = models.CharField(max_length=100, blank=True, help_text="Model number")
+    year_manufactured = models.CharField(max_length=20, blank=True, help_text="Year manufactured")
+    serial_number = models.CharField(max_length=100, blank=True, help_text="Serial number")
+    hardware_type = models.CharField(max_length=100, blank=True, help_text="Type of hardware")
+
+    # Non-Electronic-specific fields
+    item_subtype = models.CharField(max_length=100, blank=True, help_text="Subtype for non-electronic items")
+    date_published = models.CharField(max_length=50, blank=True, help_text="Date published")
+    publisher = models.CharField(max_length=255, blank=True, help_text="Publisher")
+    volume_number = models.CharField(max_length=50, blank=True, help_text="Volume number")
+    isbn_catalogue_number = models.CharField(max_length=100, blank=True, help_text="ISBN or catalogue number")
 
     box = models.ForeignKey(Box, on_delete=models.SET_NULL, null=True, blank=True, related_name="items")
     current_location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="current_items")

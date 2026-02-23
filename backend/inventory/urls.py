@@ -4,6 +4,7 @@ from .views import (
     CollectionItemViewSet,
     PublicCollectionItemViewSet,
     AdminCollectionItemViewSet,
+    dashboard_stats,
 )
 
 # from .views import InventoryItemViewSet
@@ -41,4 +42,5 @@ public_router.register(r"items", PublicCollectionItemViewSet, basename="public-i
 urlpatterns = [
     path("", include(router.urls)),
     path("public/", include(public_router.urls)),
+    path("stats/", dashboard_stats, name="dashboard-stats"),
 ]
