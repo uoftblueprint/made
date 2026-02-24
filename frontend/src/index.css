@@ -1,68 +1,127 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+
+/* default is the sans theme */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    /* surfaces */
+  --surface: 248 250 252;     /* #F8FAFC background */
+  --surface_2: 226 232 240;   /* #E2E8F0 card/list surface */
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* text */
+  --primary: 15 23 42;     /* #0F172A */
+  --muted: 71 85 105;         /* #475569 */
+  --muted_2: 148 163 184;     /* #94A3B8 extra muted */
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* page background */
+  --background: 248 250 252; /* #F8FAFC page background */
+
+  /* borders */
+  --border: 226 232 240;      /* #E2E8F0 list borders */
+  
+  /* accent */
+  --accent: 165 10 2;       /* #A50A02 */
+
+  /* states */
+  --success: 5 150 105;       /* #059669 */
+  --danger_surface : 253 165 165;     /* #FCA5A5 surface for danger */
+  --danger: 220 38 38;        /* #DC2626 */
+  --warning: 217 119 6;       /* #D97706 */
+
+  /* important blue note */
+  --note: 30 58 138;          /* #1E3A8A */
+  --note_surface: 239 246 255;/* #EFF6FF */
+
+  /* alert note */
+  --alert_outline: 253 230 138;       /* #FDE68A outline */
+  --alert_text: 120 53 15;    /* #78350F main text */
+  --alert_muted: 146 64 14;   /* #92400E subtext */
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+@layer base {
+  body {
+    @apply font-sans;
+    background-color: rgb(var(--background));
+    color: rgb(var(--primary));
+  }
+
+  .theme-helvetica {
+    @apply font-helvetica;
+    /* text */
+    --primary: 54 47 47;   /* #362F2F */
+    --muted: 126 113 112;     /* #7E7170 */
+
+    /* page background */
+    --background: 249 250 252; /* #F9FAFC */
+
+    /* borders */
+    --border: 196 190 189;    /* #C4BEBD */
+
+    /* accent + error (same) */
+    --accent: 165 10 2;       /* #A50A02 */
+
+    /* success */
+    --success: 24 167 74;         /* #18A74A */
+    --success_surface: 219 252 231;/* #DBFCE7 */
+
+    --warning: 217 119 6;       /* #D97706 */
+    /* danger button surface, uses accent as main text */
+    --danger: 165 10 2;        /* #A50A02 */
+    --danger_surface: 255 223 223; /* #FFDFDF */
+
+    /* priority */
+    --low: 197 126 45;        /* #C57E2D */
+    --low_surface: 228 181 51;/* #E4B533 */
+
+    --high: 74 134 219;       /* #4A86DB */
+    --high_surface: 74 134 219; /* use with /0.2 */
+
+    /* form specific */
+    --submit: 39 98 234;           /* #2762EA */
+    --cancel: 217 217 217;         /* #D9D9D9 */
+    --required: 219 38 39;         /* #DB2627 */
+
+  }
 }
-a:hover {
-  color: #535bf2;
+
+@layer components {
+
+  .navbar-button {
+    @apply bg-white px-4 py-2 h-10 rounded-md text-base font-semibold border text-muted;
+  }
+
+  .title {
+    @apply font-bold text-primary text-3xl
+  }
+
+  .subtitle{
+    @apply font-normal text-[0.925rem] text-muted
+  }
+
+  .form-label {
+    @apply text-base font-semibold text-[#252525]
+  }
+}
+
+/* ----- Reset / normalize ----- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
+  line-height: 1.5;
+  font-weight: 400;
   min-width: 320px;
   min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  margin: 0;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+  transition: background-color 0.2s ease;
+  
 }

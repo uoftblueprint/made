@@ -11,8 +11,7 @@ import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CataloguePage from './pages/public/CataloguePage';
-import VolunteerApplication from './pages/public/VolunteerApplication';
-
+import VolunteerManagement from './pages/admin/ManageVolunteers';
 
 const queryClient = new QueryClient();
 
@@ -21,28 +20,33 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <Header />
-          <Routes>
-            {/* --- Public Routes --- */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/catalogue" element={<CataloguePage />} />
-            <Route path="/logout" element={<LogoutPage />} />
-            <Route path="/volunteer_application" element={<VolunteerApplication />} />
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className='mx-auto w-full lg:max-w-[90%] flex-1 '>
+              <Routes >
+                {/* --- Public Routes --- */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/catalogue" element={<CataloguePage />} />
+                <Route path="/logout" element={<LogoutPage />} />
+                <Route path="/volunteer_management" element={<VolunteerManagement />} />
+                {/* Box management not complete, currently set to HomePage route*/ }
 
-            {/* --- Admin Routes --- */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute requiredRole="ADMIN">
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
+                {/* --- Admin Routes --- */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
 
-            {/* --- Catch-all 404 Route --- */}
-            {/* <Route path="*" element={<NotFoundPage />} /> */}
-          </Routes>
+                {/* --- Catch-all 404 Route --- */}
+                {/* <Route path="*" element={<NotFoundPage />} /> */}
+              </Routes>
+            </main>
+          </div>
           <Footer />
         </AuthProvider>
       </BrowserRouter>

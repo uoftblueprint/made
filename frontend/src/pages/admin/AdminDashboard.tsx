@@ -1,46 +1,46 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import FeatureCard from '../../components/common/FeatureCard';
+import {ActivityRow} from '../../components/common/ActivityRow'
+import StatisticBox from '../../components/common/StatisticBox';
+import Button from '../../components/common/Button';
 
 const AdminDashboard: React.FC = () => {
+  const handleExportToCSV = () => {
+  }
+
+  const handleAddNewItem = () => {
+
+  }
+
+  const handleCreateContainer = () => {
+
+  }
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Admin Dashboard</h1>
-      <p>Welcome, Admin. Manage your collection, volunteers, and requests here.</p>
-
-      <div className="quick-stats" style={{ margin: '2rem 0' }}>
-        <h2>Quick Stats</h2>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          <div className="stat-card" style={{ padding: '1rem', border: '1px solid #ccc' }}>
-            <strong>10</strong>
-            <p>Pending Requests</p>
-          </div>
-          <div className="stat-card" style={{ padding: '1rem', border: '1px solid #ccc' }}>
-            <strong>5</strong>
-            <p>New Volunteers</p>
-          </div>
-          <div className="stat-card" style={{ padding: '1rem', border: '1px solid #ccc' }}>
-            <strong>1200</strong>
-            <p>Total Collection Items</p>
-          </div>
-        </div>
-      </div>
-
-      <div className="management-links">
-        <h2>Management Tools</h2>
-        <nav>
-          <ul style={{ listStyleType: 'none', padding: 0 }}>
-            <li style={{ margin: '10px 0' }}>
-              <Link to="/admin/inventory">Manage Inventory (Add, Edit, Remove)</Link>
-            </li>
-            <li style={{ margin: '10px 0' }}>
-              <Link to="/admin/volunteers">Manage Volunteers (Approve, Remove)</Link>
-            </li>
-            <li style={{ margin: '10px 0' }}>
-              <Link to="/admin/requests">Review Move Requests</Link>
-            </li>
-          </ul>
-        </nav>
-      </div>
+    <div>
+      
+      <h1 className='title pb-2'>Dashboard</h1>
+      <p className='subtitle pb-5'>Overview of collection status and pending tasks</p>
+      <div className='flex justify-evenly gap-8 pb-8'>
+        <StatisticBox title='Needs Review' value={28} iconName='orange_information'/>
+        <StatisticBox title='Total Items' value={"50,247"} iconName='toaster'/>
+        <StatisticBox title='Containers' value={156} iconName='cube'/>
+        <StatisticBox title='Locations' value={12} iconName='location'/>
+    </div>
+    <div className='flex gap-2 pb-5'>
+      <Button variant='outline-black' radius='md' icon='toaster' size='xxl' layout="stacked" fullWidth={true} onClick={handleAddNewItem}>Add New Item</Button>
+      <Button variant='outline-black' radius='md' icon='cube' size='xxl' layout="stacked" fullWidth={true} onClick={handleCreateContainer}>Create Container</Button>
+      <Button variant='outline-black' radius='md' icon='download' size='xxl' layout="stacked" fullWidth={true} onClick={handleExportToCSV}>Export to CSV</Button>
+    </div>
+      <FeatureCard
+        title="Recent Activity"
+        variant="activity"
+        showHeaderDivider={true}
+      >
+        <ActivityRow text="Super Mario 64 moved to Exhibit-Floor2" time="1h ago" />
+        <ActivityRow text="3 items added to Box C-15" time="3h ago" />
+        <ActivityRow text="Hat Trick submitted via public form" time="5h ago" />
+        <ActivityRow text="Volunteer Sarah Chen granted access" time="1d ago" />
+      </FeatureCard>
     </div>
   );
 };
