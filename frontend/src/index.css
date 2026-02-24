@@ -134,6 +134,20 @@ h1 {
   color: var(--color-primary);
 }
 
+button {
+  cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+
+button:hover {
+  border-color: #646cff;
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     background-color: #ffffff;
