@@ -152,9 +152,11 @@ button:focus-visible {
   :root {
     background-color: #ffffff;
   }
+
   a:hover {
     color: #A50A02;
   }
+
   button {
     /* optional light theme button override */
     background-color: var(--color-accent);

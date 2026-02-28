@@ -50,6 +50,14 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/admin/catalogue"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <AdminCataloguePage />
+                </ProtectedRoute>
+              }
+            />
 
                 {/* --- Catch-all 404 Route --- */}
                 {/* <Route path="*" element={<NotFoundPage />} /> */}
