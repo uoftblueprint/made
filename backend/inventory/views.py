@@ -1,15 +1,17 @@
 from rest_framework import viewsets, permissions, filters, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from users.permissions import IsAdmin, IsVolunteer
 
-from users.permissions import IsVolunteer
-from .models import Box, CollectionItem
+from .models import Box, CollectionItem, Location
 from .serializers import (
     BoxDetailSerializer,
     BoxSerializer,
     CollectionItemSerializer,
     PublicCollectionItemSerializer,
     AdminCollectionItemSerializer,
+    LocationSerializer,
+    LocationDetailSerializer,
 )
 
 
@@ -53,6 +55,29 @@ class BoxViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == "retrieve":
             return BoxDetailSerializer
         return BoxSerializer
+
+
+class LocationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for locations.
+    - GET /api/locations/ - List all locations with box/item counts
+    - GET /api/locations/{id}/ - Retrieve location with nested boxes
+    - POST /api/locations/ - Create a new location
+    - PUT/PATCH /api/locations/{id}/ - Update a location
+    - DELETE /api/locations/{id}/ - Delete a location (admin only)
+    """
+
+    queryset = Location.objects.all().prefetch_related("boxes", "current_items")
+
+    def get_permissions(self):
+        if self.action in ["destroy"]:
+            return [IsAdmin()]
+        return [IsVolunteer()]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return LocationDetailSerializer
+        return LocationSerializer
 
 
 class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
@@ -122,3 +147,19 @@ class AdminCollectionItemViewSet(viewsets.ModelViewSet):
         instance.is_public_visible = False
         instance.save(update_fields=["is_public_visible", "updated_at"])
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET"])
+@permission_classes([IsVolunteer])
+def dashboard_stats(request):
+    """
+    Returns dashboard statistics.
+    - GET /api/inventory/stats/ - Get total items, boxes, and locations count
+    """
+    return Response(
+        {
+            "total_items": CollectionItem.objects.count(),
+            "total_boxes": Box.objects.count(),
+            "total_locations": Location.objects.count(),
+        }
+    )

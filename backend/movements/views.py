@@ -66,8 +66,21 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         # Volunteers see only their own requests
         user = self.request.user
         if user.is_staff:
-            return ItemMovementRequest.objects.all()  # Admins see all
-        return ItemMovementRequest.objects.filter(requested_by=user)
+            queryset = ItemMovementRequest.objects.all()  # Admins see all
+        else:
+            queryset = ItemMovementRequest.objects.filter(requested_by=user)
+
+        # Filter by status if provided
+        status_filter = self.request.query_params.get("status")
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        # Filter by item if provided
+        item_filter = self.request.query_params.get("item")
+        if item_filter:
+            queryset = queryset.filter(item_id=item_filter)
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(requested_by=self.request.user)
@@ -76,7 +89,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     def approve(self, request, pk=None):
         move_request = self.get_object()
 
-        if move_request.status != ItemMovementRequest.Status.WAITING_APPROVAL:
+        if move_request.status != "WAITING_APPROVAL":
             return Response(
                 {"detail": "This request has already been processed."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -91,7 +104,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     def reject(self, request, pk=None):
         move_request = self.get_object()
 
-        if move_request.status != ItemMovementRequest.Status.WAITING_APPROVAL:
+        if move_request.status != "WAITING_APPROVAL":
             return Response(
                 {"detail": "This request has already been processed."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -99,5 +112,28 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
 
         comment = request.data.get("comment", "")
         move_request.reject(admin_user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="complete-arrival")
+    def complete_arrival(self, request, pk=None):
+        """Mark item as arrived at destination after approved movement."""
+        move_request = self.get_object()
+
+        if move_request.status != "APPROVED":
+            return Response(
+                {"detail": "Only approved requests can be marked as arrived."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if item is actually in transit
+        if move_request.item.status != "IN_TRANSIT":
+            return Response(
+                {"detail": "Item is not currently in transit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.complete_arrival(user=request.user, comment=comment)
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)

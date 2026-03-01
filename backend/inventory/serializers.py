@@ -5,22 +5,29 @@ from .models import Box, CollectionItem, Location
 
 class LocationSerializer(serializers.ModelSerializer):
     """
-    Nested serializer for Location model.
-    Used to show location details in public API responses.
+    Serializer for Location model.
+    Used for list/create/update operations.
     """
 
     location_type_display = serializers.CharField(source="get_location_type_display", read_only=True)
+    box_count = serializers.SerializerMethodField()
+    item_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
-        fields = ["id", "name", "location_type", "location_type_display", "description"]
+        fields = ["id", "name", "location_type", "location_type_display", "description", "box_count", "item_count"]
         read_only_fields = [
             "id",
-            "name",
-            "location_type",
             "location_type_display",
-            "description",
+            "box_count",
+            "item_count",
         ]
+
+    def get_box_count(self, obj):
+        return obj.boxes.count()
+
+    def get_item_count(self, obj):
+        return obj.current_items.count()
 
 
 class BoxSerializer(serializers.ModelSerializer):
@@ -30,11 +37,32 @@ class BoxSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
 
+class LocationDetailSerializer(serializers.ModelSerializer):
+    """
+    Detailed serializer for Location with nested boxes.
+    """
+
+    location_type_display = serializers.CharField(source="get_location_type_display", read_only=True)
+    boxes = BoxSerializer(many=True, read_only=True)
+    box_count = serializers.SerializerMethodField()
+    item_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = ["id", "name", "location_type", "location_type_display", "description", "boxes", "box_count", "item_count"]
+
+    def get_box_count(self, obj):
+        return obj.boxes.count()
+
+    def get_item_count(self, obj):
+        return obj.current_items.count()
+
+
 class CollectionItemSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = CollectionItem
-        fields = ["id", "item_code", "title", "platform"]
-        read_only_fields = ["id", "item_code", "title", "platform"]
+        fields = ["id", "item_code", "title", "platform", "item_type", "working_condition", "status"]
+        read_only_fields = ["id", "item_code", "title", "platform", "item_type", "working_condition", "status"]
 
 
 class BoxDetailSerializer(serializers.ModelSerializer):
@@ -62,6 +90,9 @@ class CollectionItemSerializer(serializers.ModelSerializer):
             "title",
             "platform",
             "description",
+            "item_type",
+            "working_condition",
+            "status",
             "box",
             "current_location",
             "is_public_visible",
@@ -75,6 +106,9 @@ class CollectionItemSerializer(serializers.ModelSerializer):
             "title",
             "platform",
             "description",
+            "item_type",
+            "working_condition",
+            "status",
             "current_location",
             "is_public_visible",
             "is_on_floor",
@@ -90,6 +124,7 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
     """
 
     current_location = LocationSerializer(read_only=True)
+    location_name = serializers.SerializerMethodField()
 
     class Meta:
         model = CollectionItem
@@ -99,8 +134,14 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
             "title",
             "platform",
             "description",
+            "item_type",
+            "working_condition",
+            "status",
             "is_on_floor",
             "current_location",
+            "location_name",
+            "created_at",
+            "updated_at",
         ]
         read_only_fields = [
             "id",
@@ -108,9 +149,21 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
             "title",
             "platform",
             "description",
+            "item_type",
+            "working_condition",
+            "status",
             "is_on_floor",
             "current_location",
+            "location_name",
+            "created_at",
+            "updated_at",
         ]
+
+    def get_location_name(self, obj):
+        """Return the location name as a simple string for frontend compatibility."""
+        if obj.current_location:
+            return obj.current_location.name
+        return None
 
 
 class AdminCollectionItemSerializer(serializers.ModelSerializer):
@@ -136,11 +189,13 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
             "title",
             "platform",
             "description",
+            "item_type",
+            "working_condition",
+            "status",
             "current_location",
             "is_public_visible",
             "is_on_floor",
             "box",
-            "current_location",
         ]
         read_only_fields = ["id"]
         extra_kwargs = {

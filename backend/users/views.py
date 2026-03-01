@@ -1,10 +1,13 @@
 from rest_framework import generics, status, permissions, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
+from django.db.models import Q
+from datetime import timedelta
 import secrets
 
 from .permissions import IsAdmin
@@ -163,3 +166,113 @@ class UserUpdateView(generics.UpdateAPIView):
             )
 
         return super().update(request, *args, **kwargs)
+
+
+class VolunteerStatsView(APIView):
+    """
+    Endpoint: GET /api/users/volunteer-stats/
+    Returns volunteer statistics and list of expiring volunteers.
+    """
+
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        now = timezone.now()
+        seven_days_from_now = now + timedelta(days=7)
+
+        volunteers = User.objects.filter(role="VOLUNTEER")
+
+        active_count = (
+            volunteers.filter(is_active=True).filter(Q(access_expires_at__isnull=True) | Q(access_expires_at__gt=now)).count()
+        )
+
+        expiring_soon = volunteers.filter(
+            is_active=True,
+            access_expires_at__isnull=False,
+            access_expires_at__gt=now,
+            access_expires_at__lte=seven_days_from_now,
+        )
+        expiring_soon_count = expiring_soon.count()
+
+        expired_count = volunteers.filter(
+            access_expires_at__isnull=False,
+            access_expires_at__lte=now,
+        ).count()
+
+        total_count = volunteers.count()
+
+        expiring_volunteers = [
+            {
+                "id": v.id,
+                "name": v.name,
+                "email": v.email,
+                "access_expires_at": v.access_expires_at,
+            }
+            for v in expiring_soon
+        ]
+
+        return Response(
+            {
+                "active_count": active_count,
+                "expiring_soon_count": expiring_soon_count,
+                "expired_count": expired_count,
+                "total_count": total_count,
+                "expiring_volunteers": expiring_volunteers,
+            }
+        )
+
+
+class VolunteerOptionsView(APIView):
+    """
+    Endpoint: GET /api/users/volunteer-options/
+    Returns available roles, permissions, and event types for volunteer management.
+    """
+
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        roles = [
+            {
+                "value": "viewer",
+                "label": "Viewer",
+                "permissions": [
+                    "Read-only catalogue access",
+                    "View item details",
+                    "Search and filter",
+                    "No editing permissions",
+                ],
+            },
+            {
+                "value": "editor",
+                "label": "Editor",
+                "permissions": [
+                    "All Viewer permissions",
+                    "Add new items",
+                    "Edit existing items",
+                    "All changes need review",
+                ],
+            },
+            {
+                "value": "admin",
+                "label": "Admin",
+                "permissions": [
+                    "All Editor permissions",
+                    "Review and approve entries",
+                    "Manage volunteers",
+                    "Export data",
+                ],
+            },
+        ]
+
+        event_types = [
+            {"value": "cataloging", "label": "Cataloging"},
+            {"value": "events", "label": "Events"},
+            {"value": "tours", "label": "Tours"},
+        ]
+
+        return Response(
+            {
+                "roles": roles,
+                "event_types": event_types,
+            }
+        )

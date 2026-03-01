@@ -61,7 +61,7 @@ it("submits when valid, shows loading message when pending, created correct payl
   expect(await screen.findByRole("button", { name: /submitting/i })).toBeInTheDocument()
 
   expect(postMock).toHaveBeenCalledTimes(1)
-  expect(postMock).toHaveBeenCalledWith("/users/volunteer-applications/", {
+  expect(postMock).toHaveBeenCalledWith("/api/users/volunteer-applications/", {
     name: "Bob Vladmir",
     email: "edw22@gmail.com",
     motivation_text: "i want to help",

@@ -53,7 +53,7 @@ class ItemMovementRequest(models.Model):
         return f"Request #{self.id}: {self.item.item_code} from {self.from_location.name} to {self.to_location.name}"
 
     def approve(self, admin_user, comment=""):
-        """Approve the movement request and create history event."""
+        """Approve the movement request, set item to IN_TRANSIT, and create history event."""
         from inventory.models import ItemHistory
 
         self.status = "APPROVED"
@@ -61,7 +61,11 @@ class ItemMovementRequest(models.Model):
         self.admin_comment = comment
         self.save()
 
-        # Create history event
+        # Update item status to IN_TRANSIT
+        self.item.status = "IN_TRANSIT"
+        self.item.save(update_fields=["status", "updated_at"])
+
+        # Create history event for approval
         ItemHistory.objects.create(
             item=self.item,
             event_type="MOVE_APPROVED",
@@ -70,6 +74,17 @@ class ItemMovementRequest(models.Model):
             movement_request=self,
             acted_by=admin_user,
             notes=comment,
+        )
+
+        # Create IN_TRANSIT history event
+        ItemHistory.objects.create(
+            item=self.item,
+            event_type="IN_TRANSIT",
+            from_location=self.from_location,
+            to_location=self.to_location,
+            movement_request=self,
+            acted_by=admin_user,
+            notes=f"Item in transit to {self.to_location.name}",
         )
 
     def reject(self, admin_user, comment=""):
@@ -90,4 +105,25 @@ class ItemMovementRequest(models.Model):
             movement_request=self,
             acted_by=admin_user,
             notes=comment,
+        )
+
+    def complete_arrival(self, user, comment=""):
+        """Mark item as arrived at destination, update location, and set status back to AVAILABLE."""
+        from inventory.models import ItemHistory
+
+        # Update item location and status
+        self.item.current_location = self.to_location
+        self.item.is_on_floor = self.to_location.location_type == "FLOOR"
+        self.item.status = "AVAILABLE"
+        self.item.save(update_fields=["current_location", "is_on_floor", "status", "updated_at"])
+
+        # Create ARRIVED history event
+        ItemHistory.objects.create(
+            item=self.item,
+            event_type="ARRIVED",
+            from_location=self.from_location,
+            to_location=self.to_location,
+            movement_request=self,
+            acted_by=user,
+            notes=comment or f"Item arrived at {self.to_location.name}",
         )

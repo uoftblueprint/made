@@ -52,7 +52,7 @@ describe("AdminCataloguePage", () => {
 
         await waitFor(() => expect(screen.queryByText("Loading items...")).not.toBeInTheDocument())
 
-        fireEvent.click(screen.getByText("+ Add New Item"))
+        fireEvent.click(screen.getByText("Add New Item"))
 
         expect(screen.getByTestId("add-modal")).toBeInTheDocument()
     })
@@ -66,7 +66,7 @@ describe("AdminCataloguePage", () => {
 
         await waitFor(() => expect(screen.getByText("Game")).toBeInTheDocument())
 
-        fireEvent.click(screen.getByText("Edit"))
+        fireEvent.click(screen.getByTitle("Edit"))
 
         expect(screen.getByTestId("edit-modal")).toBeInTheDocument()
     })

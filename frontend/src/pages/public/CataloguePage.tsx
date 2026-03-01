@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useItems } from '../../actions';
 import type { ItemFilter } from '../../lib/filters';
 import { CatalogueSearchBar, ItemList } from '../../components/items'
+import './CataloguePage.css';
 
 const CataloguePage: React.FC = () => {
 
@@ -15,18 +16,20 @@ const CataloguePage: React.FC = () => {
   const { data: items = [], isLoading, isError } = useItems(filters);
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Welcome to the Collection Catalog</h1>
-      <p>Browse our available items and see what's currently on the floor.</p>
-      <div className="search-filter-section" style={{ margin: '2rem 0', width: "auto" }}>
-        <h2>Search & Filter</h2>
+    <div className="catalogue-public-layout">
+      <div className="catalogue-public-header">
+        <h1>Collection Catalogue</h1>
+        <p className="catalogue-public-header-subtitle">Browse our collection</p>
+      </div>
+
+      <div className="catalogue-public-filters">
         <CatalogueSearchBar filters={filters} setFilters={setFilters} />
       </div>
-      <div className="catalog-results-section">
-        <h2>Collection Items</h2>
-        {isLoading && <p>Loading items...</p>}
-        {isError && <p>Failed to load items.</p>}
-        {!isLoading && items?.length === 0 && <p>No items found.</p>}
+
+      <div className="catalogue-public-results">
+        {isLoading && <p className="catalogue-public-message">Loading...</p>}
+        {isError && <p className="catalogue-public-message error">Failed to load items.</p>}
+        {!isLoading && !isError && items?.length === 0 && <p className="catalogue-public-message">No items found.</p>}
         {items && items.length > 0 && <ItemList items={items} />}
       </div>
     </div>

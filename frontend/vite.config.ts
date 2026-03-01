@@ -1,7 +1,12 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import FullReload from "vite-plugin-full-reload";
+import tailwindcss from "@tailwindcss/vite";
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
-})
+  plugins: [
+    react(),
+    tailwindcss(),
+    FullReload(["src/**"], { delay: 50 }),
+  ],
+});

@@ -1,0 +1,16 @@
+.logout-container {
+    min-height: 100vh;
+    background-color: var(--color-background);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-container p {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 24px;
+    color: var(--color-secondary);
+}

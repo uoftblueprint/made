@@ -12,6 +12,7 @@ const VolunteerApplication = () => {
     const [motivationText, setMotivationText] = useState<string>('');
     const [submitError, setSubmitError] = useState<string>('')
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+    const [isSuccess, setIsSuccess] = useState<boolean>(false)
 
     const createVolunteerMutation = useCreateVolunteer()
     
@@ -19,7 +20,7 @@ const VolunteerApplication = () => {
         e.preventDefault();
         const isValid = validEmail(email) && validName(firstName) && validName(lastName) && validPhoneNumber(phoneNumber) && motivationText.length > 0
         if (!isValid) {
-            setSubmitError("Please fix the errors in the form above before submission.");
+            setSubmitError("Please fix the errors in the form above.");
             return;
         }
         const name = firstName + " " + lastName;
@@ -29,79 +30,95 @@ const VolunteerApplication = () => {
             onSuccess: () => {
                 setSubmitError('');
                 setIsSubmitting(false);
-                // Clear the form after successful submission
+                setIsSuccess(true);
                 setFirstName('');
                 setLastName('');
                 setEmail('');
                 setPhoneNumber('');
                 setMotivationText('');
-                alert("Application submitted successfully!"); // TODO: change later to redirect
             },
             onError: (error: AxiosError) =>{
                 setIsSubmitting(false)
                 if (error.response) {
-                setSubmitError(String(error.response.status))
-                return
+                    setSubmitError(String(error.response.status))
+                    return
                 }
                 if (error.request) {
-                    setSubmitError("Server unreachable, please check your connection.")
+                    setSubmitError("Server unreachable.")
                     return
                 }
                 setSubmitError("Unexpected error")
             }
         })
-
     }
 
     useEffect(()=>{
         setSubmitError('')
     },[firstName, lastName, email, phoneNumber, motivationText])
+
+    if (isSuccess) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.header}>
+                    <h1>Volunteer Application</h1>
+                    <p className={styles.subtitle}>Application submitted successfully</p>
+                </div>
+                <div className={styles.successMessage}>
+                    <p>Thank you for applying. We'll review your application and get back to you.</p>
+                    <button className={styles.submitBtn} onClick={() => setIsSuccess(false)}>
+                        Submit Another
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
     <div className={styles.container}>
-        <h1>Volunteer Application Page</h1>
-        <form className={styles.form} onSubmit={handleSubmit}>
+        <div className={styles.header}>
+            <h1>Volunteer Application</h1>
+            <p className={styles.subtitle}>Join our team</p>
+        </div>
 
-            <div className={styles.inputContainer}>
-                <div className={styles.inputRow}>
+        <form className={styles.form} onSubmit={handleSubmit}>
+            <div className={styles.formRow}>
+                <div className={styles.inputContainer}>
                     <label htmlFor="first-name">First Name</label>
                     <input type="text" id="first-name" className={styles.inputBox} value={firstName} onChange={(e)=>setFirstName(e.target.value)} />
+                    {firstName && !validName(firstName) && <span className={styles.error}>Invalid name</span>}
                 </div>
-                {!validName(firstName) && <span className={styles.error}>Must contain only letters with length 1-20.</span>}
-            </div>
 
-            <div className={styles.inputContainer}>
-                <div className={styles.inputRow}>
+                <div className={styles.inputContainer}>
                     <label htmlFor="last-name">Last Name</label>
                     <input type="text" id="last-name" className={styles.inputBox} value={lastName} onChange={(e)=>setLastName(e.target.value)} />
+                    {lastName && !validName(lastName) && <span className={styles.error}>Invalid name</span>}
                 </div>
-                {!validName(lastName) && <span className={styles.error}>Must contain only letters with length 1-20.</span>}
             </div>
 
-            <div className={styles.inputContainer}>
-                <div className={styles.inputRow}>
+            <div className={styles.formRow}>
+                <div className={styles.inputContainer}>
                     <label htmlFor="email">Email</label>
                     <input type="email" id="email" className={styles.inputBox} value={email} onChange={(e)=>setEmail(e.target.value)} />
+                    {email && !validEmail(email) && <span className={styles.error}>Invalid email</span>}
                 </div>
-                {!validEmail(email) && <span className={styles.error}>Invalid email</span>}
-            </div>
 
-            <div className={styles.inputContainer}>
-                <div className={styles.inputRow}>
+                <div className={styles.inputContainer}>
                     <label htmlFor="phone-number">Phone Number</label>
                     <input type="tel" id="phone-number" className={styles.inputBox} value={phoneNumber} onChange={(e)=>setPhoneNumber(e.target.value)} />
+                    {phoneNumber && !validPhoneNumber(phoneNumber) && <span className={styles.error}>Invalid phone number</span>}
                 </div>
-                {!validPhoneNumber(phoneNumber) && <span className={styles.error}>Please enter a valid phone number e.g. (416-622-6983)</span>}
             </div>
 
             <div className={styles.inputContainer}>
-                <div className={styles.inputRow}>
-                    <label htmlFor="motivation-text">Why do you want to volunteer?</label>
-                    <textarea id="motivation-text" className={styles.inputBox} value={motivationText} onChange={(e)=>setMotivationText(e.target.value)} />
-                </div>
-                {!motivationText && <span className={styles.error}>This field cannot be empty</span>}
+                <label htmlFor="motivation-text">Why do you want to volunteer?</label>
+                <textarea id="motivation-text" className={styles.textArea} value={motivationText} onChange={(e)=>setMotivationText(e.target.value)} rows={4} />
             </div>
-            {submitError && <p>{submitError}</p>}
-            <button disabled={isSubmitting}>{isSubmitting ? "Submitting" : "Submit"}</button>
+
+            {submitError && <p className={styles.errorMessage}>{submitError}</p>}
+
+            <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+                {isSubmitting ? "Submitting..." : "Submit"}
+            </button>
         </form>
     </div>
     );
