@@ -96,9 +96,18 @@ class CollectionItem(models.Model):
     description = models.TextField(blank=True)
 
     item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default="SOFTWARE")
-    condition = models.CharField(max_length=20, choices=CONDITION_CHOICES, default="GOOD", help_text="Physical condition of the item")
-    is_complete = models.CharField(max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is complete with all parts")
-    is_functional = models.CharField(max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is functional (for hardware)")
+    condition = models.CharField(
+        max_length=20, choices=CONDITION_CHOICES, default="GOOD", help_text="Physical condition of the item"
+    )
+    is_complete = models.CharField(
+        max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is complete with all parts"
+    )
+    is_functional = models.CharField(
+        max_length=10,
+        choices=COMPLETENESS_CHOICES,
+        default="UNKNOWN",
+        help_text="Whether the item is functional (for hardware)",
+    )
     working_condition = models.BooleanField(default=True, help_text="Whether the item is in working condition")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="AVAILABLE")
     date_of_entry = models.DateField(null=True, blank=True, help_text="Date the item was added to the collection")

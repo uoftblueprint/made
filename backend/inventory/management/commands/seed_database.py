@@ -14,25 +14,25 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--json-file',
+            "--json-file",
             type=str,
             default=None,
-            help='Path to the JSON seed file. Defaults to seed_data.json in the same directory.'
+            help="Path to the JSON seed file. Defaults to seed_data.json in the same directory.",
         )
 
     def handle(self, *args, **options):
         self.stdout.write("Seeding database...")
 
         # Determine JSON file path
-        json_file = options.get('json_file')
+        json_file = options.get("json_file")
         if not json_file:
-            json_file = os.path.join(os.path.dirname(__file__), 'seed_data.json')
+            json_file = os.path.join(os.path.dirname(__file__), "seed_data.json")
 
         if not os.path.exists(json_file):
             self.stderr.write(self.style.ERROR(f"Seed file not found: {json_file}"))
             return
 
-        with open(json_file, 'r', encoding='utf-8') as f:
+        with open(json_file, "r", encoding="utf-8") as f:
             data = json.load(f)
 
         # Create locations
@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 defaults={
                     "location_type": loc_data["location_type"],
                     "description": loc_data.get("description", ""),
-                }
+                },
             )
             locations[loc_data["name"]] = location
         self.stdout.write(f"  Processed {len(data.get('locations', []))} locations")
@@ -63,7 +63,7 @@ class Command(BaseCommand):
                     "label": box_data.get("label", ""),
                     "description": box_data.get("description", ""),
                     "location": location,
-                }
+                },
             )
             boxes[box_data["box_code"]] = box
         self.stdout.write(f"  Processed {len(data.get('boxes', []))} boxes")
@@ -75,7 +75,9 @@ class Command(BaseCommand):
             box = boxes.get(item_data.get("box"))
             location = locations.get(item_data["location"])
             if not location:
-                self.stderr.write(f"  Warning: Location '{item_data['location']}' not found for item '{item_data['item_code']}'")
+                self.stderr.write(
+                    f"  Warning: Location '{item_data['location']}' not found for item '{item_data['item_code']}'"
+                )
                 continue
 
             is_on_floor = location.location_type == "FLOOR"
@@ -105,17 +107,12 @@ class Command(BaseCommand):
                     "current_location": location,
                     "is_on_floor": is_on_floor,
                     "is_public_visible": item_data.get("is_public_visible", True),
-                }
+                },
             )
 
             if created:
                 items_created += 1
-                ItemHistory.objects.create(
-                    item=item,
-                    event_type="INITIAL",
-                    to_location=location,
-                    notes="Initial cataloging"
-                )
+                ItemHistory.objects.create(item=item, event_type="INITIAL", to_location=location, notes="Initial cataloging")
         self.stdout.write(f"  Created {items_created} collection items")
 
         # Create admin user if not exists
@@ -138,7 +135,7 @@ class Command(BaseCommand):
                     "is_staff": user_data.get("is_staff", False),
                     "is_superuser": user_data.get("is_superuser", False),
                     "access_expires_at": access_expires_at,
-                }
+                },
             )
             if created:
                 user.set_password(user_data.get("password", "password123"))
@@ -158,7 +155,7 @@ class Command(BaseCommand):
                     "name": app_data["name"],
                     "motivation_text": app_data.get("motivation_text", ""),
                     "status": app_data.get("status", "PENDING"),
-                }
+                },
             )
             if created and app_data.get("status") != "PENDING" and admin_user:
                 app.reviewed_at = timezone.now() - timedelta(days=7)
@@ -189,7 +186,7 @@ class Command(BaseCommand):
                         "requested_by": volunteer_user,
                         "admin": admin_user if req_data.get("status") in ["APPROVED", "REJECTED"] else None,
                         "admin_comment": req_data.get("admin_comment", ""),
-                    }
+                    },
                 )
                 if created:
                     movements_created += 1

@@ -156,8 +156,10 @@ def dashboard_stats(request):
     Returns dashboard statistics.
     - GET /api/inventory/stats/ - Get total items, boxes, and locations count
     """
-    return Response({
-        "total_items": CollectionItem.objects.count(),
-        "total_boxes": Box.objects.count(),
-        "total_locations": Location.objects.count(),
-    })
+    return Response(
+        {
+            "total_items": CollectionItem.objects.count(),
+            "total_boxes": Box.objects.count(),
+            "total_locations": Location.objects.count(),
+        }
+    )

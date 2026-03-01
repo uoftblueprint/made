@@ -182,11 +182,9 @@ class VolunteerStatsView(APIView):
 
         volunteers = User.objects.filter(role="VOLUNTEER")
 
-        active_count = volunteers.filter(
-            is_active=True
-        ).filter(
-            Q(access_expires_at__isnull=True) | Q(access_expires_at__gt=now)
-        ).count()
+        active_count = (
+            volunteers.filter(is_active=True).filter(Q(access_expires_at__isnull=True) | Q(access_expires_at__gt=now)).count()
+        )
 
         expiring_soon = volunteers.filter(
             is_active=True,
@@ -213,13 +211,15 @@ class VolunteerStatsView(APIView):
             for v in expiring_soon
         ]
 
-        return Response({
-            "active_count": active_count,
-            "expiring_soon_count": expiring_soon_count,
-            "expired_count": expired_count,
-            "total_count": total_count,
-            "expiring_volunteers": expiring_volunteers,
-        })
+        return Response(
+            {
+                "active_count": active_count,
+                "expiring_soon_count": expiring_soon_count,
+                "expired_count": expired_count,
+                "total_count": total_count,
+                "expiring_volunteers": expiring_volunteers,
+            }
+        )
 
 
 class VolunteerOptionsView(APIView):
@@ -270,7 +270,9 @@ class VolunteerOptionsView(APIView):
             {"value": "tours", "label": "Tours"},
         ]
 
-        return Response({
-            "roles": roles,
-            "event_types": event_types,
-        })
+        return Response(
+            {
+                "roles": roles,
+                "event_types": event_types,
+            }
+        )
