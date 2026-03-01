@@ -1,0 +1,46 @@
+.catalogue-public-layout {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+/* Header - matching admin style */
+.catalogue-public-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.catalogue-public-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 32px;
+  color: var(--color-primary);
+}
+
+.catalogue-public-header-subtitle {
+  margin: var(--spacing-xs) 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-secondary);
+}
+
+/* Filters */
+.catalogue-public-filters {
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Results */
+.catalogue-public-results {
+  margin-bottom: var(--spacing-lg);
+}
+
+.catalogue-public-message {
+  font-size: 14px;
+  color: var(--color-secondary);
+  padding: var(--spacing-lg);
+  text-align: center;
+}
+
+.catalogue-public-message.error {
+  color: var(--color-error);
+}

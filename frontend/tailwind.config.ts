@@ -1,47 +1,54 @@
-import { type Config } from "tailwindcss";
-
 export default {
-  content: ["./index.html", "./src/**/*.{ts,tsx,jsx,js}"],
+  content: ["./index.html", "./src/**/*.{ts,tsx,jsx,js,jsx,js}"],
   theme: {
     extend: {
+      screens: {
+        tablet: "768px",
+        laptop: "1024px",
+      },
       colors: {
-        primary: "#0F172A",       // dark navy background / main brand
-        accent: "#A50A02",        // dark red
-        success: "#059669",       // green
-        warning: "#D97706",       // orange
-        error: "#E61304",         // red
-        light_blue: "#DBEAFE",    // light blue accent
-        background_gray: "#F8FAFC",
-        gray: {
-          100: "#F8FAFC",   // very light gray background
-          200: "#E5E7EB",   // light gray background / borders
-          300: "#D1D5DB",   // medium light gray
-          400: "#9CA3AF",   // medium gray
-          500: "#6B7280",   // default gray for text
-          600: "#4B5563",   // dark gray for text / borders
-          700: "#374151",   // darker gray for headings
-        },
+        // text and surfaces
+        primary: "rgb(var(--primary) / <alpha-value>)",
+        muted: "rgb(var(--muted) / <alpha-value>)",
+        muted_2: "rgb(var(--muted_2) / <alpha-value>)",     
+        border: "rgb(var(--border) / <alpha-value>)",
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        surface_2: "rgb(var(--surface_2) / <alpha-value>)",
+        background: "rgb(var(--background) / <alpha-value>)",
+
+        // states / accents
+        accent: "rgb(var(--accent) / <alpha-value>)",
+        danger: "rgb(var(--danger) / <alpha-value>)",
+        danger_surface: "rgb(var(--danger_surface) / <alpha-value>)",
+        success: "rgb(var(--success) / <alpha-value>)",
+        success_surface: "rgb(var(--success_surface) / <alpha-value>)",
+        warning: "rgb(var(--warning) / <alpha-value>)",
+
+        low: "rgb(var(--low) / <alpha-value>)",
+        low_surface: "rgb(var(--low_surface) / <alpha-value>)",
+
+        high: "rgb(var(--high) / <alpha-value>)",
+        high_surface: "rgb(var(--high_surface) / <alpha-value>)",
+
+        // form
+        submit: "rgb(var(--submit) / <alpha-value>)",
+        required: "rgb(var(--required) / <alpha-value>)",
+        cancel: "rgb(var(--cancel) / <alpha-value>)",
+
+        // notes
+        note: "rgb(var(--note) / <alpha-value>)",
+        note_surface: "rgb(var(--note_surface) / <alpha-value>)",
+
+        // alerts
+        alert_outline: "rgb(var(--alert_outline) / <alpha-value>)",
+        alert_text: "rgb(var(--alert_text) / <alpha-value>)",
+        alert_muted: "rgb(var(--alert_muted) / <alpha-value>)",
       },
       fontFamily: {
-        sans: ["Helvetica Neue", "ui-sans-serif", "system-ui"],
-        heading: ["Helvetica Neue", "ui-sans-serif", "system-ui"],
-      },
-      fontSize: {
-        h1: ["2.25rem", { lineHeight: "2.5rem", fontWeight: "700" }], // 36px
-        h2: ["1.875rem", { lineHeight: "2.25rem", fontWeight: "700" }], // 30px
-        body: ["1rem", { lineHeight: "1.5rem", fontWeight: "400" }], // 16px
-        caption: ["0.875rem", { lineHeight: "1.25rem", fontWeight: "400" }], // 14px
-      },
-      spacing: {
-        xs: "0.25rem",   // 4px
-        sm: "0.5rem",    // 8px
-        md: "1rem",      // 16px
-        lg: "1.5rem",    // 24px
-        xl: "2rem",      // 32px
-        "2xl": "4rem",   // 64px
+        sans: ["ui-sans-serif", "system-ui"],
+        helvetica: ["Helvetica Neue", "ui-sans-serif", "system-ui"],
       },
     },
   },
-
   plugins: [],
-} satisfies Config;
+}

@@ -1,34 +1,115 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
-/* ----- CSS Variables ----- */
+/* ----- CSS Variables from Figma Design ----- */
 :root {
-  --color-accent: #A50A02;
-  --color-background-gray: #F8FAFC;
-  --color-primary: #0F172A;
-  --font-sans: "Helvetica Neue", ui-sans-serif, system-ui;
+  /* Typography */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  /* Colors - Primary */
+  --color-primary: #0f172a;
+  --color-secondary: #475569;
+  --color-muted: #94a3b8;
+  
+  /* Colors - Backgrounds */
+  --color-background: #ffffff;
+  --color-background-gray: #f8fafc;
+  --color-background-light: #f1f5f9;
+  
+  /* Colors - Borders */
+  --color-border: #e2e8f0;
+  --color-border-light: #f3f4f6;
+  
+  /* Colors - Accent */
+  --color-accent: #0f172a;
+  --color-accent-hover: #1e293b;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+  --color-warning-border: #fde68a;
+  
+  /* Colors - Tab States */
+  --color-tab-dashboard: #f59e0b;
+  --color-tab-active: #991b1b;
+  
+  /* Colors - Status */
+  --color-available: #0d9488;
+  --color-in-transit: #ea580c;
+  --color-exhibit: #0d9488;
+  --color-storage: #64748b;
+  --color-checked-out: #1e293b;
+  
+  /* Colors - Tan/Beige Accent */
+  --color-tan-bg: #fef7ed;
+  --color-tan-border: #fed7aa;
+  
+  /* Colors - Status */
+  --color-success: #22c55e;
+  --color-error: #dc2626;
+  
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
+/* ----- Base Styles ----- */
+* {
+  box-sizing: border-box;
 }
 
 body {
   font-family: var(--font-sans);
+  font-size: 14px;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light dark;
-  background-color: var(--color-background-gray);
+  color: var(--color-primary);
+  background-color: var(--color-background);
   display: block;
   min-width: 320px;
   min-height: 100vh;
+  margin: 0;
+}
+
+/* ----- Typography ----- */
+h1 {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 36px;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+h3 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 24px;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+p {
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--color-secondary);
   margin: 0;
 }
 
@@ -36,66 +117,124 @@ body {
 a {
   text-decoration: none;
   font-weight: 500;
-  color: var(--color-accent);
+  color: var(--color-secondary);
+  transition: color 0.2s ease;
 }
+
 a:hover {
-  color: #930701; /* slightly darker accent */
+  color: var(--color-primary);
 }
 
 /* ----- Buttons ----- */
 button {
-  background-color: var(--color-accent);
-  color: white;
-  padding: 0.5rem 1.5rem;
-  border-radius: 0.5rem;
   font-family: var(--font-sans);
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 24px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-button:hover {
-  background-color: #930701; /* hover accent */
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-button:hover {
-  border-color: #646cff;
+  transition: all 0.2s ease;
 }
 
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    background-color: #ffffff;
-  }
+/* Primary Button */
+.btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-background);
+}
 
-  a:hover {
-    color: #A50A02;
-  }
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+}
 
-  button {
-    /* optional light theme button override */
-    background-color: var(--color-accent);
-  }
+/* Secondary Button */
+.btn-secondary {
+  background-color: var(--color-background);
+  color: var(--color-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* ----- Form Elements ----- */
+input,
+textarea,
+select {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  transition: border-color 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-muted);
+}
+
+/* ----- Cards ----- */
+.card {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ----- Layout Utilities ----- */
+.page-container {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  padding: var(--spacing-lg) var(--spacing-xl);
+}
+
+.content-container {
+  width: 100%;
+}
+
+/* ----- Custom Scrollbar Styles ----- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-secondary);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted) var(--color-background-light);
 }

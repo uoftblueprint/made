@@ -12,46 +12,48 @@
 }
 
 .delete-dialog {
-    background: #ffffff;
-    border-radius: 12px;
+    background: var(--color-background);
+    border-radius: var(--radius-lg);
     width: 100%;
     max-width: 400px;
-    padding: 24px;
+    padding: var(--spacing-lg);
 }
 
 .delete-dialog h3 {
-    margin: 0 0 12px;
-    font-size: 1.125rem;
+    margin: 0 0 var(--spacing-sm);
+    font-size: 20px;
     font-weight: 600;
-    color: #1f2937;
+    line-height: 28px;
+    color: var(--color-primary);
 }
 
 .delete-dialog p {
-    margin: 0 0 20px;
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.5;
+    margin: 0 0 var(--spacing-md);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--color-secondary);
 }
 
 .delete-dialog .item-name {
     font-weight: 600;
-    color: #1f2937;
+    color: var(--color-primary);
 }
 
 .delete-dialog-actions {
     display: flex;
-    gap: 12px;
+    gap: var(--spacing-sm);
     justify-content: flex-end;
 }
 
 .btn-delete {
-    padding: 10px 20px;
-    background: #dc2626;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-error);
     border: none;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #ffffff;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 24px;
+    color: var(--color-background);
     cursor: pointer;
 }
 

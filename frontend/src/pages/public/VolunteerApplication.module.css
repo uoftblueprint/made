@@ -1,30 +1,157 @@
-.container{
-    display: flex; 
+.container {
+    min-height: 100vh;
+    background-color: var(--color-background);
+    padding: var(--spacing-lg) var(--spacing-xl);
+    max-width: 600px;
+    display: flex;
     flex-direction: column;
-    padding: 1rem; 
-    flex-grow: 1;
-} 
-.form{ 
-    display: flex; 
+}
+
+/* Header - matching admin style */
+.header {
+    margin-bottom: var(--spacing-lg);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+    color: var(--color-primary);
+}
+
+.subtitle {
+    margin: var(--spacing-xs) 0 0;
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--color-secondary);
+}
+
+/* Card */
+.card {
+    width: 100%;
+    max-width: 640px;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* Form */
+.form {
+    display: flex;
     flex-direction: column;
-    justify-content: space-around;
-    gap: 0.75rem;
-} 
+    gap: var(--spacing-md);
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 640px) {
+    .formRow {
+        grid-template-columns: 1fr;
+    }
+}
 
 .inputContainer {
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-xs);
 }
 
-.inputRow { 
-    display: flex;
-    gap: 0.75rem;
-} 
+.inputContainer label {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 20px;
+    color: var(--color-primary);
+}
 
 .inputBox {
-    flex-grow: 1;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-primary);
+    background-color: var(--color-background);
+}
+
+.inputBox:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.textArea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--color-primary);
+    background-color: var(--color-background);
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+.textArea:focus {
+    outline: none;
+    border-color: var(--color-primary);
 }
 
 .error {
-    margin: auto auto;
+    font-size: 12px;
+    color: var(--color-error);
+}
+
+.errorMessage {
+    font-size: 14px;
+    color: var(--color-error);
+    margin: 0;
+}
+
+.hint {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-muted);
+    margin: 0;
+}
+
+/* Submit Button - matching admin style */
+.submitBtn {
+    padding: 10px 20px;
+    background: var(--color-primary);
+    color: var(--color-background);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.submitBtn:hover:not(:disabled) {
+    background: var(--color-accent-hover);
+}
+
+.submitBtn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Success Message */
+.successMessage {
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.successMessage p {
+    font-size: 14px;
+    color: var(--color-secondary);
+    margin: 0 0 var(--spacing-md);
 }
