@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Archive, MapPin, Package, ChevronRight, X } from 'lucide-react';
+import { Archive, MapPin, Package, ChevronRight } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
 import { useBoxDetail } from '../../actions/useBoxes';
 import type { CreateLocationData } from '../../api/locations.api';
+import Button from '../../components/common/Button';
+import Modal from '../../components/common/Modal';
 import './BoxManagementPage.css';
 
 const BoxManagementPage: React.FC = () => {
@@ -70,9 +72,9 @@ const BoxManagementPage: React.FC = () => {
           <h1>Box Management</h1>
           <p className="box-management-header-subtitle">Track items, boxes, and shelf locations across the museum</p>
         </div>
-        <button className="box-management-add-btn" onClick={() => setShowAddModal(true)}>
-          + Add New Location
-        </button>
+        <Button variant="primary" size="md" icon="plus" onClick={() => setShowAddModal(true)}>
+          Add New Location
+        </Button>
       </div>
 
       {/* View Toggle */}
@@ -240,75 +242,68 @@ const BoxManagementPage: React.FC = () => {
       </div>
 
       {/* Add Location Modal */}
-      {showAddModal && (
-        <div className="box-management-modal-overlay" onClick={handleCloseModal}>
-          <div className="box-management-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="box-management-modal-header">
-              <h2>Add New Location</h2>
-              <button className="box-management-modal-close" onClick={handleCloseModal}>
-                <X size={20} />
-              </button>
-            </div>
-            <div className="box-management-modal-body">
-              {createError && (
-                <div className="box-management-modal-error">{createError}</div>
-              )}
-              <div className="box-management-form-group">
-                <label htmlFor="location-name">Name *</label>
-                <input
-                  id="location-name"
-                  type="text"
-                  value={newLocationName}
-                  onChange={(e) => setNewLocationName(e.target.value)}
-                  placeholder="e.g., Shelf A1, Floor - Main Exhibit"
-                  disabled={creatingLocation}
-                />
-              </div>
-              <div className="box-management-form-group">
-                <label htmlFor="location-type">Type *</label>
-                <select
-                  id="location-type"
-                  value={newLocationType}
-                  onChange={(e) => setNewLocationType(e.target.value as CreateLocationData['location_type'])}
-                  disabled={creatingLocation}
-                >
-                  <option value="FLOOR">Floor</option>
-                  <option value="STORAGE">Storage</option>
-                  <option value="EVENT">Event</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-              <div className="box-management-form-group">
-                <label htmlFor="location-description">Description</label>
-                <textarea
-                  id="location-description"
-                  value={newLocationDescription}
-                  onChange={(e) => setNewLocationDescription(e.target.value)}
-                  placeholder="Optional description"
-                  rows={3}
-                  disabled={creatingLocation}
-                />
-              </div>
-            </div>
-            <div className="box-management-modal-footer">
-              <button 
-                className="box-management-modal-cancel" 
-                onClick={handleCloseModal}
-                disabled={creatingLocation}
-              >
-                Cancel
-              </button>
-              <button 
-                className="box-management-modal-submit" 
-                onClick={handleAddLocation}
-                disabled={creatingLocation || !newLocationName.trim()}
-              >
-                {creatingLocation ? 'Creating...' : 'Create Location'}
-              </button>
-            </div>
+      <Modal open={showAddModal} onClose={handleCloseModal} title="Add New Location">
+        <div className="box-management-modal-body">
+          <h2 className="text-xl font-semibold text-primary mb-4">Add New Location</h2>
+          {createError && (
+            <div className="box-management-modal-error">{createError}</div>
+          )}
+          <div className="box-management-form-group">
+            <label htmlFor="location-name">Name *</label>
+            <input
+              id="location-name"
+              type="text"
+              value={newLocationName}
+              onChange={(e) => setNewLocationName(e.target.value)}
+              placeholder="e.g., Shelf A1, Floor - Main Exhibit"
+              disabled={creatingLocation}
+            />
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="location-type">Type *</label>
+            <select
+              id="location-type"
+              value={newLocationType}
+              onChange={(e) => setNewLocationType(e.target.value as CreateLocationData['location_type'])}
+              disabled={creatingLocation}
+            >
+              <option value="FLOOR">Floor</option>
+              <option value="STORAGE">Storage</option>
+              <option value="EVENT">Event</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="location-description">Description</label>
+            <textarea
+              id="location-description"
+              value={newLocationDescription}
+              onChange={(e) => setNewLocationDescription(e.target.value)}
+              placeholder="Optional description"
+              rows={3}
+              disabled={creatingLocation}
+            />
           </div>
         </div>
-      )}
+        <div className="box-management-modal-footer">
+          <Button 
+            variant="outline-gray" 
+            size="md"
+            onClick={handleCloseModal}
+            disabled={creatingLocation}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="primary" 
+            size="md"
+            onClick={handleAddLocation}
+            disabled={creatingLocation || !newLocationName.trim()}
+          >
+            {creatingLocation ? 'Creating...' : 'Create Location'}
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };

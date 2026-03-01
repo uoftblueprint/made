@@ -1,6 +1,8 @@
 import { useVolunteerApplications, useUpdateVolunteerStatus, useVolunteerStats, useVolunteerOptions } from '../../actions/useVolunteers';
 import { useState, useMemo } from 'react'
-import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown, Plus } from 'lucide-react';
+import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown } from 'lucide-react';
+import Button from '../../components/common/Button';
+import Modal from '../../components/common/Modal';
 import './ManageVolunteers.css';
 
 const DEFAULT_STATUS_OPTIONS = [
@@ -87,10 +89,9 @@ const ManageVolunteers = () => {
                     <h1>Volunteer Management</h1>
                     <p className="volunteers-header-subtitle">Manage volunteer access, roles, and expiration</p>
                 </div>
-                <button className="volunteers-add-btn" onClick={() => setShowAddModal(true)}>
-                    <Plus size={16} />
+                <Button variant="primary" size="md" icon="plus" onClick={() => setShowAddModal(true)}>
                     Add Volunteer
-                </button>
+                </Button>
             </div>
 
             {/* Stats Bar */}
@@ -220,12 +221,12 @@ const ManageVolunteers = () => {
                                     <div className="volunteers-actions">
                                         {volunteer.status === 'PENDING' && (
                                             <>
-                                                <button className="volunteers-action-btn approve" onClick={() => onApprove(volunteer.id)}>
+                                                <Button variant="success" size="xs" onClick={() => onApprove(volunteer.id)}>
                                                     Approve
-                                                </button>
-                                                <button className="volunteers-action-btn delete" onClick={() => onReject(volunteer.id)}>
+                                                </Button>
+                                                <Button variant="danger" size="xs" onClick={() => onReject(volunteer.id)}>
                                                     <Trash2 size={14} />
-                                                </button>
+                                                </Button>
                                             </>
                                         )}
                                         {volunteer.status === 'APPROVED' && (
@@ -268,68 +269,64 @@ const ManageVolunteers = () => {
             )}
 
             {/* Add Volunteer Modal */}
-            {showAddModal && (
-                <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-                    <div className="volunteers-modal" onClick={(e) => e.stopPropagation()}>
-                        <h2>Grant Access to New Volunteer</h2>
-                        <p className="modal-subtitle">Fill out fields marked with * to create an entry. Everything else is optional and can be added later.</p>
-                        
-                        <div className="modal-form">
-                            <div className="modal-row">
-                                <div className="modal-field">
-                                    <label>First Name <span className="required">*</span></label>
-                                    <input type="text" placeholder="" />
-                                </div>
-                                <div className="modal-field">
-                                    <label>Last Name <span className="required">*</span></label>
-                                    <input type="text" placeholder="" />
-                                </div>
-                            </div>
-                            <div className="modal-row">
-                                <div className="modal-field">
-                                    <label>Email Address <span className="required">*</span></label>
-                                    <input type="email" placeholder="This will be used for login credentials" />
-                                </div>
-                                <div className="modal-field">
-                                    <label>Available Start Date <span className="required">*</span></label>
-                                    <input type="date" />
-                                </div>
-                            </div>
-                            
-                            <h3>Volunteer Details</h3>
-                            <div className="modal-row">
-                                <div className="modal-field">
-                                    <label>Preferred Role <span className="required">*</span></label>
-                                    <select>
-                                        <option value="">Please select a role</option>
-                                        {roles.filter(r => r.value !== 'admin').map((role) => (
-                                            <option key={role.value} value={role.value}>{role.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="modal-field">
-                                    <label>Phone Number <span className="required">*</span></label>
-                                    <input type="tel" placeholder="" />
-                                </div>
-                            </div>
-                            <div className="modal-field">
-                                <label>Interested Event Types</label>
-                                <select>
-                                    <option value="">Select option</option>
-                                    {eventTypes.map((eventType) => (
-                                        <option key={eventType.value} value={eventType.value}>{eventType.label}</option>
-                                    ))}
-                                </select>
-                            </div>
+            <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Grant Access to New Volunteer">
+                <h2 className="text-xl font-semibold text-primary mb-2">Grant Access to New Volunteer</h2>
+                <p className="modal-subtitle">Fill out fields marked with * to create an entry. Everything else is optional and can be added later.</p>
+                
+                <div className="modal-form">
+                    <div className="modal-row">
+                        <div className="modal-field">
+                            <label>First Name <span className="required">*</span></label>
+                            <input type="text" placeholder="" />
                         </div>
-
-                        <div className="modal-actions">
-                            <button className="modal-btn secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
-                            <button className="modal-btn primary">Create Volunteer</button>
+                        <div className="modal-field">
+                            <label>Last Name <span className="required">*</span></label>
+                            <input type="text" placeholder="" />
                         </div>
                     </div>
+                    <div className="modal-row">
+                        <div className="modal-field">
+                            <label>Email Address <span className="required">*</span></label>
+                            <input type="email" placeholder="This will be used for login credentials" />
+                        </div>
+                        <div className="modal-field">
+                            <label>Available Start Date <span className="required">*</span></label>
+                            <input type="date" />
+                        </div>
+                    </div>
+                    
+                    <h3>Volunteer Details</h3>
+                    <div className="modal-row">
+                        <div className="modal-field">
+                            <label>Preferred Role <span className="required">*</span></label>
+                            <select>
+                                <option value="">Please select a role</option>
+                                {roles.filter(r => r.value !== 'admin').map((role) => (
+                                    <option key={role.value} value={role.value}>{role.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="modal-field">
+                            <label>Phone Number <span className="required">*</span></label>
+                            <input type="tel" placeholder="" />
+                        </div>
+                    </div>
+                    <div className="modal-field">
+                        <label>Interested Event Types</label>
+                        <select>
+                            <option value="">Select option</option>
+                            {eventTypes.map((eventType) => (
+                                <option key={eventType.value} value={eventType.value}>{eventType.label}</option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
-            )}
+
+                <div className="modal-actions">
+                    <Button variant="outline-gray" size="md" onClick={() => setShowAddModal(false)}>Cancel</Button>
+                    <Button variant="primary" size="md">Create Volunteer</Button>
+                </div>
+            </Modal>
         </div>
     );
 }

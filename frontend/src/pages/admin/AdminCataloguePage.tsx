@@ -3,7 +3,8 @@ import { AddItemModal, EditItemModal, DeleteItemDialog } from '../../components/
 import { itemsApi } from '../../api/items.api';
 import type { PublicCollectionItem } from '../../lib/types';
 import { Link } from 'react-router-dom';
-import { Plus, Eye, Edit2, Download, ChevronDown } from 'lucide-react';
+import { Eye, Edit2, ChevronDown } from 'lucide-react';
+import Button from '../../components/common/Button';
 import './AdminCataloguePage.css';
 
 type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
@@ -232,13 +233,14 @@ const AdminCataloguePage: React.FC = () => {
                     <h1>Collection Catalogue</h1>
                     <p className="catalogue-header-subtitle">Search, filter, and manage items</p>
                 </div>
-                <button
-                    className="catalogue-add-btn"
+                <Button
+                    variant="primary"
+                    size="md"
+                    icon="plus"
                     onClick={() => setIsAddModalOpen(true)}
                 >
-                    <Plus size={16} />
                     Add New Item
-                </button>
+                </Button>
             </div>
 
             {/* Main Content */}
@@ -313,10 +315,9 @@ const AdminCataloguePage: React.FC = () => {
                         </select>
                         <ChevronDown size={14} className="dropdown-icon" />
                     </div>
-                    <button className="catalogue-export-btn" onClick={handleExportCSV}>
-                        <Download size={14} />
+                    <Button variant="outline-black" size="sm" icon="download" onClick={handleExportCSV}>
                         Export CSV
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Item Count */}

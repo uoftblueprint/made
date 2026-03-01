@@ -1,11 +1,25 @@
 import * as React from "react"
+import { Plus, Archive, Download, Trash2, Edit, Eye, Check, X, ExternalLink } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+
+const iconMap: Record<string, LucideIcon> = {
+  plus: Plus,
+  archive: Archive,
+  download: Download,
+  trash: Trash2,
+  edit: Edit,
+  view: Eye,
+  check: Check,
+  x: X,
+  "external-link": ExternalLink,
+}
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "outline-black" | "outline-gray" | "danger" | "success"
   size?: "xs" | "sm" | "md" | "lg" | "xl" | "xxl"
   fullWidth?: boolean
   radius?: "xs" | "sm" | "md" | "lg" | "xl"
-  icon?: string // file name without its svg extension
+  icon?: keyof typeof iconMap
   layout?: "default" | "stacked"
 }
 
@@ -100,24 +114,11 @@ export function Button({
 
   if (className) classes.push(className)
 
-  const iconClass =
-    layout === "stacked"
-      ? "h-6 w-6 shrink-0"
-      : "h-4 w-4 shrink-0"
+  const iconSize = layout === "stacked" ? 24 : 16
 
-  const leftIcon = icon ? (
-    icon === "plus" ? (
-      <span className={`${iconClass} inline-flex items-center justify-center`}>
-        +
-      </span>
-    ) : (
-      <img
-        src={`/icons/${icon}.svg`}
-        alt=""
-        aria-hidden="true"
-        className={iconClass}
-      />
-    )
+  const IconComponent = icon ? iconMap[icon] : null
+  const leftIcon = IconComponent ? (
+    <IconComponent size={iconSize} className="shrink-0" aria-hidden="true" />
   ) : null
 
   return (

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Check, X, Clock, CheckCircle, XCircle, Filter } from 'lucide-react';
 import { useRequests } from '../../actions/useRequests';
 import type { MovementRequest, MovementRequestStatus } from '../../lib/types';
+import Button from '../../components/common/Button';
 import './RequestsPage.css';
 
 function formatTimeAgo(dateString: string): string {
@@ -128,22 +129,24 @@ const RequestsPage: React.FC = () => {
                   <td>
                     {request.status === 'WAITING_APPROVAL' ? (
                       <div className="request-actions">
-                        <button
-                          className="request-action-btn approve"
+                        <Button
+                          variant="success"
+                          size="xs"
                           onClick={() => handleApprove(request)}
                           disabled={processingId === request.id}
                           title="Approve"
                         >
                           <Check size={16} />
-                        </button>
-                        <button
-                          className="request-action-btn reject"
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="xs"
                           onClick={() => handleReject(request)}
                           disabled={processingId === request.id}
                           title="Reject"
                         >
                           <X size={16} />
-                        </button>
+                        </Button>
                       </div>
                     ) : (
                       <span className="request-processed">

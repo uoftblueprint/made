@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Package, Archive, MapPin, Plus, Download, Check, X } from 'lucide-react';
+import { AlertCircle, Package, Archive, MapPin, Check, X } from 'lucide-react';
 import { usePendingRequests } from '../../actions/useRequests';
 import { useDashboardStats } from '../../actions/useStats';
 import type { MovementRequest } from '../../lib/types';
+import Button from '../../components/common/Button';
 import './AdminDashboard.css';
 
 function formatTimeAgo(dateString: string): string {
@@ -139,18 +140,17 @@ const AdminDashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="admin-quick-actions">
-        <Link to="/admin/catalogue" className="admin-quick-action-btn">
-          <Plus className="admin-quick-action-icon" size={24} />
-          Add New Item
+        <Link to="/admin/catalogue" className="block">
+          <Button variant="outline-black" size="lg" icon="plus" layout="stacked" fullWidth>
+            Add New Item
+          </Button>
         </Link>
-        <button className="admin-quick-action-btn">
-          <Archive className="admin-quick-action-icon" size={24} />
+        <Button variant="outline-black" size="lg" icon="archive" layout="stacked" fullWidth>
           Create Container
-        </button>
-        <button className="admin-quick-action-btn">
-          <Download className="admin-quick-action-icon" size={24} />
+        </Button>
+        <Button variant="outline-black" size="lg" icon="download" layout="stacked" fullWidth>
           Export to CSV
-        </button>
+        </Button>
       </div>
     </div>
   );

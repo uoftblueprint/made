@@ -23,7 +23,7 @@ const Header = () => {
             <Link to="/catalogue" className={`header-link ${isActive('/catalogue') ? 'active' : ''}`}>
               Catalogue
             </Link>
-            <Link to="/volunteer_application" className={`header-link ${isActive('/volunteer_application') ? 'active' : ''}`}>
+            <Link to="/volunteer_management" className={`header-link ${isActive('/volunteer_management') ? 'active' : ''}`}>
               Volunteer Application
             </Link>
           </>
