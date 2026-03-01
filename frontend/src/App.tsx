@@ -25,21 +25,32 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <Header />
-          <Routes>
-            {/* --- Public Routes --- */}
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/catalogue" element={<CataloguePage />} />
-            <Route path="/logout" element={<LogoutPage />} />
-            <Route path="/volunteer_application" element={<VolunteerApplication />} />
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className='mx-auto w-full lg:max-w-[90%] flex-1 '>
+              <Routes >
+                {/* --- Public Routes --- */}
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/catalogue" element={<CataloguePage />} />
+                <Route path="/logout" element={<LogoutPage />} />
+                <Route path="/volunteer_management" element={<VolunteerManagement />} />
+                {/* Box management not complete, currently set to HomePage route*/ }
 
-            {/* --- Admin Routes --- */}
+                {/* --- Admin Routes --- */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
             <Route
-              path="/admin"
+              path="/admin/catalogue"
               element={
                 <ProtectedRoute requiredRole="ADMIN">
-                  <AdminDashboard />
+                  <AdminCataloguePage />
                 </ProtectedRoute>
               }
             />
@@ -84,9 +95,11 @@ const App: React.FC = () => {
               }
             />
 
-            {/* --- Catch-all 404 Route --- */}
-            {/* <Route path="*" element={<NotFoundPage />} /> */}
-          </Routes>
+                {/* --- Catch-all 404 Route --- */}
+                {/* <Route path="*" element={<NotFoundPage />} /> */}
+              </Routes>
+            </main>
+          </div>
           <Footer />
         </AuthProvider>
       </BrowserRouter>

@@ -15,6 +15,10 @@ const CataloguePage: React.FC = () => {
 
   const { data: items = [], isLoading, isError } = useItems(filters);
 
+  const handleAddItem = () => {
+    
+  }
+
   return (
     <div className="catalogue-public-layout">
       <div className="catalogue-public-header">
@@ -32,7 +36,7 @@ const CataloguePage: React.FC = () => {
         {!isLoading && !isError && items?.length === 0 && <p className="catalogue-public-message">No items found.</p>}
         {items && items.length > 0 && <ItemList items={items} />}
       </div>
-    </div>
+    </>
   );
 };
 
