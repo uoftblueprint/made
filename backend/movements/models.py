@@ -17,8 +17,9 @@ class ItemMovementRequest(models.Model):
     ]
 
     REVIEW_STATUS_CHOICES = [
-    ("PENDING", "Pending"),
-    ("APPROVED", "Approved"),]
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+    ]
 
     item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE, related_name="movement_requests")
     requested_by = models.ForeignKey(

@@ -62,6 +62,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data["review_status"] = "PENDING"
         return super().create(validated_data)
+
     def update(self, instance, validated_data):
         validated_data["review_status"] = "PENDING"
         return super().update(instance, validated_data)
