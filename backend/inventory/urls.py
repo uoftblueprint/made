@@ -5,6 +5,7 @@ from .views import (
     PublicCollectionItemViewSet,
     AdminCollectionItemViewSet,
     dashboard_stats,
+    export_items,
 )
 
 # from .views import InventoryItemViewSet
@@ -32,6 +33,7 @@ from .views import (
 # PUT    /api/inventory/items/{id}/      - Full update
 # PATCH  /api/inventory/items/{id}/     - Partial update
 # DELETE /api/inventory/items/{id}/     - Soft delete (admin only)
+# GET    /api/inventory/export/          - Export items as CSV
 
 router = DefaultRouter()
 router.register(r"items", CollectionItemViewSet, basename="item")
@@ -43,4 +45,5 @@ urlpatterns = [
     path("", include(router.urls)),
     path("public/", include(public_router.urls)),
     path("stats/", dashboard_stats, name="dashboard-stats"),
+    path("export/", export_items, name="export-items"),
 ]

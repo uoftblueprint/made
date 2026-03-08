@@ -5,6 +5,7 @@ import { usePendingRequests } from '../../actions/useRequests';
 import { useDashboardStats } from '../../actions/useStats';
 import type { MovementRequest } from '../../lib/types';
 import Button from '../../components/common/Button';
+import { ExportModal } from '../../components/items';
 import './AdminDashboard.css';
 
 function formatTimeAgo(dateString: string): string {
@@ -25,6 +26,7 @@ const AdminDashboard: React.FC = () => {
   const { requests: pendingRequests, loading, approve, reject } = usePendingRequests();
   const { stats, loading: statsLoading } = useDashboardStats();
   const [processingId, setProcessingId] = useState<number | null>(null);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
   const handleApprove = async (request: MovementRequest) => {
     setProcessingId(request.id);
@@ -148,10 +150,16 @@ const AdminDashboard: React.FC = () => {
         <Button variant="outline-black" size="lg" icon="archive" layout="stacked" fullWidth>
           Create Container
         </Button>
-        <Button variant="outline-black" size="lg" icon="download" layout="stacked" fullWidth>
+        <Button variant="outline-black" size="lg" icon="download" layout="stacked" fullWidth onClick={() => setIsExportModalOpen(true)}>
           Export to CSV
         </Button>
       </div>
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+      />
     </div>
   );
 };

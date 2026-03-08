@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AddItemModal, EditItemModal, DeleteItemDialog } from '../../components/items';
+import { AddItemModal, EditItemModal, DeleteItemDialog, ExportModal } from '../../components/items';
 import { itemsApi } from '../../api/items.api';
 import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types';
 import { Link } from 'react-router-dom';
@@ -144,6 +144,7 @@ const AdminCataloguePage: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<AdminCollectionItem | null>(null);
 
   const [showFilters, setShowFilters] = useState(false);
@@ -217,33 +218,6 @@ const AdminCataloguePage: React.FC = () => {
     if (statusFilter && display.status !== statusFilter) return false;
     return true;
   });
-
-  // Export CSV handler
-  const handleExportCSV = () => {
-        const headers = ['Game Title', 'MADE ID', 'System', 'Type', 'Box ID', 'Location', 'Working Condition', 'Status'];
-    const csvRows = [headers.join(',')];
-    inventoryItems.forEach(({ display }) => {
-      const row = [
-        `"${display.title}"`,
-        display.item_code,
-        display.platform,
-        getTypeLabel(display.item_type),
-        display.box_code,
-        getLocationLabel(display.location_type, display.location_name),
-        display.working_condition ? 'Yes' : 'No',
-        getStatusLabel(display.status),
-      ];
-      csvRows.push(row.join(','));
-    });
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'collection_catalogue.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
 
   return (
     <div className="catalogue-layout">
@@ -332,7 +306,7 @@ const AdminCataloguePage: React.FC = () => {
             </select>
             <ChevronDown size={14} className="dropdown-icon" />
           </div>
-          <Button className="catalogue-export-mobile-hide" variant="outline-black" size="sm" icon="download" onClick={handleExportCSV}>
+          <Button className="catalogue-export-mobile-hide" variant="outline-black" size="sm" icon="download" onClick={() => setIsExportModalOpen(true)}>
             Export CSV
           </Button>
         </div>
@@ -562,6 +536,11 @@ const AdminCataloguePage: React.FC = () => {
         }}
         onConfirm={handleDeleteConfirm}
         itemTitle={selectedItem?.title || ''}
+      />
+
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
       />
     </div>
   );
