@@ -261,31 +261,35 @@ def export_items(request):
     response["Content-Disposition"] = f'attachment; filename="made_export_{today}.csv"'
 
     writer = csv.writer(response)
-    writer.writerow([
-        "MADE ID",
-        "Title",
-        "Platform",
-        "Item Type",
-        "Box Code",
-        "Location",
-        "Location Type",
-        "Working Condition",
-        "Status",
-        "Created At",
-    ])
+    writer.writerow(
+        [
+            "MADE ID",
+            "Title",
+            "Platform",
+            "Item Type",
+            "Box Code",
+            "Location",
+            "Location Type",
+            "Working Condition",
+            "Status",
+            "Created At",
+        ]
+    )
 
     for item in queryset:
-        writer.writerow([
-            item.item_code,
-            item.title,
-            item.platform,
-            item.get_item_type_display(),
-            item.box.box_code if item.box else "",
-            item.current_location.name if item.current_location else "",
-            item.current_location.get_location_type_display() if item.current_location else "",
-            "Yes" if item.working_condition else "No",
-            item.get_status_display(),
-            item.created_at.strftime("%Y-%m-%d %H:%M:%S") if item.created_at else "",
-        ])
+        writer.writerow(
+            [
+                item.item_code,
+                item.title,
+                item.platform,
+                item.get_item_type_display(),
+                item.box.box_code if item.box else "",
+                item.current_location.name if item.current_location else "",
+                item.current_location.get_location_type_display() if item.current_location else "",
+                "Yes" if item.working_condition else "No",
+                item.get_status_display(),
+                item.created_at.strftime("%Y-%m-%d %H:%M:%S") if item.created_at else "",
+            ]
+        )
 
     return response

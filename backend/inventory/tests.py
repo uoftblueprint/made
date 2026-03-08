@@ -1151,9 +1151,7 @@ class TestExportItems:
         self.storage_location = storage_location
 
         # Create a box for filtering tests
-        self.box = Box.objects.create(
-            box_code="BOX001", label="Export Test Box", location=floor_location
-        )
+        self.box = Box.objects.create(box_code="BOX001", label="Export Test Box", location=floor_location)
 
         # Create test items
         self.item_software = CollectionItem.objects.create(
@@ -1188,9 +1186,7 @@ class TestExportItems:
     def test_admin_gets_csv_response(self):
         """Admin should receive a CSV file response."""
         token = self._get_admin_token()
-        response = self.client.get(
-            self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = self.client.get(self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == status.HTTP_200_OK
         assert response["Content-Type"] == "text/csv"
         assert "attachment" in response["Content-Disposition"]
@@ -1199,18 +1195,14 @@ class TestExportItems:
     def test_volunteer_gets_csv_response(self):
         """Volunteer should also have access to export."""
         token = self._get_volunteer_token()
-        response = self.client.get(
-            self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = self.client.get(self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}")
         assert response.status_code == status.HTTP_200_OK
         assert response["Content-Type"] == "text/csv"
 
     def test_csv_contains_headers_and_data(self):
         """CSV should contain header row and data rows."""
         token = self._get_admin_token()
-        response = self.client.get(
-            self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}"
-        )
+        response = self.client.get(self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}")
         content = response.content.decode("utf-8")
         lines = content.strip().split("\n")
 
@@ -1286,4 +1278,3 @@ class TestExportItems:
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-
