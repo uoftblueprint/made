@@ -1059,6 +1059,7 @@ class BoxEndpointsTest(TestCase):
         self.item_b.refresh_from_db()
         assert self.item_b.box_id == self.box_b.id
 
+<<<<<<< HEAD
     def test_mark_box_arrived_updates_box_and_items(self):
         response = self.client.post(
             f"/api/boxes/{self.box_a.id}/mark-arrived/",
@@ -1128,3 +1129,161 @@ class BoxEndpointsTest(TestCase):
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = json.loads(response.content)
         assert data.get("detail") == "Destination location not found."
+
+
+# ============================================================================
+# TESTS FOR GET /api/inventory/export/ (CSV Export)
+# ============================================================================
+
+
+@pytest.mark.django_db
+class TestExportItems:
+    """Tests for the CSV export endpoint."""
+
+    EXPORT_URL = "/api/inventory/export/"
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client, admin_user, volunteer_user, floor_location, storage_location):
+        self.client = client
+        self.admin_user = admin_user
+        self.volunteer_user = volunteer_user
+        self.floor_location = floor_location
+        self.storage_location = storage_location
+
+        # Create a box for filtering tests
+        self.box = Box.objects.create(
+            box_code="BOX001", label="Export Test Box", location=floor_location
+        )
+
+        # Create test items
+        self.item_software = CollectionItem.objects.create(
+            item_code="EXP001",
+            title="Export Test Game",
+            platform="SNES",
+            item_type="SOFTWARE",
+            current_location=floor_location,
+            box=self.box,
+            is_public_visible=True,
+        )
+        self.item_hardware = CollectionItem.objects.create(
+            item_code="EXP002",
+            title="Export Test Console",
+            platform="",
+            item_type="HARDWARE",
+            current_location=storage_location,
+            is_public_visible=True,
+        )
+
+    def _get_admin_token(self):
+        return get_admin_token(self.client)
+
+    def _get_volunteer_token(self):
+        return get_volunteer_token(self.client)
+
+    def test_unauthenticated_returns_401(self):
+        """Unauthenticated request should be rejected."""
+        response = self.client.get(self.EXPORT_URL)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_admin_gets_csv_response(self):
+        """Admin should receive a CSV file response."""
+        token = self._get_admin_token()
+        response = self.client.get(
+            self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response["Content-Type"] == "text/csv"
+        assert "attachment" in response["Content-Disposition"]
+        assert "made_export_" in response["Content-Disposition"]
+
+    def test_volunteer_gets_csv_response(self):
+        """Volunteer should also have access to export."""
+        token = self._get_volunteer_token()
+        response = self.client.get(
+            self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        assert response.status_code == status.HTTP_200_OK
+        assert response["Content-Type"] == "text/csv"
+
+    def test_csv_contains_headers_and_data(self):
+        """CSV should contain header row and data rows."""
+        token = self._get_admin_token()
+        response = self.client.get(
+            self.EXPORT_URL, HTTP_AUTHORIZATION=f"Bearer {token}"
+        )
+        content = response.content.decode("utf-8")
+        lines = content.strip().split("\n")
+
+        # Header + at least 2 data rows
+        assert len(lines) >= 3
+        assert "MADE ID" in lines[0]
+        assert "Title" in lines[0]
+        assert "EXP001" in content
+        assert "EXP002" in content
+
+    def test_filter_by_record_type(self):
+        """Filtering by record_type should return only matching items."""
+        token = self._get_admin_token()
+        response = self.client.get(
+            f"{self.EXPORT_URL}?record_type=SOFTWARE",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        content = response.content.decode("utf-8")
+        assert "EXP001" in content
+        assert "EXP002" not in content
+
+    def test_filter_by_box_id(self):
+        """Filtering by box_id should return only items in that box."""
+        token = self._get_admin_token()
+        response = self.client.get(
+            f"{self.EXPORT_URL}?box_id={self.box.id}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        content = response.content.decode("utf-8")
+        assert "EXP001" in content  # In the box
+        assert "EXP002" not in content  # Not in any box
+
+    def test_filter_by_date_range(self):
+        """Filtering by start_date and end_date should scope results."""
+        token = self._get_admin_token()
+        today = timezone.now().strftime("%Y-%m-%d")
+        response = self.client.get(
+            f"{self.EXPORT_URL}?start_date={today}&end_date={today}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        content = response.content.decode("utf-8")
+        # Items were created today, so they should appear
+        assert "EXP001" in content
+
+    def test_filter_future_date_returns_empty(self):
+        """Filtering with a future start_date should return headers only."""
+        token = self._get_admin_token()
+        future = "2099-01-01"
+        response = self.client.get(
+            f"{self.EXPORT_URL}?start_date={future}",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        content = response.content.decode("utf-8")
+        lines = content.strip().split("\n")
+        # Only header row
+        assert len(lines) == 1
+        assert "MADE ID" in lines[0]
+
+    def test_invalid_start_date_returns_400(self):
+        """Invalid date format should return 400."""
+        token = self._get_admin_token()
+        response = self.client.get(
+            f"{self.EXPORT_URL}?start_date=not-a-date",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_invalid_end_date_returns_400(self):
+        """Invalid end_date format should return 400."""
+        token = self._get_admin_token()
+        response = self.client.get(
+            f"{self.EXPORT_URL}?end_date=bad",
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+

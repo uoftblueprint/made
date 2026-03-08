@@ -1,3 +1,7 @@
+import csv
+from datetime import datetime
+
+from django.http import HttpResponse
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
@@ -204,3 +208,84 @@ def dashboard_stats(request):
             "total_locations": Location.objects.count(),
         }
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsVolunteer])
+def export_items(request):
+    """
+    Export collection items as a CSV file.
+    Accepts optional query parameters:
+    - start_date (YYYY-MM-DD): filter items created on or after this date
+    - end_date (YYYY-MM-DD): filter items created on or before this date
+    - box_id (int): filter items belonging to a specific box
+    - record_type (str): filter by item_type (SOFTWARE, HARDWARE, NON_ELECTRONIC)
+    """
+    queryset = CollectionItem.objects.all().select_related("box", "current_location")
+
+    # Apply filters
+    start_date = request.query_params.get("start_date")
+    end_date = request.query_params.get("end_date")
+    box_id = request.query_params.get("box_id")
+    record_type = request.query_params.get("record_type")
+
+    if start_date:
+        try:
+            parsed = datetime.strptime(start_date, "%Y-%m-%d")
+            queryset = queryset.filter(created_at__date__gte=parsed.date())
+        except ValueError:
+            return Response(
+                {"error": "Invalid start_date format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    if end_date:
+        try:
+            parsed = datetime.strptime(end_date, "%Y-%m-%d")
+            queryset = queryset.filter(created_at__date__lte=parsed.date())
+        except ValueError:
+            return Response(
+                {"error": "Invalid end_date format. Use YYYY-MM-DD."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    if box_id:
+        queryset = queryset.filter(box__id=box_id)
+
+    if record_type:
+        queryset = queryset.filter(item_type=record_type)
+
+    # Build CSV response
+    today = datetime.now().strftime("%Y%m%d")
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="made_export_{today}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        "MADE ID",
+        "Title",
+        "Platform",
+        "Item Type",
+        "Box Code",
+        "Location",
+        "Location Type",
+        "Working Condition",
+        "Status",
+        "Created At",
+    ])
+
+    for item in queryset:
+        writer.writerow([
+            item.item_code,
+            item.title,
+            item.platform,
+            item.get_item_type_display(),
+            item.box.box_code if item.box else "",
+            item.current_location.name if item.current_location else "",
+            item.current_location.get_location_type_display() if item.current_location else "",
+            "Yes" if item.working_condition else "No",
+            item.get_status_display(),
+            item.created_at.strftime("%Y-%m-%d %H:%M:%S") if item.created_at else "",
+        ])
+
+    return response

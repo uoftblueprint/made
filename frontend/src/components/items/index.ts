@@ -6,3 +6,4 @@ export { default as VolunteerList } from '../volunteers/VolunteerList';
 export { default as AddItemModal } from './AddItemModal';
 export { default as EditItemModal } from './EditItemModal';
 export { default as DeleteItemDialog } from './DeleteItemDialog';
+export { default as ExportModal } from './ExportModal';

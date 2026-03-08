@@ -15,6 +15,8 @@ vi.mock("../../components/items", () => ({
     EditItemModal: ({ isOpen }: { isOpen: boolean }) =>
         isOpen ? <div data-testid="edit-modal" /> : null,
     DeleteItemDialog: () => null,
+    ExportModal: ({ isOpen }: { isOpen: boolean }) =>
+        isOpen ? <div data-testid="export-modal" /> : null,
 }))
 
 beforeEach(() => vi.clearAllMocks())
