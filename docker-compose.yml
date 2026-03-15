@@ -1,18 +1,20 @@
-version: '3.8'
-
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: DockerFile
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
     ports:
-      - "8000:8000"
+      - "8003:8000"
     env_file:
       - ./backend/.env
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: DockerFile
     command: npm run dev
     volumes:
       - ./frontend:/app
