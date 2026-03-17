@@ -65,7 +65,7 @@ class BoxViewSet(viewsets.ReadOnlyModelViewSet):
 
         if not location_id:
             return Response(
-                {"detail": "location is required."},
+                {"detail": "Location is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
