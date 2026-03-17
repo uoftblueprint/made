@@ -23,6 +23,16 @@ export interface BoxDetail extends Box {
   items: BoxItem[];
 }
 
+export interface MarkBoxArrivedInput {
+  location: number;
+  comment?: string;
+}
+
+export interface MarkBoxArrivedResponse {
+  box: BoxDetail;
+  moved_items: number;
+}
+
 export const boxesApi = {
   getAll: async (): Promise<Box[]> => {
     const response = await apiClient.get('/boxes/');
@@ -35,6 +45,11 @@ export const boxesApi = {
 
   getById: async (id: number): Promise<BoxDetail> => {
     const response = await apiClient.get(`/boxes/${id}/`);
+    return response.data;
+  },
+
+  markArrived: async (id: number, data: MarkBoxArrivedInput): Promise<MarkBoxArrivedResponse> => {
+    const response = await apiClient.post(`/boxes/${id}/mark-arrived/`, data);
     return response.data;
   },
 };
