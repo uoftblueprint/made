@@ -1,7 +1,7 @@
 // Movement Requests hooks
 import { useState, useEffect, useCallback } from 'react';
 import { requestsApi } from '../api/requests.api';
-import type { ReviewRequestInput } from '../api/requests.api';
+import type { CompleteArrivalInput, ReviewRequestInput } from '../api/requests.api';
 import type { MovementRequest, MovementRequestStatus } from '../lib/types';
 
 interface UseRequestsResult {
@@ -12,6 +12,7 @@ interface UseRequestsResult {
   refetch: () => Promise<void>;
   approve: (id: number, data?: ReviewRequestInput) => Promise<void>;
   reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
+  completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
 }
 
 export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
@@ -48,6 +49,11 @@ export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
     await fetchRequests();
   }, [fetchRequests]);
 
+  const completeArrival = useCallback(async (id: number, data?: CompleteArrivalInput) => {
+    await requestsApi.completeArrival(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
   const pendingRequests = requests.filter(r => r.status === 'WAITING_APPROVAL');
 
   return {
@@ -58,6 +64,7 @@ export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
     refetch: fetchRequests,
     approve,
     reject,
+    completeArrival,
   };
 }
 
@@ -72,6 +79,7 @@ interface UseItemRequestsResult {
   refetch: () => Promise<void>;
   approve: (id: number, data?: ReviewRequestInput) => Promise<void>;
   reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
+  completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
 }
 
 export function useItemRequests(itemId: number | undefined): UseItemRequestsResult {
@@ -111,6 +119,11 @@ export function useItemRequests(itemId: number | undefined): UseItemRequestsResu
     await fetchRequests();
   }, [fetchRequests]);
 
+  const completeArrival = useCallback(async (id: number, data?: CompleteArrivalInput) => {
+    await requestsApi.completeArrival(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
   return {
     requests,
     loading,
@@ -118,5 +131,6 @@ export function useItemRequests(itemId: number | undefined): UseItemRequestsResu
     refetch: fetchRequests,
     approve,
     reject,
+    completeArrival,
   };
 }

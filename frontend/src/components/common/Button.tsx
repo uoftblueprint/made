@@ -69,9 +69,9 @@ export function Button({
 
   if (variant === "primary") {
     classes.push(
-      "bg-primary text-white",
+      "bg-[var(--color-primary)] text-white",
       "hover:opacity-90",
-      "focus-visible:ring-primary"
+      "focus-visible:ring-[var(--color-primary)]"
     )
   }
 

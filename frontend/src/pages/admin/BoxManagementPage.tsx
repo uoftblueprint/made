@@ -1,11 +1,24 @@
 import React, { useState, useMemo } from 'react';
+import axios from 'axios';
 import { Archive, MapPin, Package, ChevronRight } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
 import { useBoxDetail } from '../../actions/useBoxes';
 import type { CreateLocationData } from '../../api/locations.api';
+import { boxesApi } from '../../api/boxes.api';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import './BoxManagementPage.css';
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { detail?: unknown } | undefined;
+    if (typeof data?.detail === 'string') {
+      return data.detail;
+    }
+  }
+
+  return error instanceof Error ? error.message : fallback;
+}
 
 const BoxManagementPage: React.FC = () => {
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
@@ -15,10 +28,14 @@ const BoxManagementPage: React.FC = () => {
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationType, setNewLocationType] = useState<CreateLocationData['location_type']>('STORAGE');
   const [newLocationDescription, setNewLocationDescription] = useState('');
+  const [arrivalDestinationId, setArrivalDestinationId] = useState<number | ''>('');
+  const [arrivalComment, setArrivalComment] = useState('');
+  const [markArrivedError, setMarkArrivedError] = useState<string | null>(null);
+  const [markingArrived, setMarkingArrived] = useState(false);
 
   const { locations, loading: locationsLoading, refetch: refetchLocations } = useLocations();
-  const { location: selectedLocation, loading: locationLoading } = useLocationDetail(selectedLocationId);
-  const { box: selectedBox, loading: boxLoading } = useBoxDetail(selectedBoxId);
+  const { location: selectedLocation, loading: locationLoading, refetch: refetchSelectedLocation } = useLocationDetail(selectedLocationId);
+  const { box: selectedBox, loading: boxLoading, refetch: refetchSelectedBox } = useBoxDetail(selectedBoxId);
   const { createLocation, creating: creatingLocation, error: createError } = useCreateLocation();
 
   const handleAddLocation = async () => {
@@ -59,10 +76,42 @@ const BoxManagementPage: React.FC = () => {
   const handleLocationClick = (locationId: number) => {
     setSelectedLocationId(locationId);
     setSelectedBoxId(null);
+    setArrivalDestinationId('');
+    setArrivalComment('');
+    setMarkArrivedError(null);
   };
 
   const handleBoxClick = (boxId: number) => {
     setSelectedBoxId(boxId);
+    setArrivalDestinationId('');
+    setArrivalComment('');
+    setMarkArrivedError(null);
+  };
+
+  const handleMarkBoxArrived = async () => {
+    if (!selectedBox || arrivalDestinationId === '') {
+      return;
+    }
+
+    setMarkingArrived(true);
+    setMarkArrivedError(null);
+
+    try {
+      await boxesApi.markArrived(selectedBox.id, {
+        location: arrivalDestinationId,
+        comment: arrivalComment.trim() || undefined,
+      });
+
+      await Promise.all([refetchLocations(), refetchSelectedLocation(), refetchSelectedBox()]);
+      setSelectedLocationId(arrivalDestinationId);
+      setSelectedBoxId(null);
+      setArrivalDestinationId('');
+      setArrivalComment('');
+    } catch (err) {
+      setMarkArrivedError(getApiErrorMessage(err, 'Failed to mark box as arrived.'));
+    } finally {
+      setMarkingArrived(false);
+    }
   };
 
   return (
@@ -199,6 +248,40 @@ const BoxManagementPage: React.FC = () => {
                     <div className="box-management-loading">Loading box details...</div>
                   ) : selectedBox ? (
                     <>
+                      <div className="box-arrival-panel">
+                        {markArrivedError && <p className="box-arrival-error">{markArrivedError}</p>}
+                        <div className="box-arrival-controls">
+                          <select
+                            value={arrivalDestinationId}
+                            onChange={(e) => setArrivalDestinationId(e.target.value ? Number(e.target.value) : '')}
+                            disabled={markingArrived}
+                          >
+                            <option value="">Select destination location</option>
+                            {locations
+                              .filter((location) => location.id !== selectedLocationId)
+                              .map((location) => (
+                                <option key={location.id} value={location.id}>
+                                  {location.name} ({location.location_type_display})
+                                </option>
+                              ))}
+                          </select>
+                          <input
+                            type="text"
+                            value={arrivalComment}
+                            onChange={(e) => setArrivalComment(e.target.value)}
+                            placeholder="Optional note"
+                            disabled={markingArrived}
+                          />
+                          <Button
+                            variant="primary"
+                            size="md"
+                            onClick={handleMarkBoxArrived}
+                            disabled={markingArrived || arrivalDestinationId === ''}
+                          >
+                            {markingArrived ? 'Updating...' : 'Mark as Arrived'}
+                          </Button>
+                        </div>
+                      </div>
                       <h3 className="box-management-section-title">
                         Items in {selectedBox.box_code} ({selectedBox.items?.length || 0})
                       </h3>

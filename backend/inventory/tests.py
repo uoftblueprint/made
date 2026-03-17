@@ -1002,6 +1002,7 @@ class BoxEndpointsTest(TestCase):
         token = AccessToken.for_user(self.user)
         self.client = Client(HTTP_AUTHORIZATION=f"Bearer {token}")
         self.location = Location.objects.create(name="Storage Z", location_type="STORAGE")
+        self.destination_location = Location.objects.create(name="Floor A", location_type="FLOOR")
         self.box_a = Box.objects.create(
             box_code="BOX001",
             label="Box A",
@@ -1019,6 +1020,13 @@ class BoxEndpointsTest(TestCase):
             item_code="ITEM002",
             title="Item Two",
             current_location=self.location,
+        )
+        self.item_c = CollectionItem.objects.create(
+            item_code="ITEM003",
+            title="Item Three",
+            current_location=self.location,
+            box=self.box_a,
+            status="IN_TRANSIT",
         )
 
     def test_list_boxes(self):
@@ -1050,3 +1058,73 @@ class BoxEndpointsTest(TestCase):
         assert response.status_code == status.HTTP_200_OK
         self.item_b.refresh_from_db()
         assert self.item_b.box_id == self.box_b.id
+
+    def test_mark_box_arrived_updates_box_and_items(self):
+        response = self.client.post(
+            f"/api/boxes/{self.box_a.id}/mark-arrived/",
+            data=json.dumps(
+                {
+                    "location": self.destination_location.id,
+                    "comment": "Received at floor",
+                }
+            ),
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = json.loads(response.content)
+        assert data["moved_items"] == 2
+
+        self.box_a.refresh_from_db()
+        self.item_a.refresh_from_db()
+        self.item_c.refresh_from_db()
+
+        assert self.box_a.location_id == self.destination_location.id
+        assert self.item_a.current_location_id == self.destination_location.id
+        assert self.item_c.current_location_id == self.destination_location.id
+        assert self.item_a.is_on_floor is True
+        assert self.item_c.is_on_floor is True
+        assert self.item_c.status == "AVAILABLE"
+
+        assert ItemHistory.objects.filter(
+            item=self.item_a,
+            event_type="ARRIVED",
+            to_location=self.destination_location,
+        ).exists()
+        assert ItemHistory.objects.filter(
+            item=self.item_c,
+            event_type="ARRIVED",
+            to_location=self.destination_location,
+        ).exists()
+
+    def test_mark_box_arrived_requires_location(self):
+        response = self.client.post(
+            f"/api/boxes/{self.box_a.id}/mark-arrived/",
+            data=json.dumps({}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_mark_box_arrived_rejects_same_location(self):
+        response = self.client.post(
+            f"/api/boxes/{self.box_a.id}/mark-arrived/",
+            data=json.dumps({"location": self.location.id}),
+            content_type="application/json",
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_mark_box_arrived_rejects_invalid_location(self):
+        if Location.objects.exists():
+            invalid_location_id = Location.objects.order_by("-id").first().id + 1
+        else:
+            invalid_location_id = 1
+        response = self.client.post(
+            f"/api/boxes/{self.box_a.id}/mark-arrived/",
+            data=json.dumps({"location": invalid_location_id}),
+            content_type="application/json",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        data = json.loads(response.content)
+        assert data.get("detail") == "Destination location not found."

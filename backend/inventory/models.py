@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 import logging
 
 from .constants import LOCATION_CHANGING_EVENTS
@@ -58,6 +59,53 @@ class Box(models.Model):
     def __str__(self):
         return f"{self.box_code} - {self.label or 'Unlabeled'}"
 
+    def mark_as_arrived(self, destination_location, user=None, comment=""):
+        """
+        Move this box to destination and keep all contained items in sync.
+        """
+        with transaction.atomic():
+            self.location = destination_location
+            self.save(update_fields=["location", "updated_at"])
+
+            destination_is_floor = destination_location.location_type == "FLOOR"
+            # Fetch only fields needed to batch-write item state and history.
+            items_data = list(self.items.values_list("id", "current_location_id", "status"))
+            items_to_update = []
+            history_entries = []
+
+            if items_data:
+                now = timezone.now()
+                for item_id, from_location_id, status in items_data:
+                    items_to_update.append(
+                        CollectionItem(
+                            id=item_id,
+                            current_location_id=destination_location.id,
+                            is_on_floor=destination_is_floor,
+                            status="AVAILABLE" if status == "IN_TRANSIT" else status,
+                            updated_at=now,
+                        )
+                    )
+            for item_id, from_location_id, _ in items_data:
+                history_entries.append(
+                    ItemHistory(
+                        item_id=item_id,
+                        event_type="ARRIVED",
+                        from_location_id=from_location_id,
+                        to_location=destination_location,
+                        acted_by=user,
+                        notes=comment or f"Box {self.box_code} arrived at {destination_location.name}",
+                    )
+                )
+            if items_to_update:
+                CollectionItem.objects.bulk_update(
+                    items_to_update,
+                    ["current_location", "is_on_floor", "status", "updated_at"],
+                )
+            if history_entries:
+                ItemHistory.objects.bulk_create(history_entries)
+
+            return len(items_data)
+
 
 class CollectionItem(models.Model):
     """
@@ -97,10 +145,16 @@ class CollectionItem(models.Model):
 
     item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default="SOFTWARE")
     condition = models.CharField(
-        max_length=20, choices=CONDITION_CHOICES, default="GOOD", help_text="Physical condition of the item"
+        max_length=20,
+        choices=CONDITION_CHOICES,
+        default="GOOD",
+        help_text="Physical condition of the item",
     )
     is_complete = models.CharField(
-        max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is complete with all parts"
+        max_length=10,
+        choices=COMPLETENESS_CHOICES,
+        default="UNKNOWN",
+        help_text="Whether the item is complete with all parts",
     )
     is_functional = models.CharField(
         max_length=10,

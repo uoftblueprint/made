@@ -70,6 +70,12 @@
     border: 1px solid #fcd34d;
 }
 
+.item-badge.in-transit {
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
 /* Content Layout */
 .item-details-content {
     display: grid;
@@ -274,6 +280,16 @@
 
 .item-action-btn.reject-request:hover:not(:disabled) {
     background: #fef2f2;
+}
+
+.item-action-btn.arrival {
+    background: #22c55e;
+    color: white;
+    border: none;
+}
+
+.item-action-btn.arrival:hover:not(:disabled) {
+    background: #16a34a;
 }
 
 .item-action-btn:disabled {
