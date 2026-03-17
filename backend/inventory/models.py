@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, transaction
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 import logging
 
 from .constants import LOCATION_CHANGING_EVENTS
@@ -58,6 +59,49 @@ class Box(models.Model):
     def __str__(self):
         return f"{self.box_code} - {self.label or 'Unlabeled'}"
 
+    def mark_as_arrived(self, destination_location, user=None, comment=""):
+        """
+        Move this box to destination and keep all contained items in sync.
+        """
+        with transaction.atomic():
+            self.location = destination_location
+            self.save(update_fields=["location", "updated_at"])
+
+            destination_is_floor = destination_location.location_type == "FLOOR"
+            items = list(self.items.select_related("current_location"))
+            item_ids = [item.id for item in items]
+            history_entries = []
+
+            if item_ids:
+                CollectionItem.objects.filter(id__in=item_ids).update(
+                    current_location=destination_location,
+                    is_on_floor=destination_is_floor,
+                    status=models.Case(
+                        models.When(status="IN_TRANSIT", then=models.Value("AVAILABLE")),
+                        default=models.F("status"),
+                        output_field=models.CharField(max_length=20),
+                    ),
+                    updated_at=timezone.now(),
+                )
+
+            for item in items:
+                from_location = item.current_location
+
+                history_entries.append(
+                    ItemHistory(
+                        item=item,
+                        event_type="ARRIVED",
+                        from_location=from_location,
+                        to_location=destination_location,
+                        acted_by=user,
+                        notes=comment or f"Box {self.box_code} arrived at {destination_location.name}",
+                    )
+                )
+            if history_entries:
+                ItemHistory.objects.bulk_create(history_entries)
+
+            return len(items)
+
 
 class CollectionItem(models.Model):
     """
@@ -97,10 +141,16 @@ class CollectionItem(models.Model):
 
     item_type = models.CharField(max_length=20, choices=ITEM_TYPE_CHOICES, default="SOFTWARE")
     condition = models.CharField(
-        max_length=20, choices=CONDITION_CHOICES, default="GOOD", help_text="Physical condition of the item"
+        max_length=20,
+        choices=CONDITION_CHOICES,
+        default="GOOD",
+        help_text="Physical condition of the item",
     )
     is_complete = models.CharField(
-        max_length=10, choices=COMPLETENESS_CHOICES, default="UNKNOWN", help_text="Whether the item is complete with all parts"
+        max_length=10,
+        choices=COMPLETENESS_CHOICES,
+        default="UNKNOWN",
+        help_text="Whether the item is complete with all parts",
     )
     is_functional = models.CharField(
         max_length=10,

@@ -1,5 +1,5 @@
 from rest_framework import viewsets, permissions, filters, status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from users.permissions import IsAdmin, IsVolunteer
 
@@ -46,15 +46,57 @@ class BoxViewSet(viewsets.ReadOnlyModelViewSet):
     ViewSet for boxes.
     - GET /api/boxes/ - List all boxes
     - GET /api/boxes/{id}/ - Retrieve box with items
+    - POST /api/boxes/{id}/mark-arrived/ - Mark box as arrived at destination
     """
 
     queryset = Box.objects.all().prefetch_related("items")
     permission_classes = [IsVolunteer]
 
     def get_serializer_class(self):
-        if self.action == "retrieve":
+        if self.action in ["retrieve", "mark_arrived"]:
             return BoxDetailSerializer
         return BoxSerializer
+
+    @action(detail=True, methods=["post"], url_path="mark-arrived")
+    def mark_arrived(self, request, pk=None):
+        """Mark a box as arrived and sync all contained items to destination location."""
+        box = self.get_object()
+        location_id = request.data.get("location")
+
+        if not location_id:
+            return Response(
+                {"detail": "location is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            destination = Location.objects.get(pk=location_id)
+        except (Location.DoesNotExist, ValueError, TypeError):
+            return Response(
+                {"detail": "Destination location not found."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if box.location_id == destination.id:
+            return Response(
+                {"detail": "Box is already at this location."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        moved_items = box.mark_as_arrived(
+            destination_location=destination,
+            user=request.user,
+            comment=request.data.get("comment", ""),
+        )
+        box.refresh_from_db()
+        serializer = self.get_serializer(box)
+        return Response(
+            {
+                "box": serializer.data,
+                "moved_items": moved_items,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class LocationViewSet(viewsets.ModelViewSet):
