@@ -16,8 +16,9 @@ export interface Volunteer {
   reviewed_at: string | null;
   reviewed_by: string | null;
   created_at?: string;
-  expires_at?: string;
-  days_remaining?: number;
+  user_id?: number;
+  expires_at?: string | null;
+  days_remaining?: number | null;
 }
 
 export interface VolunteerApplicationInput {
