@@ -68,11 +68,13 @@ class Box(models.Model):
             self.save(update_fields=["location", "updated_at"])
 
             destination_is_floor = destination_location.location_type == "FLOOR"
-            items = list(self.items.select_related("current_location"))
-            item_ids = [item.id for item in items]
+            # Fetch only the fields we actually need to avoid loading full model instances
+            items_data = list(self.items.values_list("id", "current_location_id"))
+            item_ids = [item_id for item_id, _ in items_data]
             history_entries = []
 
             if item_ids:
+                now = timezone.now()
                 CollectionItem.objects.filter(id__in=item_ids).update(
                     current_location=destination_location,
                     is_on_floor=destination_is_floor,
@@ -81,17 +83,15 @@ class Box(models.Model):
                         default=models.F("status"),
                         output_field=models.CharField(max_length=20),
                     ),
-                    updated_at=timezone.now(),
+                    updated_at=now,
                 )
 
-            for item in items:
-                from_location = item.current_location
-
+            for item_id, from_location_id in items_data:
                 history_entries.append(
                     ItemHistory(
-                        item=item,
+                        item_id=item_id,
                         event_type="ARRIVED",
-                        from_location=from_location,
+                        from_location_id=from_location_id,
                         to_location=destination_location,
                         acted_by=user,
                         notes=comment or f"Box {self.box_code} arrived at {destination_location.name}",
@@ -100,7 +100,7 @@ class Box(models.Model):
             if history_entries:
                 ItemHistory.objects.bulk_create(history_entries)
 
-            return len(items)
+            return len(items_data)
 
 
 class CollectionItem(models.Model):
