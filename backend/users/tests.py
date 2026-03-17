@@ -297,3 +297,145 @@ def test_expired_user_blocked_by_middleware(client):
 
     res_expired = client.get("/api/users/", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res_expired.status_code == status.HTTP_403_FORBIDDEN
+
+
+# --- New tests for volunteer lifecycle ---
+
+
+@pytest.mark.django_db
+def test_approve_application_sets_expiry():
+    """Approving an application with access_expires_at creates the user with that expiry."""
+    client = Client()
+
+    application = VolunteerApplication.objects.create(
+        name="Expiry Volunteer",
+        email="expiry@example.com",
+        motivation_text="I want to help",
+        status="PENDING",
+    )
+
+    expires = (timezone.now() + timedelta(days=30)).replace(microsecond=0)
+    url = f"/api/users/volunteer-applications/{application.id}/"
+    response = client.patch(
+        url,
+        {"status": "APPROVED", "access_expires_at": expires.isoformat()},
+        content_type="application/json",
+    )
+    assert response.status_code in (200, 202)
+
+    user = User.objects.get(email="expiry@example.com")
+    assert user.role == "VOLUNTEER"
+    assert user.access_expires_at is not None
+    assert abs((user.access_expires_at - expires).total_seconds()) < 2
+
+
+@pytest.mark.django_db
+def test_approve_application_no_expiry():
+    """Approving an application without access_expires_at creates user with no expiry."""
+    client = Client()
+
+    application = VolunteerApplication.objects.create(
+        name="No Expiry Vol",
+        email="noexpiry@example.com",
+        motivation_text="Happy to help",
+        status="PENDING",
+    )
+
+    url = f"/api/users/volunteer-applications/{application.id}/"
+    response = client.patch(url, {"status": "APPROVED"}, content_type="application/json")
+    assert response.status_code in (200, 202)
+
+    user = User.objects.get(email="noexpiry@example.com")
+    assert user.role == "VOLUNTEER"
+    assert user.access_expires_at is None
+
+
+@pytest.mark.django_db
+def test_reapprove_application_updates_expiry():
+    """Re-approving an application for an existing user updates their access_expires_at."""
+    client = Client()
+
+    existing_user = User.objects.create_user(
+        email="existing@example.com",
+        name="Existing Vol",
+        password="pass",
+        role="VOLUNTEER",
+        access_expires_at=timezone.now() + timedelta(days=5),
+    )
+
+    application = VolunteerApplication.objects.create(
+        name="Existing Vol",
+        email="existing@example.com",
+        motivation_text="Previously approved",
+        status="PENDING",
+    )
+
+    new_expires = (timezone.now() + timedelta(days=60)).replace(microsecond=0)
+    url = f"/api/users/volunteer-applications/{application.id}/"
+    response = client.patch(
+        url,
+        {"status": "APPROVED", "access_expires_at": new_expires.isoformat()},
+        content_type="application/json",
+    )
+    assert response.status_code in (200, 202)
+
+    existing_user.refresh_from_db()
+    assert abs((existing_user.access_expires_at - new_expires).total_seconds()) < 2
+
+
+@pytest.mark.django_db
+def test_volunteer_applications_list_enriched_with_user_data(client):
+    """Approved applications in the list endpoint include user_id, expires_at, days_remaining."""
+    admin = User.objects.create_user(email="admin_list@example.com", name="Admin", password="adminpass", role="ADMIN")
+
+    expires = timezone.now() + timedelta(days=10)
+    volunteer_user = User.objects.create_user(
+        email="listvol@example.com",
+        name="List Vol",
+        password="pass",
+        role="VOLUNTEER",
+        access_expires_at=expires,
+    )
+    VolunteerApplication.objects.create(
+        name="List Vol",
+        email="listvol@example.com",
+        motivation_text="Help",
+        status="APPROVED",
+    )
+
+    res_login = client.post(
+        "/api/auth/login/",
+        {"email": "admin_list@example.com", "password": "adminpass"},
+        content_type="application/json",
+    )
+    token = res_login.data["access"]
+
+    res = client.get("/api/users/volunteer-applications/", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res.status_code == 200
+
+    data = res.json()
+    items = data.get("results", data) if isinstance(data, dict) else data
+    approved = [i for i in items if i.get("status") == "APPROVED" and i.get("email") == "listvol@example.com"]
+    assert len(approved) == 1
+    row = approved[0]
+    assert row["user_id"] == volunteer_user.id
+    assert row["expires_at"] is not None
+    assert row["days_remaining"] is not None
+    assert 9 <= row["days_remaining"] <= 10
+
+
+@pytest.mark.django_db
+def test_volunteer_stats_includes_warning_days(client):
+    """The volunteer-stats endpoint returns warning_days: 7."""
+    admin = User.objects.create_user(email="admin_stats@example.com", name="Admin", password="adminpass", role="ADMIN")
+
+    res_login = client.post(
+        "/api/auth/login/",
+        {"email": "admin_stats@example.com", "password": "adminpass"},
+        content_type="application/json",
+    )
+    token = res_login.data["access"]
+
+    res = client.get("/api/users/volunteer-stats/", HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert res.status_code == 200
+    assert res.json()["warning_days"] == 7

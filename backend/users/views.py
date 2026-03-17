@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.db import transaction
 from django.db.models import Q
-from datetime import timedelta
+from datetime import datetime, timedelta
 import secrets
 
 from .permissions import IsAdmin
@@ -38,14 +38,6 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             return VolunteerApplicationSerializer
         return VolunteerApplicationSerializer
 
-    def list(self, request, *args, **kwargs):
-        """List applications; restrict to admin users using role."""
-        user = getattr(request, "user", None)
-        if not (user is not None and getattr(user, "is_authenticated", False) and self._is_admin(user)):
-            return Response({"detail": "Admin only"}, status=status.HTTP_403_FORBIDDEN)
-
-        return super().list(request, *args, **kwargs)
-
     def _is_admin(self, user):
         """Check for admin users based on role."""
         return getattr(user, "role", None) == "ADMIN"
@@ -61,13 +53,29 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
 
         application.save()
 
-    def _handle_volunteer_user_creation(self, application):
-        """Create a VOLUNTEER user when an application is approved, if needed."""
+    def _parse_access_expires_at(self, value):
+        """Parse an ISO datetime string or None from request data."""
+        if value is None or value == "":
+            return None
+        if isinstance(value, str):
+            try:
+                dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                if timezone.is_naive(dt):
+                    dt = timezone.make_aware(dt)
+                return dt
+            except (ValueError, TypeError):
+                return None
+        return None
+
+    def _handle_volunteer_user_creation(self, application, access_expires_at=None):
+        """Create or update a VOLUNTEER user when an application is approved."""
         if application.status != "APPROVED":
             return
 
-        exists = User.objects.filter(email=application.email).exists()
-        if exists:
+        existing = User.objects.filter(email=application.email).first()
+        if existing:
+            existing.access_expires_at = access_expires_at
+            existing.save(update_fields=["access_expires_at", "updated_at"])
             return
 
         temp_password = secrets.token_urlsafe(12)
@@ -76,7 +84,40 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             name=application.name,
             password=temp_password,
             role="VOLUNTEER",
+            access_expires_at=access_expires_at,
         )
+
+    def list(self, request, *args, **kwargs):
+        """List applications; restrict to admin users. Enrich APPROVED rows with user data."""
+        user = getattr(request, "user", None)
+        if not (user is not None and getattr(user, "is_authenticated", False) and self._is_admin(user)):
+            return Response({"detail": "Admin only"}, status=status.HTTP_403_FORBIDDEN)
+
+        response = super().list(request, *args, **kwargs)
+
+        # Enrich approved applications with linked user info
+        data = response.data
+        items = data.get("results", data) if isinstance(data, dict) else data
+        now = timezone.now()
+
+        for item in items:
+            if item.get("status") != "APPROVED":
+                continue
+            volunteer_user = User.objects.filter(email=item.get("email"), role="VOLUNTEER").first()
+            if volunteer_user:
+                item["user_id"] = volunteer_user.id
+                item["expires_at"] = volunteer_user.access_expires_at.isoformat() if volunteer_user.access_expires_at else None
+                if volunteer_user.access_expires_at:
+                    delta = volunteer_user.access_expires_at - now
+                    item["days_remaining"] = max(delta.days, 0)
+                else:
+                    item["days_remaining"] = None
+            else:
+                item["user_id"] = None
+                item["expires_at"] = None
+                item["days_remaining"] = None
+
+        return response
 
     @transaction.atomic
     def perform_update(self, serializer):
@@ -88,7 +129,12 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             "REJECTED",
         }:
             self._handle_review_metadata(application)
-            self._handle_volunteer_user_creation(application)
+            if application.status == "APPROVED":
+                raw_expiry = self.request.data.get("access_expires_at")
+                access_expires_at = self._parse_access_expires_at(raw_expiry)
+                self._handle_volunteer_user_creation(application, access_expires_at=access_expires_at)
+            else:
+                self._handle_volunteer_user_creation(application)
 
 
 # Register new account
@@ -218,6 +264,7 @@ class VolunteerStatsView(APIView):
                 "expired_count": expired_count,
                 "total_count": total_count,
                 "expiring_volunteers": expiring_volunteers,
+                "warning_days": 7,
             }
         )
 
