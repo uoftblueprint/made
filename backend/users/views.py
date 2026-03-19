@@ -72,10 +72,14 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         if application.status != "APPROVED":
             return
 
-        existing = User.objects.filter(email=application.email).first()
-        if existing:
-            existing.access_expires_at = access_expires_at
-            existing.save(update_fields=["access_expires_at", "updated_at"])
+        existing_volunteer = User.objects.filter(email=application.email, role="VOLUNTEER").first()
+        if existing_volunteer:
+            existing_volunteer.access_expires_at = access_expires_at
+            existing_volunteer.save(update_fields=["access_expires_at", "updated_at"])
+            return
+
+        conflicting_user = User.objects.filter(email=application.email).exclude(role="VOLUNTEER").first()
+        if conflicting_user:
             return
 
         temp_password = secrets.token_urlsafe(12)
