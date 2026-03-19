@@ -8,6 +8,14 @@ from datetime import timedelta
 from .models import VolunteerApplication, User
 
 
+def _admin_token(client, email="admin@test.com", password="adminpass"):
+    """Create an admin user and return a JWT access token."""
+    if not User.objects.filter(email=email).exists():
+        User.objects.create_user(email=email, name="Admin", password=password, role="ADMIN")
+    res = client.post("/api/auth/login/", {"email": email, "password": password}, content_type="application/json")
+    return res.data["access"]
+
+
 @pytest.mark.django_db
 def test_create_user():
     """Test creating basic user"""
@@ -20,6 +28,7 @@ def test_create_user():
 @pytest.mark.django_db
 def test_approve_volunteer_application():
     client = Client()
+    token = _admin_token(client)
 
     application = VolunteerApplication.objects.create(
         name="Test Volunteer",
@@ -30,7 +39,7 @@ def test_approve_volunteer_application():
 
     url = f"/api/users/volunteer-applications/{application.id}/"
 
-    response = client.patch(url, {"status": "APPROVED"}, content_type="application/json")
+    response = client.patch(url, {"status": "APPROVED"}, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code in (200, 202)
 
     application.refresh_from_db()
@@ -44,6 +53,7 @@ def test_approve_volunteer_application():
 @pytest.mark.django_db
 def test_reject_application():
     client = Client()
+    token = _admin_token(client)
 
     application = VolunteerApplication.objects.create(
         name="Test Volunteer 2",
@@ -54,7 +64,7 @@ def test_reject_application():
 
     url = f"/api/users/volunteer-applications/{application.id}/"
 
-    response = client.patch(url, {"status": "REJECTED"}, content_type="application/json")
+    response = client.patch(url, {"status": "REJECTED"}, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code in (200, 202)
 
     application.refresh_from_db()
@@ -306,6 +316,7 @@ def test_expired_user_blocked_by_middleware(client):
 def test_approve_application_sets_expiry():
     """Approving an application with access_expires_at creates the user with that expiry."""
     client = Client()
+    token = _admin_token(client)
 
     application = VolunteerApplication.objects.create(
         name="Expiry Volunteer",
@@ -320,6 +331,7 @@ def test_approve_application_sets_expiry():
         url,
         {"status": "APPROVED", "access_expires_at": expires.isoformat()},
         content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
     )
     assert response.status_code in (200, 202)
 
@@ -333,6 +345,7 @@ def test_approve_application_sets_expiry():
 def test_approve_application_no_expiry():
     """Approving an application without access_expires_at creates user with no expiry."""
     client = Client()
+    token = _admin_token(client)
 
     application = VolunteerApplication.objects.create(
         name="No Expiry Vol",
@@ -342,7 +355,7 @@ def test_approve_application_no_expiry():
     )
 
     url = f"/api/users/volunteer-applications/{application.id}/"
-    response = client.patch(url, {"status": "APPROVED"}, content_type="application/json")
+    response = client.patch(url, {"status": "APPROVED"}, content_type="application/json", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert response.status_code in (200, 202)
 
     user = User.objects.get(email="noexpiry@example.com")
@@ -354,6 +367,7 @@ def test_approve_application_no_expiry():
 def test_reapprove_application_updates_expiry():
     """Re-approving an application for an existing user updates their access_expires_at."""
     client = Client()
+    token = _admin_token(client)
 
     existing_user = User.objects.create_user(
         email="existing@example.com",
@@ -376,6 +390,7 @@ def test_reapprove_application_updates_expiry():
         url,
         {"status": "APPROVED", "access_expires_at": new_expires.isoformat()},
         content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
     )
     assert response.status_code in (200, 202)
 

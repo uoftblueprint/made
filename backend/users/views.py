@@ -32,15 +32,19 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
     serializer_class = VolunteerApplicationSerializer
     permission_classes = [permissions.AllowAny]
 
+    def get_permissions(self):
+        """Allow anyone to submit an application; restrict everything else to admins."""
+        if getattr(self, "action", None) == "create":
+            return [permissions.AllowAny()]
+        if getattr(self, "action", None) in {"list", "retrieve", "update", "partial_update", "destroy"}:
+            return [IsAdmin()]
+        return [permission() for permission in self.permission_classes]
+
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
         if self.action == "create":
             return VolunteerApplicationSerializer
         return VolunteerApplicationSerializer
-
-    def _is_admin(self, user):
-        """Check for admin users based on role."""
-        return getattr(user, "role", None) == "ADMIN"
 
     def _handle_review_metadata(self, application):
         """Set reviewed_at and reviewed_by when an application is reviewed."""
@@ -92,11 +96,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         )
 
     def list(self, request, *args, **kwargs):
-        """List applications; restrict to admin users. Enrich APPROVED rows with user data."""
-        user = getattr(request, "user", None)
-        if not (user is not None and getattr(user, "is_authenticated", False) and self._is_admin(user)):
-            return Response({"detail": "Admin only"}, status=status.HTTP_403_FORBIDDEN)
-
+        """List applications restricted to admins. Enrich APPROVED rows with user data."""
         response = super().list(request, *args, **kwargs)
 
         # Enrich approved applications with linked user info
