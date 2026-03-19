@@ -72,7 +72,7 @@ const ManageVolunteers = () => {
     const activeCount = stats?.active_count ?? 0;
     const expiringSoonCount = stats?.expiring_soon_count ?? 0;
     const expiredCount = stats?.expired_count ?? 0;
-    const totalCount = data.length;
+    const totalCount = stats?.total_count ?? data.length;
     const expiringVolunteers = stats?.expiring_volunteers ?? [];
     const warningDays = stats?.warning_days ?? 7;
 
