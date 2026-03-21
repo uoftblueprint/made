@@ -73,12 +73,8 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
                     dt = timezone.make_aware(dt)
                 return dt
             except (ValueError, TypeError) as exc:
-                raise ValidationError(
-                    {"access_expires_at": "Invalid datetime format. Use ISO 8601."}
-                ) from exc
-        raise ValidationError(
-            {"access_expires_at": "Invalid datetime format. Use ISO 8601."}
-        )
+                raise ValidationError({"access_expires_at": "Invalid datetime format. Use ISO 8601."}) from exc
+        raise ValidationError({"access_expires_at": "Invalid datetime format. Use ISO 8601."})
 
     def _handle_volunteer_user_creation(self, application, access_expires_at=None):
         """Create or update a VOLUNTEER user when an application is approved."""
@@ -113,11 +109,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         items = data.get("results", data) if isinstance(data, dict) else data
         now = timezone.now()
 
-        approved_emails = {
-            item.get("email")
-            for item in items
-            if item.get("status") == "APPROVED" and item.get("email")
-        }
+        approved_emails = {item.get("email") for item in items if item.get("status") == "APPROVED" and item.get("email")}
         volunteers_by_email = {}
         if approved_emails:
             for u in User.objects.filter(role="VOLUNTEER", email__in=approved_emails):
@@ -129,11 +121,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
             volunteer_user = volunteers_by_email.get(item.get("email"))
             if volunteer_user:
                 item["user_id"] = volunteer_user.id
-                item["expires_at"] = (
-                    volunteer_user.access_expires_at.isoformat()
-                    if volunteer_user.access_expires_at
-                    else None
-                )
+                item["expires_at"] = volunteer_user.access_expires_at.isoformat() if volunteer_user.access_expires_at else None
                 if volunteer_user.access_expires_at:
                     delta = volunteer_user.access_expires_at - now
                     item["days_remaining"] = max(delta.days, 0)
