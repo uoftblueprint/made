@@ -113,13 +113,27 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         items = data.get("results", data) if isinstance(data, dict) else data
         now = timezone.now()
 
+        approved_emails = {
+            item.get("email")
+            for item in items
+            if item.get("status") == "APPROVED" and item.get("email")
+        }
+        volunteers_by_email = {}
+        if approved_emails:
+            for u in User.objects.filter(role="VOLUNTEER", email__in=approved_emails):
+                volunteers_by_email[u.email] = u
+
         for item in items:
             if item.get("status") != "APPROVED":
                 continue
-            volunteer_user = User.objects.filter(email=item.get("email"), role="VOLUNTEER").first()
+            volunteer_user = volunteers_by_email.get(item.get("email"))
             if volunteer_user:
                 item["user_id"] = volunteer_user.id
-                item["expires_at"] = volunteer_user.access_expires_at.isoformat() if volunteer_user.access_expires_at else None
+                item["expires_at"] = (
+                    volunteer_user.access_expires_at.isoformat()
+                    if volunteer_user.access_expires_at
+                    else None
+                )
                 if volunteer_user.access_expires_at:
                     delta = volunteer_user.access_expires_at - now
                     item["days_remaining"] = max(delta.days, 0)
