@@ -16,6 +16,10 @@ const plusDays = (days: number, from?: string | null) => {
     return base.toISOString().slice(0, 10);
 };
 
+/** HTML date input is YYYY-MM-DD; API expects a full ISO datetime. */
+const dateToEndOfDayIso = (dateStr: string): string =>
+    new Date(`${dateStr}T23:59:59`).toISOString();
+
 const ManageVolunteers = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -49,7 +53,8 @@ const ManageVolunteers = () => {
     const closeExpiryModal = () => setExpiryModal(null);
 
     const submitExpiryModal = () => {
-        const expiry = noExpiry ? null : expiryDate || null;
+        const expiry =
+            noExpiry ? null : expiryDate ? dateToEndOfDayIso(expiryDate) : null;
         if (expiryModal?.mode === 'approve') {
             approveMutation.mutate(
                 { id: expiryModal.applicationId, action: 'APPROVED', access_expires_at: expiry },
