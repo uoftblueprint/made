@@ -364,6 +364,34 @@ def test_approve_application_no_expiry():
 
 
 @pytest.mark.django_db
+def test_approve_application_invalid_expiry_returns_400():
+    """Malformed access_expires_at returns 400 and does not approve the application."""
+    client = Client()
+    token = _admin_token(client)
+
+    application = VolunteerApplication.objects.create(
+        name="Bad Expiry",
+        email="badexpiry@example.com",
+        motivation_text="x",
+        status="PENDING",
+    )
+
+    url = f"/api/users/volunteer-applications/{application.id}/"
+    response = client.patch(
+        url,
+        {"status": "APPROVED", "access_expires_at": "not-a-valid-iso-datetime"},
+        content_type="application/json",
+        HTTP_AUTHORIZATION=f"Bearer {token}",
+    )
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert "access_expires_at" in response.data
+
+    application.refresh_from_db()
+    assert application.status == "PENDING"
+    assert not User.objects.filter(email="badexpiry@example.com").exists()
+
+
+@pytest.mark.django_db
 def test_reapprove_application_updates_expiry():
     """Re-approving an application for an existing user updates their access_expires_at."""
     client = Client()

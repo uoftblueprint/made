@@ -1,6 +1,7 @@
 from rest_framework import generics, status, permissions, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
@@ -58,7 +59,11 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         application.save()
 
     def _parse_access_expires_at(self, value):
-        """Parse an ISO datetime string or None from request data."""
+        """Parse an ISO datetime string or None from request data.
+
+        Missing or empty values mean no expiry. If a value is provided but cannot
+        be parsed, raises ValidationError (400) instead of silently treating as no expiry.
+        """
         if value is None or value == "":
             return None
         if isinstance(value, str):
@@ -67,9 +72,13 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
                 if timezone.is_naive(dt):
                     dt = timezone.make_aware(dt)
                 return dt
-            except (ValueError, TypeError):
-                return None
-        return None
+            except (ValueError, TypeError) as exc:
+                raise ValidationError(
+                    {"access_expires_at": "Invalid datetime format. Use ISO 8601."}
+                ) from exc
+        raise ValidationError(
+            {"access_expires_at": "Invalid datetime format. Use ISO 8601."}
+        )
 
     def _handle_volunteer_user_creation(self, application, access_expires_at=None):
         """Create or update a VOLUNTEER user when an application is approved."""
@@ -126,6 +135,14 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
     @transaction.atomic
     def perform_update(self, serializer):
         old_status = serializer.instance.status
+        validated = serializer.validated_data
+        new_status = validated.get("status", old_status)
+
+        parsed_expiry = None
+        if old_status != new_status and new_status == "APPROVED":
+            raw_expiry = self.request.data.get("access_expires_at")
+            parsed_expiry = self._parse_access_expires_at(raw_expiry)
+
         application = serializer.save()
 
         if old_status != application.status and application.status in {
@@ -134,9 +151,7 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         }:
             self._handle_review_metadata(application)
             if application.status == "APPROVED":
-                raw_expiry = self.request.data.get("access_expires_at")
-                access_expires_at = self._parse_access_expires_at(raw_expiry)
-                self._handle_volunteer_user_creation(application, access_expires_at=access_expires_at)
+                self._handle_volunteer_user_creation(application, access_expires_at=parsed_expiry)
             else:
                 self._handle_volunteer_user_creation(application)
 
