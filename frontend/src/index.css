@@ -41,6 +41,10 @@
   /* Colors - Tan/Beige Accent */
   --color-tan-bg: #fef7ed;
   --color-tan-border: #fed7aa;
+
+  /* Colors - Light Blue Accent */
+  --color-light-blue-bg: #EFF6FF;
+  --color-light-blue-border: #BFDBFE;
   
   /* Colors - Status */
   --color-success: #22c55e;

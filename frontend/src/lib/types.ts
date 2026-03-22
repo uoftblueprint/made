@@ -27,12 +27,10 @@ export interface VolunteerApplicationInput {
   motivation_text: string
 }
 
-// TODO: place holder
-export interface CollectionItem {
-  id: number;
-  name: string;
-  description: string;
-}
+export type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
+export type ItemStatus = 'AVAILABLE' | 'IN_TRANSIT' | 'CHECKED_OUT' | 'MAINTENANCE';
+export type ConditionType = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+export type CompletenessType = 'YES' | 'NO' | 'UNKNOWN';
 
 export interface LocationInfo {
   id: number;
@@ -42,46 +40,27 @@ export interface LocationInfo {
   description?: string;
 }
 
-export type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
-export type ConditionType = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
-export type CompletenessType = 'YES' | 'NO' | 'UNKNOWN';
+export interface BoxSummary {
+  id: number;
+  box_code?: string;
+  label?: string;
+  description?: string;
+  location?: number;
+}
 
-export interface PublicCollectionItem {
+export interface CollectionItem {
   id: number;
   item_code: string;
   title: string;
   platform: string;
   description: string;
-  item_type?: ItemType;
-  condition?: ConditionType;
-  is_complete?: CompletenessType;
-  is_functional?: CompletenessType;
-  date_of_entry?: string;
-  working_condition?: boolean;
-  status?: 'AVAILABLE' | 'IN_TRANSIT' | 'CHECKED_OUT' | 'MAINTENANCE';
+  item_type: ItemType;
+  working_condition: boolean;
+  status: ItemStatus;
+  current_location: LocationInfo | number | null;
+  is_public_visible: boolean;
   is_on_floor: boolean;
-  location_name?: string;
-  current_location?: LocationInfo;
-  box_code?: string;
-  created_at?: string;
-  updated_at?: string;
-  // Software-specific fields
-  creator_publisher?: string;
-  release_year?: string;
-  version_edition?: string;
-  media_type?: string;
-  // Hardware-specific fields
-  manufacturer?: string;
-  model_number?: string;
-  year_manufactured?: string;
-  serial_number?: string;
-  hardware_type?: string;
-  // Non-Electronic-specific fields
-  item_subtype?: string;
-  date_published?: string;
-  publisher?: string;
-  volume_number?: string;
-  isbn_catalogue_number?: string;
+  box: BoxSummary | number | null;
 }
 
 // TODO: place holder

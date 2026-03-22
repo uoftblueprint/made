@@ -21,6 +21,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   radius?: "xs" | "sm" | "md" | "lg" | "xl"
   icon?: keyof typeof iconMap
   layout?: "default" | "stacked"
+  hideMobile?: boolean
 }
 
 export function Button({
@@ -32,6 +33,7 @@ export function Button({
   layout = "default",
   className,
   type,
+  hideMobile = false,
   children,
   ...props
 }: ButtonProps) {
@@ -39,12 +41,12 @@ export function Button({
   const resolvedType = type ?? "button"
 
   const classes: string[] = [
-    "inline-flex items-center justify-center font-medium transition",
+    hideMobile ? "hidden md:inline-flex" : "inline-flex",
+    "items-center justify-center font-medium transition",
     "outline-none",
     "focus-visible:ring-2 focus-visible:ring-offset-2",
     "disabled:opacity-50 disabled:pointer-events-none",
   ]
-
   /* ---------- Radius ---------- */
   if (radius) classes.push(`rounded-${radius}`)
   else classes.push("rounded")
