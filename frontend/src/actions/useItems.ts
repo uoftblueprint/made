@@ -5,6 +5,6 @@ import type { ItemFilter } from '../lib/filters';
 export const useItems = (filters?: ItemFilter) => {
   return useQuery({
     queryKey: ['items', 'list', filters],
-    queryFn: () => itemsApi.getAll(filters), // Use the updated `itemsApi.getAll`
+    queryFn: () => itemsApi.getAll(filters),
   });
 };

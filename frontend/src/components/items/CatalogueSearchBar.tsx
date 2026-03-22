@@ -15,7 +15,7 @@ const CatalogueSearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) =
     const handler = setTimeout(() => {
       setFilters((prev) => ({
         ...prev,
-        search: searchValue.trim() || null
+        search: searchValue.trim() || undefined
       }));
     }, 300);
 
@@ -24,13 +24,12 @@ const CatalogueSearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) =
 
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.trim();
-    setSearchValue(value);
+    setSearchValue(e.target.value);
   };
 
   const handlePlatformChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value.trim();
-    setFilters(prev => ({ ...prev, platform: value || null }));
+    setFilters(prev => ({ ...prev, platform: value || undefined }));
   };
 
   const handleFloorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +41,7 @@ const CatalogueSearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) =
 
   const handleOrderingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value.trim();
-    setFilters(prev => ({ ...prev, ordering: value || null }));
+    setFilters(prev => ({ ...prev, ordering: value || undefined }));
   };
 
 

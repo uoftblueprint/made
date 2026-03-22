@@ -1,10 +1,10 @@
 // Item list component
-import type { PublicCollectionItem } from "../../lib/types";
+import type { CollectionItem } from "../../lib/types";
 import ItemCard from "./ItemCard";
 import './ItemList.css';
 
 interface ItemListProps {
-    items: PublicCollectionItem[];
+    items: CollectionItem[];
 }
 
 const ItemList: React.FC<ItemListProps> = ({ items }) => {

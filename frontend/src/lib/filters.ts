@@ -1,9 +1,9 @@
 export interface ItemFilter {
-  search?: string | null;
-  platform?: string | null;
+  platform?: string;
   is_on_floor?: boolean | null;
-  ordering?: string | null;
-  item_type?: 'SOFTWARE' | 'HARDWARE' | null;
-  status?: 'AVAILABLE' | 'IN_TRANSIT' | 'CHECKED_OUT' | 'MAINTENANCE' | null;
-  location_type?: 'FLOOR' | 'STORAGE' | 'EVENT' | 'OTHER' | null;
+  search?: string;
+  ordering?: string;
+  item_type?: string;
+  status?: string;
+  location_type?: string;
 }

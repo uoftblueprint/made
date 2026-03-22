@@ -90,3 +90,9 @@
 .header-link-logout:hover {
     color: var(--color-primary);
 }
+
+@media (max-width: 767px) {
+  .header-nav {
+    display: none;
+  }
+}
