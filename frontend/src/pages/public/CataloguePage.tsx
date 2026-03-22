@@ -7,10 +7,10 @@ import './CataloguePage.css';
 const CataloguePage: React.FC = () => {
 
   const [filters, setFilters] = useState<ItemFilter>({
-    search: null,
-    platform: null,
+    search: undefined,
+    platform: undefined,
     is_on_floor: null,
-    ordering: null,
+    ordering: undefined,
   });
 
   const { data: items = [], isLoading, isError } = useItems(filters);
