@@ -125,6 +125,7 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
 
     current_location = LocationSerializer(read_only=True)
     location_name = serializers.SerializerMethodField()
+    box_code = serializers.CharField(source="box.box_code", read_only=True)
 
     class Meta:
         model = CollectionItem
@@ -140,6 +141,7 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
             "is_on_floor",
             "current_location",
             "location_name",
+            "box_code",
             "created_at",
             "updated_at",
         ]
@@ -153,6 +155,7 @@ class PublicCollectionItemSerializer(serializers.ModelSerializer):
             "working_condition",
             "status",
             "is_on_floor",
+            "box_code",
             "current_location",
             "location_name",
             "created_at",
