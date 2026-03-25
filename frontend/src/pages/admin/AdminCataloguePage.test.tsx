@@ -22,16 +22,15 @@ beforeEach(() => vi.clearAllMocks())
 describe("AdminCataloguePage", () => {
     it("shows loading then displays items from API", async () => {
         mockGetAll.mockResolvedValue([
-            { id: 1, item_code: "G1", title: "Test Game", platform: "SNES", is_on_floor: true },
+            { id: 1, item_code: "G1", title: "Game", platform: "NES", is_on_floor: true, box: null, current_location: null, description: "test description", is_public_visible: true, item_type: "HARDWARE", working_condition: true, status: "AVAILABLE" },
         ])
 
         render(<BrowserRouter><AdminCataloguePage /></BrowserRouter>)
 
         expect(screen.getByText("Loading items...")).toBeInTheDocument()
 
-        await waitFor(() => {
-            expect(screen.getByText("Test Game")).toBeInTheDocument()
-        })
+        const items = await screen.findAllByText("Game")
+        expect(items.length).toBeGreaterThan(0)
     })
 
     it("shows error state when API fails", async () => {
@@ -59,14 +58,13 @@ describe("AdminCataloguePage", () => {
 
     it("opens Edit modal when Edit button clicked", async () => {
         mockGetAll.mockResolvedValue([
-            { id: 1, item_code: "G1", title: "Game", platform: "NES", is_on_floor: true },
+            { id: 1, item_code: "G1", title: "Game", platform: "NES", is_on_floor: true, box: null, current_location: null, description: "test description", is_public_visible: true, item_type: "HARDWARE", working_condition: true, status: "AVAILABLE" },
         ])
 
         render(<BrowserRouter><AdminCataloguePage /></BrowserRouter>)
 
-        await waitFor(() => expect(screen.getByText("Game")).toBeInTheDocument())
-
-        fireEvent.click(screen.getByTitle("Edit"))
+        const editButton = await screen.findByTitle("Edit")
+        fireEvent.click(editButton)
 
         expect(screen.getByTestId("edit-modal")).toBeInTheDocument()
     })
