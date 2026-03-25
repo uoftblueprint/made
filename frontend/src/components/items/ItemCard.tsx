@@ -1,9 +1,9 @@
 // Item card component
-import type { CollectionItem } from "../../lib/types"
+import type { PublicCollectionItem } from "../../lib/types"
 import './ItemCard.css';
 
 interface ItemCardProps {
-  item: CollectionItem;
+  item: PublicCollectionItem;
 }
 
 const ItemCard: React.FC<ItemCardProps> = ({ item }) => {

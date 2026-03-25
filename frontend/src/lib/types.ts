@@ -26,7 +26,6 @@ export interface VolunteerApplicationInput {
   email: string
   motivation_text: string
 }
-
 export type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
 export type ItemStatus = 'AVAILABLE' | 'IN_TRANSIT' | 'CHECKED_OUT' | 'MAINTENANCE';
 export type ConditionType = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
@@ -40,15 +39,7 @@ export interface LocationInfo {
   description?: string;
 }
 
-export interface BoxSummary {
-  id: number;
-  box_code?: string;
-  label?: string;
-  description?: string;
-  location?: number;
-}
-
-export interface CollectionItem {
+export interface BaseCollectionItem {
   id: number;
   item_code: string;
   title: string;
@@ -57,16 +48,24 @@ export interface CollectionItem {
   item_type: ItemType;
   working_condition: boolean;
   status: ItemStatus;
-  current_location: LocationInfo | number | null;
-  is_public_visible: boolean;
+  current_location: LocationInfo | null;
   is_on_floor: boolean;
-  box: BoxSummary | number | null;
+}
+
+export interface PublicCollectionItem extends BaseCollectionItem {
+  location_name?: string | null;
+  box_code?: string | null;
+}
+
+export interface AdminCollectionItem extends BaseCollectionItem {
+  is_public_visible: boolean;
+  box: number | null;
 }
 
 // TODO: place holder
 export interface ItemOnFloor {
   id: number;
-  item: CollectionItem;
+  item: BaseCollectionItem;
   location: string;
 }
 
