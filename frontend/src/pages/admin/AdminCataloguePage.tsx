@@ -1,471 +1,570 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AddItemModal, EditItemModal, DeleteItemDialog } from '../../components/items';
 import { itemsApi } from '../../api/items.api';
-import type { PublicCollectionItem } from '../../lib/types';
+import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types';
 import { Link } from 'react-router-dom';
-import { Eye, Edit2, ChevronDown } from 'lucide-react';
+import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check } from 'lucide-react';
 import Button from '../../components/common/Button';
 import './AdminCataloguePage.css';
 
-type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
-type Condition = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
-type Completeness = 'YES' | 'NO' | 'UNKNOWN';
-
 interface InventoryItem {
-    id: number;
-    item_code: string;
-    title: string;
-    platform: string;
-    description: string;
-    item_type: ItemType;
-    condition: Condition;
-    is_complete: Completeness;
-    is_functional: Completeness;
-    date_of_entry: string;
-    working_condition: boolean;
-    status: 'AVAILABLE' | 'IN_TRANSIT' | 'CHECKED_OUT' | 'MAINTENANCE';
-    location_type: 'FLOOR' | 'STORAGE' | 'EVENT' | 'OTHER';
-    location_name: string;
-    box_code: string;
-    // Software fields
-    creator_publisher: string;
-    release_year: string;
-    version_edition: string;
-    media_type: string;
-    // Hardware fields
-    manufacturer: string;
-    model_number: string;
-    year_manufactured: string;
-    serial_number: string;
-    hardware_type: string;
-    // Non-Electronic fields
-    item_subtype: string;
-    date_published: string;
-    publisher: string;
-    volume_number: string;
-    isbn_catalogue_number: string;
+  id: number;
+  item_code: string;
+  title: string;
+  platform: string;
+  description: string;
+  item_type: ItemType;
+  working_condition: boolean;
+  status: ItemStatus;
+
+  location_type: 'FLOOR' | 'STORAGE' | 'EVENT' | 'OTHER';
+  location_name: string;
+  box_code: string;
 }
 
-const mapApiToInventoryItem = (item: PublicCollectionItem): InventoryItem => ({
-    id: item.id,
-    item_code: item.item_code,
-    title: item.title,
-    platform: item.platform || '',
-    description: item.description || '',
-    item_type: (item.item_type as ItemType) ?? 'SOFTWARE',
-    condition: (item.condition as Condition) ?? 'GOOD',
-    is_complete: (item.is_complete as Completeness) ?? 'UNKNOWN',
-    is_functional: (item.is_functional as Completeness) ?? 'UNKNOWN',
-    date_of_entry: item.date_of_entry || '',
-    working_condition: item.working_condition ?? true,
-    status: item.status ?? 'AVAILABLE',
-    location_type: item.current_location?.location_type || 'OTHER',
-    location_name: item.current_location?.name || 'Unknown',
-    box_code: item.box_code || '--',
-    creator_publisher: item.creator_publisher || '',
-    release_year: item.release_year || '',
-    version_edition: item.version_edition || '',
-    media_type: item.media_type || '',
-    manufacturer: item.manufacturer || '',
-    model_number: item.model_number || '',
-    year_manufactured: item.year_manufactured || '',
-    serial_number: item.serial_number || '',
-    hardware_type: item.hardware_type || '',
-    item_subtype: item.item_subtype || '',
-    date_published: item.date_published || '',
-    publisher: item.publisher || '',
-    volume_number: item.volume_number || '',
-    isbn_catalogue_number: item.isbn_catalogue_number || '',
+const mapApiToInventoryItem = (item: AdminCollectionItem): InventoryItem => ({
+  id: item.id,
+  item_code: item.item_code ?? '',
+  title: item.title ?? '',
+  platform: item.platform ?? '',
+  description: item.description ?? '',
+  item_type: item.item_type ?? 'SOFTWARE',
+  working_condition: item.working_condition ?? false,
+  status: item.status ?? 'AVAILABLE',
+
+  location_type: item.current_location?.location_type ?? 'OTHER',
+  location_name: item.current_location?.name ?? 'Unknown',
+  box_code: item.box ? String(item.box) : '--',
 });
 
 const getLocationLabel = (locationType: InventoryItem['location_type'], locationName: string) => {
-    const typeLabels: Record<string, string> = {
-        'FLOOR': 'Exhibit',
-        'STORAGE': 'In Storage',
-        'EVENT': 'Event',
-        'OTHER': 'Other',
-    };
-    const typeLabel = typeLabels[locationType] || 'Unknown';
-    if (locationType === 'FLOOR' && locationName) {
-        return `Exhibit - ${locationName.replace('Floor - ', '').replace('Exhibit - ', '')}`;
-    }
-    return typeLabel;
+  const typeLabels: Record<InventoryItem['location_type'], string> = {
+    FLOOR: 'Exhibit',
+    STORAGE: 'In Storage',
+    EVENT: 'Event',
+    OTHER: 'Other',
+  };
+
+  const typeLabel = typeLabels[locationType];
+
+  if (locationType === 'FLOOR' && locationName) {
+    return `Exhibit - ${locationName.replace('Floor - ', '').replace('Exhibit - ', '')}`;
+  }
+  return typeLabel;
 };
 
-const getStatusLabel = (status: InventoryItem['status']) => {
-    const labels: Record<string, string> = {
-        'AVAILABLE': 'Available',
-        'IN_TRANSIT': 'In Transit',
-        'CHECKED_OUT': 'Checked Out',
-        'MAINTENANCE': 'Maintenance',
-    };
-    return labels[status] || status;
+const getStatusLabel = (status?: ItemStatus) => {
+  const labels: Record<ItemStatus, string> = {
+    AVAILABLE: 'Available',
+    IN_TRANSIT: 'In Transit',
+    CHECKED_OUT: 'Checked Out',
+    MAINTENANCE: 'Maintenance',
+  };
+  return status ? labels[status] : 'Unknown';
 };
 
-const getTypeLabel = (itemType: InventoryItem['item_type']) => {
-    const labels: Record<ItemType, string> = {
-        'SOFTWARE': 'Software',
-        'HARDWARE': 'Hardware',
-        'NON_ELECTRONIC': 'Non-Electronic',
-    };
-    return labels[itemType] || itemType;
+const getTypeLabel = (itemType?: ItemType) => {
+  const labels: Record<ItemType, string> = {
+    SOFTWARE: 'Software',
+    HARDWARE: 'Hardware',
+    NON_ELECTRONIC: 'Non-Electronic',
+  };
+  return itemType ? labels[itemType] : 'Unknown';
+};
+
+const typeOptions = [
+  { value: '', label: 'All Types' },
+  { value: 'SOFTWARE', label: 'Software' },
+  { value: 'HARDWARE', label: 'Hardware' },
+  { value: 'NON_ELECTRONIC', label: 'Non-Electronic' },
+] as const;
+
+const locationOptions = [
+  { value: '', label: 'All Locations' },
+  { value: 'FLOOR', label: 'On Floor' },
+  { value: 'STORAGE', label: 'In Storage' },
+  { value: 'EVENT', label: 'Event' },
+] as const;
+
+const statusOptions = [
+  { value: '', label: 'All Status' },
+  { value: 'AVAILABLE', label: 'Available' },
+  { value: 'IN_TRANSIT', label: 'In Transit' },
+  { value: 'CHECKED_OUT', label: 'Checked Out' },
+  { value: 'MAINTENANCE', label: 'Maintenance' },
+] as const;
+
+type MobileFilterGroupProps = {
+  label: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+};
+
+const MobileFilterGroup: React.FC<MobileFilterGroupProps> = ({
+  label,
+  value,
+  options,
+  onChange,
+}) => {
+  return (
+    <div className="catalogue-mobile-filter-group">
+      <div className="catalogue-mobile-filter-label">{label}</div>
+      <div className="catalogue-mobile-filter-options">
+        {options.map((option) => {
+          const isActive = value === option.value;
+          return (
+            <button
+              key={option.value || 'all'}
+              type="button"
+              className={`catalogue-mobile-filter-option ${isActive ? 'active' : ''}`}
+              onClick={() => onChange(option.value)}
+            >
+              <span>{option.label}</span>
+              {isActive && <Check size={14} />}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 const AdminCataloguePage: React.FC = () => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedSearch, setDebouncedSearch] = useState('');
-    const [items, setItems] = useState<InventoryItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [items, setItems] = useState<AdminCollectionItem[]>([]);
+  const inventoryItems = items.map((item) => ({
+    raw: item,
+    display: mapApiToInventoryItem(item),
+  }));
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // Modal states
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<AdminCollectionItem | null>(null);
 
-    // Debounce search query
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setDebouncedSearch(searchQuery);
-        }, 300);
-        return () => clearTimeout(timer);
-    }, [searchQuery]);
+  const [showFilters, setShowFilters] = useState(false);
 
-    // Fetch items from API
-    const fetchItems = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const apiItems = await itemsApi.getAll({ search: debouncedSearch || undefined });
-            setItems(apiItems.map(mapApiToInventoryItem));
-        } catch (err) {
-            console.error('Failed to fetch items:', err);
-            setError('Failed to load items. Please try again.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [debouncedSearch]);
+  const [typeFilter, setTypeFilter] = useState<string>('');
+  const [locationFilter, setLocationFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
 
-    // Fetch when debounced search changes
-    useEffect(() => {
-        fetchItems();
-    }, [fetchItems]);
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    const handleAddSuccess = () => {
-        fetchItems();
-    };
+  // Fetch items from API
+  const fetchItems = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const apiItems = await itemsApi.getAll({ search: debouncedSearch || undefined });
+      setItems(apiItems || []);
+    } catch (err) {
+      console.error('Failed to fetch items:', err);
+      setError('Failed to load items. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [debouncedSearch]);
 
-    const handleEditClick = (item: InventoryItem) => {
-        setSelectedItem(item);
-        setIsEditModalOpen(true);
-    };
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
-    const handleEditSuccess = () => {
-        fetchItems();
-    };
+  const handleAddSuccess = () => {
+    fetchItems();
+  };
 
-    const handleMoveClick = (item: InventoryItem) => {
-        console.log('Move item:', item.title);
-    };
+  const handleEditClick = (item: AdminCollectionItem) => {
+    setSelectedItem(item);
+    setIsEditModalOpen(true);
+  };
+  const handleEditSuccess = () => {
+    fetchItems();
+  };
 
-    const handleDeleteConfirm = () => {
-        // Mock delete removes local state (will replace with call once Issue #30 is done)
-        if (selectedItem) {
-            setItems(items.filter(i => i.id !== selectedItem.id));
-        }
-        setSelectedItem(null);
-    };
+  const handleMoveClick = (item: AdminCollectionItem) => {
+    console.log('Move item:', item.title);
+  };
 
-    // Stats from all items (not filtered)
-    const stats = {
-        onFloor: items.filter(i => i.location_type === 'FLOOR').length,
-        inStorage: items.filter(i => i.location_type === 'STORAGE').length,
-        checkedOut: items.filter(i => i.status === 'CHECKED_OUT').length,
-        total: items.length,
-    };
+  const handleDeleteConfirm = () => {
+    // Mock delete removes local state (will replace with call once Issue #30 is done)
+    if (selectedItem) {
+      setItems((prev) => prev.filter((i) => i.id !== selectedItem.id));
+    }
+    setSelectedItem(null);
+  };
 
-    // Filter states
-    const [typeFilter, setTypeFilter] = useState<string>('');
-    const [locationFilter, setLocationFilter] = useState<string>('');
-    const [statusFilter, setStatusFilter] = useState<string>('');
+  // Stats from all items (not filtered)
+  const stats = {
+    onFloor: inventoryItems.filter(({ display }) => display.location_type === 'FLOOR').length,
+    inStorage: inventoryItems.filter(({ display }) => display.location_type === 'STORAGE').length,
+    checkedOut: inventoryItems.filter(({ display }) => display.status === 'CHECKED_OUT').length,
+    total: inventoryItems.length,
+  };
 
-    // Apply filters to items
-    const filteredItems = items.filter(item => {
-        if (typeFilter && item.item_type !== typeFilter) return false;
-        if (locationFilter && item.location_type !== locationFilter) return false;
-        if (statusFilter && item.status !== statusFilter) return false;
-        return true;
-    });
+  const filteredItems = inventoryItems.filter(({ display }) => {
+    if (typeFilter && display.item_type !== typeFilter) return false;
+    if (locationFilter && display.location_type !== locationFilter) return false;
+    if (statusFilter && display.status !== statusFilter) return false;
+    return true;
+  });
 
-    // Export CSV handler
-    const handleExportCSV = () => {
+  // Export CSV handler
+  const handleExportCSV = () => {
         const headers = ['Game Title', 'MADE ID', 'System', 'Type', 'Box ID', 'Location', 'Working Condition', 'Status'];
-        const csvRows = [headers.join(',')];
-        items.forEach(item => {
-            const row = [
-                `"${item.title}"`,
-                item.item_code,
-                item.platform,
-                getTypeLabel(item.item_type),
-                item.box_code,
-                getLocationLabel(item.location_type, item.location_name),
-                item.working_condition ? 'Yes' : 'No',
-                getStatusLabel(item.status)
-            ];
-            csvRows.push(row.join(','));
-        });
-        const csvContent = csvRows.join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'collection_catalogue.csv';
-        a.click();
-        URL.revokeObjectURL(url);
-    };
+    const csvRows = [headers.join(',')];
+    inventoryItems.forEach(({ display }) => {
+      const row = [
+        `"${display.title}"`,
+        display.item_code,
+        display.platform,
+        getTypeLabel(display.item_type),
+        display.box_code,
+        getLocationLabel(display.location_type, display.location_name),
+        display.working_condition ? 'Yes' : 'No',
+        getStatusLabel(display.status),
+      ];
+      csvRows.push(row.join(','));
+    });
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'collection_catalogue.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-    return (
-        <div className="catalogue-layout">
-            {/* Header */}
-            <div className="catalogue-header">
-                <div className="catalogue-header-left">
-                    <h1>Collection Catalogue</h1>
-                    <p className="catalogue-header-subtitle">Search, filter, and manage items</p>
-                </div>
-                <Button
-                    variant="primary"
-                    size="md"
-                    icon="plus"
-                    onClick={() => setIsAddModalOpen(true)}
-                >
-                    Add New Item
-                </Button>
-            </div>
-
-            {/* Main Content */}
-            <div className="catalogue-content">
-
-                {/* Stats Bar */}
-                <div className="catalogue-stats-bar">
-                    <div className="catalogue-stat-item">
-                        <span className="label">On Floor:</span>
-                        <span className="value">{stats.onFloor.toLocaleString()}</span>
-                    </div>
-                    <div className="catalogue-stat-item">
-                        <span className="label">In Storage:</span>
-                        <span className="value">{stats.inStorage.toLocaleString()}</span>
-                    </div>
-                    <div className="catalogue-stat-item">
-                        <span className="label">Checked Out:</span>
-                        <span className="value">{stats.checkedOut.toLocaleString()}</span>
-                    </div>
-                    <div className="catalogue-stat-item">
-                        <span className="label">Total Items:</span>
-                        <span className="value">{stats.total.toLocaleString()}</span>
-                    </div>
-                </div>
-
-                {/* Search and Filters */}
-                <div className="catalogue-filters">
-                    <input
-                        type="text"
-                        className="catalogue-search"
-                        placeholder="Search by Title, MADE ID, or Location..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                    <div className="catalogue-filter-dropdown">
-                        <select
-                            value={typeFilter}
-                            onChange={(e) => setTypeFilter(e.target.value)}
-                            className="catalogue-filter-select"
-                        >
-                            <option value="">All Types</option>
-                            <option value="SOFTWARE">Software</option>
-                            <option value="HARDWARE">Hardware</option>
-                            <option value="NON_ELECTRONIC">Non-Electronic</option>
-                        </select>
-                        <ChevronDown size={14} className="dropdown-icon" />
-                    </div>
-                    <div className="catalogue-filter-dropdown">
-                        <select
-                            value={locationFilter}
-                            onChange={(e) => setLocationFilter(e.target.value)}
-                            className="catalogue-filter-select"
-                        >
-                            <option value="">Exhibit</option>
-                            <option value="FLOOR">On Floor</option>
-                            <option value="STORAGE">In Storage</option>
-                            <option value="EVENT">Event</option>
-                        </select>
-                        <ChevronDown size={14} className="dropdown-icon" />
-                    </div>
-                    <div className="catalogue-filter-dropdown">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value)}
-                            className="catalogue-filter-select"
-                        >
-                            <option value="">All Status</option>
-                            <option value="AVAILABLE">Available</option>
-                            <option value="IN_TRANSIT">In Transit</option>
-                            <option value="CHECKED_OUT">Checked Out</option>
-                            <option value="MAINTENANCE">Maintenance</option>
-                        </select>
-                        <ChevronDown size={14} className="dropdown-icon" />
-                    </div>
-                    <Button variant="outline-black" size="sm" icon="download" onClick={handleExportCSV}>
-                        Export CSV
-                    </Button>
-                </div>
-
-                {/* Item Count */}
-                <div className="catalogue-item-count">
-                    Showing {filteredItems.length} of {stats.total.toLocaleString()} items
-                </div>
-
-                {/* Loading State */}
-                {isLoading && (
-                    <div className="catalogue-loading">Loading items...</div>
-                )}
-
-                {/* Error State */}
-                {error && (
-                    <div className="catalogue-error">
-                        {error}
-                        <button onClick={fetchItems}>Retry</button>
-                    </div>
-                )}
-
-                {/* Inventory Table */}
-                {!isLoading && !error && filteredItems.length > 0 && (
-                    <table className="catalogue-table">
-                        <thead>
-                            <tr>
-                                <th>Game Title</th>
-                                <th>MADE ID</th>
-                                <th>System</th>
-                                <th>Type</th>
-                                <th>Box ID</th>
-                                <th>Location</th>
-                                <th>Working Condition</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredItems.map((item) => (
-                                <tr key={item.id}>
-                                    <td><strong>{item.title}</strong></td>
-                                    <td>{item.item_code}</td>
-                                    <td>{item.platform}</td>
-                                    <td>{getTypeLabel(item.item_type)}</td>
-                                    <td>{item.box_code}</td>
-                                    <td>
-                                        <span className={`location-badge ${item.location_type.toLowerCase()}`}>
-                                            {getLocationLabel(item.location_type, item.location_name)}
-                                        </span>
-                                    </td>
-                                    <td className={item.working_condition ? 'condition-yes' : 'condition-no'}>
-                                        {item.working_condition ? 'Yes' : 'No'}
-                                    </td>
-                                    <td>
-                                        <span className={`status-badge ${item.status.toLowerCase().replace('_', '-')}`}>
-                                            {getStatusLabel(item.status)}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div className="catalogue-actions">
-                                            <Link
-                                                to={`/admin/catalogue/${item.id}`}
-                                                className="catalogue-action-btn"
-                                                title="View"
-                                            >
-                                                <Eye size={14} />
-                                            </Link>
-                                            <button
-                                                className="catalogue-action-btn"
-                                                onClick={() => handleEditClick(item)}
-                                                title="Edit"
-                                            >
-                                                <Edit2 size={14} />
-                                            </button>
-                                            <button
-                                                className="catalogue-action-btn catalogue-move-btn"
-                                                onClick={() => handleMoveClick(item)}
-                                            >
-                                                Move
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-
-                {/* Empty State */}
-                {!isLoading && !error && filteredItems.length === 0 && (
-                    <div className="catalogue-empty-state">
-                        <p>No items found. Click add item button to add first item.</p>
-                    </div>
-                )}
-            </div>
-
-            {/* Modals */}
-            <AddItemModal
-                isOpen={isAddModalOpen}
-                onClose={() => setIsAddModalOpen(false)}
-                onSuccess={handleAddSuccess}
-            />
-
-            <EditItemModal
-                isOpen={isEditModalOpen}
-                onClose={() => {
-                    setIsEditModalOpen(false);
-                    setSelectedItem(null);
-                }}
-                onSuccess={handleEditSuccess}
-                item={selectedItem ? {
-                    id: selectedItem.id,
-                    item_code: selectedItem.item_code,
-                    title: selectedItem.title,
-                    item_type: selectedItem.item_type,
-                    platform: selectedItem.platform,
-                    description: selectedItem.description,
-                    condition: selectedItem.condition,
-                    is_complete: selectedItem.is_complete,
-                    is_functional: selectedItem.is_functional,
-                    date_of_entry: selectedItem.date_of_entry,
-                    creator_publisher: selectedItem.creator_publisher,
-                    release_year: selectedItem.release_year,
-                    version_edition: selectedItem.version_edition,
-                    media_type: selectedItem.media_type,
-                    manufacturer: selectedItem.manufacturer,
-                    model_number: selectedItem.model_number,
-                    year_manufactured: selectedItem.year_manufactured,
-                    serial_number: selectedItem.serial_number,
-                    hardware_type: selectedItem.hardware_type,
-                    item_subtype: selectedItem.item_subtype,
-                    date_published: selectedItem.date_published,
-                    publisher: selectedItem.publisher,
-                    volume_number: selectedItem.volume_number,
-                    isbn_catalogue_number: selectedItem.isbn_catalogue_number,
-                } : null}
-            />
-
-            <DeleteItemDialog
-                isOpen={isDeleteDialogOpen}
-                onClose={() => {
-                    setIsDeleteDialogOpen(false);
-                    setSelectedItem(null);
-                }}
-                onConfirm={handleDeleteConfirm}
-                itemTitle={selectedItem?.title || ''}
-            />
+  return (
+    <div className="catalogue-layout">
+      {/* Header */}
+      <div className="catalogue-header">
+        <div className="catalogue-header-left">
+          <h1>Collection Catalogue</h1>
+          <p className="catalogue-header-subtitle">Search, filter, and manage items</p>
         </div>
-    );
+
+        <h1 className="catalogue-header-mobile">Search Items</h1>
+
+        <Button
+          hideMobile={true}
+          variant="primary"
+          size="md"
+          icon="plus"
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          Add New Item
+        </Button>
+      </div>
+
+      {/* Main Content */}
+      <div className="catalogue-content">
+        
+        {/* Stats Bar */}
+        <div className="catalogue-stats-bar">
+          <div className="catalogue-stat-item">
+            <span className="label">On Floor:</span>
+            <span className="value">{stats.onFloor.toLocaleString()}</span>
+          </div>
+          <div className="catalogue-stat-item">
+            <span className="label">In Storage:</span>
+            <span className="value">{stats.inStorage.toLocaleString()}</span>
+          </div>
+          <div className="catalogue-stat-item">
+            <span className="label">Checked Out:</span>
+            <span className="value">{stats.checkedOut.toLocaleString()}</span>
+          </div>
+          <div className="catalogue-stat-item">
+            <span className="label">Total Items:</span>
+            <span className="value">{stats.total.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="catalogue-filters-desktop">
+          <input
+            type="text"
+            className="catalogue-search"
+            placeholder="Search by Title, MADE ID, or Location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
+          <div className="catalogue-filter-dropdown">
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="catalogue-filter-select"
+            >
+              {typeOptions.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>{option.label}</option>))}</select>
+            <ChevronDown size={14} className="dropdown-icon" />
+          </div>
+          <div className="catalogue-filter-dropdown">
+            <select
+              value={locationFilter}
+              onChange={(e) => setLocationFilter(e.target.value)}
+              className="catalogue-filter-select"
+            >
+              {locationOptions.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>{option.label}</option>))}
+            </select>
+            <ChevronDown size={14} className="dropdown-icon" />
+          </div>
+          <div className="catalogue-filter-dropdown">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="catalogue-filter-select"
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>{option.label}</option>))}
+            </select>
+            <ChevronDown size={14} className="dropdown-icon" />
+          </div>
+          <Button className="catalogue-export-mobile-hide" variant="outline-black" size="sm" icon="download" onClick={handleExportCSV}>
+            Export CSV
+          </Button>
+        </div>
+
+        <div className="catalogue-filters-mobile">
+          <input
+            type="text"
+            className="catalogue-search"
+            placeholder="Search by Title, MADE ID, or Location..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+
+          <div className="catalogue-filters-wrapper">
+            <button
+              type="button"
+              className="catalogue-filters-button"
+              onClick={() => setShowFilters((prev) => !prev)}
+            >
+              Filters
+              <ChevronDown
+                size={14}
+                className={`filters-icon ${showFilters ? 'open' : ''}`}
+              />
+            </button>
+
+            {showFilters && (
+              <div className="catalogue-filters-panel">
+                <MobileFilterGroup
+                  label="Type"
+                  value={typeFilter}
+                  options={typeOptions}
+                  onChange={setTypeFilter}
+                />
+
+                <MobileFilterGroup
+                  label="Location"
+                  value={locationFilter}
+                  options={locationOptions}
+                  onChange={setLocationFilter}
+                />
+
+                <MobileFilterGroup
+                  label="Status"
+                  value={statusFilter}
+                  options={statusOptions}
+                  onChange={setStatusFilter}
+                />
+
+                <button
+                  type="button"
+                  className="catalogue-clear-filters"
+                  onClick={() => {
+                    setTypeFilter('');
+                    setLocationFilter('');
+                    setStatusFilter('');
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="catalogue-item-count">
+          Showing {filteredItems.length} of {stats.total.toLocaleString()} items
+        </div>
+
+        {/* Loading State */}
+        {isLoading && <div className="catalogue-loading">Loading items...</div>}
+
+        {/* Error State */}
+        {error && (
+          <div className="catalogue-error">
+            {error}
+            <button onClick={fetchItems}>Retry</button>
+          </div>
+        )}
+
+        {/* Inventory Table */}
+        {!isLoading && !error && filteredItems.length > 0 && (
+          <table className="catalogue-table">
+            <thead>
+              <tr>
+                <th>Game Title</th>
+                <th>MADE ID</th>
+                <th>System</th>
+                <th>Type</th>
+                <th>Box ID</th>
+                <th>Location</th>
+                <th>Working Condition</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map(({ raw, display }) => (
+                <tr key={raw.id}>
+                  <td>
+                    <strong>{display.title}</strong>
+                  </td>
+                  <td>{display.item_code}</td>
+                  <td>{display.platform}</td>
+                  <td>{getTypeLabel(display.item_type)}</td>
+                  <td>{display.box_code}</td>
+                  <td>
+                    <span className={`location-badge ${display.location_type.toLowerCase()}`}>
+                      {getLocationLabel(display.location_type, display.location_name)}
+                    </span>
+                  </td>
+                  <td className={display.working_condition ? 'condition-yes' : 'condition-no'}>
+                    {display.working_condition ? 'Yes' : 'No'}
+                  </td>
+                  <td>
+                    <span
+                      className={`status-badge ${display.status.toLowerCase().replace('_', '-')}`}
+                    >
+                      {display.status ? getStatusLabel(display.status) : 'Unknown'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="catalogue-actions">
+                      <Link
+                        to={`/admin/catalogue/${raw.id}`}
+                        className="catalogue-action-btn"
+                        title="View"
+                      >
+                        <Eye size={14} />
+                      </Link>
+                      <button
+                        className="catalogue-action-btn"
+                        onClick={() => handleEditClick(raw)}
+                        title="Edit"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button
+                        className="catalogue-action-btn catalogue-move-btn"
+                        onClick={() => handleMoveClick(raw)}
+                      >
+                        Move
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {!isLoading && !error && filteredItems.length > 0 && (
+          <div className="catalogue-mobile-list">
+            {filteredItems.map(({ raw, display }) => (
+              <Link
+                key={raw.id}
+                to={`/admin/catalogue/${raw.id}`}
+                className="catalogue-mobile-card"
+              >
+                <div className="catalogue-mobile-card-top">
+                  <div className="catalogue-mobile-card-text">
+                    <h3 className="catalogue-mobile-card-title">{display.title}</h3>
+                    <p className="catalogue-mobile-card-id">{display.item_code}</p>
+                  </div>
+
+                  <ChevronRight size={20} className="catalogue-mobile-card-chevron" />
+                </div>
+
+                <div className="catalogue-mobile-card-meta">
+                  <span className="catalogue-mobile-type-pill">
+                    {getTypeLabel(display.item_type)}
+                  </span>
+
+                  <span className="catalogue-mobile-location">
+                    <MapPin size={16} />
+                    {display.box_code !== '--'
+                      ? `Box ${display.box_code}`
+                      : getLocationLabel(display.location_type, display.location_name)}
+                  </span>
+                </div>
+
+                <div className="catalogue-mobile-divider" />
+
+                <div className="catalogue-mobile-card-bottom">
+                  <span className="catalogue-mobile-works-label">Works?</span>
+                  <span
+                    className={`catalogue-mobile-works-value ${
+                      display.working_condition ? 'yes' : 'unknown'
+                    }`}
+                  >
+                    {display.working_condition ? 'Yes' : 'No'}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && !error && filteredItems.length === 0 && (
+          <div className="catalogue-empty-state">
+            <p>No items found. Click add item button to add first item.</p>
+          </div>
+        )}
+      </div>
+
+      <AddItemModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleAddSuccess}
+      />
+
+      <EditItemModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedItem(null);
+        }}
+        onSuccess={handleEditSuccess}
+        item={selectedItem}
+      />
+
+      <DeleteItemDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => {
+          setIsDeleteDialogOpen(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        itemTitle={selectedItem?.title || ''}
+      />
+    </div>
+  );
 };
 
 export default AdminCataloguePage;

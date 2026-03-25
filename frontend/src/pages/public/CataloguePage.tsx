@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useItems } from '../../actions';
+import { usePublicItems } from '../../actions/useItems';
 import type { ItemFilter } from '../../lib/filters';
 import { CatalogueSearchBar, ItemList } from '../../components/items'
 import './CataloguePage.css';
@@ -13,7 +13,7 @@ const CataloguePage: React.FC = () => {
     ordering: undefined,
   });
 
-  const { data: items = [], isLoading, isError } = useItems(filters);
+  const { data: items = [], isLoading, isError } = usePublicItems(filters);
 
   return (
     <div className="catalogue-public-layout">

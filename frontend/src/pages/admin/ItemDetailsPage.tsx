@@ -3,9 +3,12 @@ import axios from 'axios';
 import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X, Clock, ArrowRight } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
+import type { AdminCollectionItem } from '../../lib/types';
 import { useItemRequests } from '../../actions/useRequests';
-import type { PublicCollectionItem, MovementRequest } from '../../lib/types';
+import type { MovementRequest } from '../../lib/types';
 import './ItemDetailsPage.css';
+import { ItemDetailsCard } from '../../components/items/ItemDetailCard';
+import EditItemModal from '../../components/items/EditItemModal';
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -18,32 +21,34 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-interface ItemDetails extends PublicCollectionItem {
+interface ItemDetails extends AdminCollectionItem {
   cataloger?: string;
   date_of_entry?: string;
   physical_description?: string;
   does_it_work?: string;
   notes?: string;
   source?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const ItemDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const isRequestView = searchParams.get('from') === 'request';
-  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [item, setItem] = useState<ItemDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
   const [arrivalError, setArrivalError] = useState<string | null>(null);
-  
+
   const { requests: movementRequests, loading: requestsLoading, approve, reject, completeArrival } = useItemRequests(id ? parseInt(id) : undefined);
   const pendingRequests = movementRequests.filter(r => r.status === 'WAITING_APPROVAL');
   const approvedRequests = movementRequests.filter(r => r.status === 'APPROVED');
   const activeTransitRequest = approvedRequests[0] ?? null;
   const isInTransit = item?.status === 'IN_TRANSIT';
-  
+
   const backLink = isRequestView ? '/admin' : '/admin/catalogue';
   const backText = isRequestView ? 'Back to Dashboard' : 'Back to Catalogue';
 
@@ -73,20 +78,6 @@ const ItemDetailsPage: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
-  };
-
-  const formatTimeAgo = (dateString: string): string => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) return `${diffDays}d ago`;
-    if (diffHours > 0) return `${diffHours}h ago`;
-    if (diffMins > 0) return `${diffMins}m ago`;
-    return 'just now';
   };
 
   const handleApprove = async (request: MovementRequest) => {
@@ -157,20 +148,30 @@ const ItemDetailsPage: React.FC = () => {
     );
   }
 
+  const locationName = item.current_location?.name ?? '--';
+
+  const workStatus =
+    item.does_it_work !== undefined
+      ? item.does_it_work
+      : item.working_condition
+      ? 'Yes'
+      : 'No';
+
   return (
     <div className="item-details-layout">
-      {/* Back Link */}
       <Link to={backLink} className="item-details-back">
         <ArrowLeft size={16} />
         {backText}
       </Link>
 
-      {/* Header */}
-      <div className="item-details-header">
+      <div className="item-details-header mt-5 md:mt-0">
         <div className="item-details-header-left">
           <h1>{item.title || 'Untitled Item'}</h1>
-          <p className="item-details-subtitle">Software Work Record · {item.item_code || `MADE-SW-${id}`}</p>
+          <p className="item-details-subtitle hidden md:block">
+            Software Work Record · {item.item_code || `MADE-SW-${id}`}
+          </p>
         </div>
+
         <div className="item-details-badges">
           {isRequestView && pendingRequests.length > 0 && (
             <span className="item-badge move-requested">Move Requested</span>
@@ -178,7 +179,9 @@ const ItemDetailsPage: React.FC = () => {
           {isInTransit && (
             <span className="item-badge in-transit">In Transit</span>
           )}
-          <span className="item-badge type">{item.platform || 'Software'}</span>
+          <span className="item-badge type hidden md:block">
+            {item.platform || 'Software'}
+          </span>
         </div>
       </div>
 
@@ -191,7 +194,7 @@ const ItemDetailsPage: React.FC = () => {
           )}
 
           {/* Required Information */}
-          <div className="item-details-card">
+          <div className="item-details-card hidden md:flex">
             <h3>Required Information</h3>
             <div className="item-details-grid">
               <div className="item-field">
@@ -209,7 +212,7 @@ const ItemDetailsPage: React.FC = () => {
               <div className="item-field">
                 <span className="item-field-label">Location/Box ID</span>
                 <span className="item-field-value">
-                  <MapPin size={14} /> {item.current_location?.name || '--'}
+                  <MapPin size={14} /> {locationName}
                 </span>
               </div>
               <div className="item-field">
@@ -225,7 +228,7 @@ const ItemDetailsPage: React.FC = () => {
 
           {/* Quick Reference */}
           <div className="item-details-card quick-reference">
-            <h3>Quick Reference</h3>
+            <h3 className="hidden md:block">Quick Reference</h3>
             <div className="item-details-grid three-col">
               <div className="item-field">
                 <span className="item-field-label">What do we have?</span>
@@ -233,17 +236,17 @@ const ItemDetailsPage: React.FC = () => {
               </div>
               <div className="item-field">
                 <span className="item-field-label">Where is it?</span>
-                <span className="item-field-value">{item.current_location?.name || '--'}</span>
+                <span className="item-field-value">{locationName}</span>
               </div>
               <div className="item-field">
                 <span className="item-field-label">Does it work?</span>
-                <span className="item-field-value warning">{item.does_it_work || (item.working_condition !== undefined ? (item.working_condition ? 'Yes' : 'No') : 'Not yet tested')}</span>
+                <span className="item-field-value warning">{workStatus}</span>
               </div>
             </div>
           </div>
 
           {/* Optional Metadata */}
-          <div className="item-details-card">
+          <div className="item-details-card hidden md:block">
             <h3>Optional Metadata</h3>
             <div className="item-field">
               <span className="item-field-label">Physical Description</span>
@@ -265,64 +268,15 @@ const ItemDetailsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Movement Requests - only show in request view */}
-          {isRequestView && (pendingRequests.length > 0 || requestsLoading) && (
-            <div className="item-details-card movement-requests-card">
-              <h3>
-                <Clock size={18} />
-                Pending Movement Requests ({requestsLoading ? '...' : pendingRequests.length})
-              </h3>
-              {requestsLoading ? (
-                <p className="item-details-placeholder">Loading requests...</p>
-              ) : (
-                <div className="movement-requests-list">
-                  {pendingRequests.map((request) => (
-                    <div key={request.id} className="movement-request-item">
-                      <div className="movement-request-info">
-                        <div className="movement-request-route">
-                          <span className="movement-location">{request.from_location_name}</span>
-                          <ArrowRight size={16} className="movement-arrow" />
-                          <span className="movement-location">{request.to_location_name}</span>
-                        </div>
-                        <div className="movement-request-meta">
-                          <span>Requested by {request.requested_by_username}</span>
-                          <span className="movement-request-time">{formatTimeAgo(request.created_at)}</span>
-                        </div>
-                      </div>
-                      <div className="movement-request-actions">
-                        <button
-                          className="movement-request-btn approve"
-                          onClick={() => handleApprove(request)}
-                          disabled={processingRequestId === request.id}
-                        >
-                          <Check size={16} />
-                          Approve
-                        </button>
-                        <button
-                          className="movement-request-btn reject"
-                          onClick={() => handleReject(request)}
-                          disabled={processingRequestId === request.id}
-                        >
-                          <X size={16} />
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Location History */}
-          <div className="item-details-card">
+          <div className="item-details-card hidden md:block">
+            
             <h3>Location History</h3>
-            {item.current_location?.name ? (
+            {locationName !== '--' ? (
               <div className="item-location-history">
                 <div className="location-history-entry">
                   <span className="location-history-date">{formatDate(item.date_of_entry || item.created_at)}</span>
                   <div className="location-history-details">
-                    <span className="location-history-box">{item.current_location?.name}</span>
+                    <span className="location-history-box">{locationName}</span>
                     <span className="location-history-note">Initial Entry</span>
                   </div>
                 </div>
@@ -357,7 +311,21 @@ const ItemDetailsPage: React.FC = () => {
               </button>
             </>
           )}
-          <button className="item-action-btn secondary">
+          <div className="md:hidden">
+            <ItemDetailsCard
+              item={{
+                madeId: item.item_code || `MADE-SW-${id}`,
+                platform: item.platform || 'Software',
+                location: locationName !== '--' ? locationName : 'None',
+              }}
+              onUpdateLocation={() => console.log('open modal')}
+            />
+          </div>
+
+          <button
+            className="item-action-btn primary"
+            onClick={() => setIsEditModalOpen(true)}
+          >
             <Edit2 size={16} />
             Edit Record
           </button>
@@ -375,17 +343,17 @@ const ItemDetailsPage: React.FC = () => {
               {processingRequestId === activeTransitRequest.id ? 'Marking...' : 'Mark as Arrived'}
             </button>
           )}
-          <button className="item-action-btn secondary">
+          <button className="item-action-btn secondary desktop-only-btn">
             <ExternalLink size={16} />
             View in Google Sheets
           </button>
-          <button className="item-action-btn danger">
+          <button className="item-action-btn danger desktop-only-btn">
             <Trash2 size={16} />
             Archive (Recoverable)
           </button>
 
           {/* Metadata */}
-          <div className="item-sidebar-meta">
+          <div className="item-sidebar-meta hidden md:block">
             <div className="item-meta-field">
               <span className="item-meta-label">Source</span>
               <span className="item-meta-value">{item.source || 'Public Entry Form'}</span>
@@ -401,7 +369,7 @@ const ItemDetailsPage: React.FC = () => {
           </div>
 
           {/* Data Safety */}
-          <div className="item-sidebar-safety">
+          <div className="item-sidebar-safety hidden md:block">
             <h4>Data Safety</h4>
             <ul>
               <li>No permanent deletion</li>
@@ -412,6 +380,18 @@ const ItemDetailsPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <EditItemModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={async () => {
+          if (!id) return;
+          const data = await itemsApi.getById(id);
+          setItem(data as ItemDetails);
+          setIsEditModalOpen(false);
+        }}
+        item={item}
+      />
     </div>
   );
 };

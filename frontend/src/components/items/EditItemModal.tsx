@@ -1,552 +1,453 @@
-import React, { useState, useEffect } from 'react';
-import './AddItemModal.css';
-
-type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
-type Condition = 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
-type Completeness = 'YES' | 'NO' | 'UNKNOWN';
+import React, { useEffect, useState } from 'react';
+import { itemsApi, type UpdateItemData, } from '../../api/items.api';
+import { type AdminCollectionItem, type ItemType, type ItemStatus } from '../../lib/types'
+import { useLocations } from '../../actions/useLocations';
+import { useBoxes } from '../../actions/useBoxes';
 
 interface EditItemModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSuccess: () => void;
-    item: {
-        id: number;
-        item_code: string;
-        title: string;
-        item_type: ItemType;
-        platform: string;
-        description: string;
-        condition: Condition;
-        is_complete: Completeness;
-        is_functional: Completeness;
-        date_of_entry: string;
-        creator_publisher: string;
-        release_year: string;
-        version_edition: string;
-        media_type: string;
-        manufacturer: string;
-        model_number: string;
-        year_manufactured: string;
-        serial_number: string;
-        hardware_type: string;
-        item_subtype: string;
-        date_published: string;
-        publisher: string;
-        volume_number: string;
-        isbn_catalogue_number: string;
-    } | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  item: AdminCollectionItem | null;
 }
 
 interface FormData {
-    title: string;
-    item_code: string;
-    item_type: ItemType;
-    platform: string;
-    date_of_entry: string;
-    condition: Condition;
-    is_complete: Completeness;
-    is_functional: Completeness;
-    description: string;
-    creator_publisher: string;
-    release_year: string;
-    version_edition: string;
-    media_type: string;
-    manufacturer: string;
-    model_number: string;
-    year_manufactured: string;
-    serial_number: string;
-    hardware_type: string;
-    item_subtype: string;
-    date_published: string;
-    publisher: string;
-    volume_number: string;
-    isbn_catalogue_number: string;
+  title: string;
+  item_code: string;
+  item_type: ItemType;
+  platform: string;
+  description: string;
+  working_condition: boolean;
+  status: ItemStatus;
+  current_location: number | '';
+  is_public_visible: boolean;
+  is_on_floor: boolean;
+  box: number | '';
 }
 
 interface FormErrors {
-    item_code?: string;
-    title?: string;
+  item_code?: string;
+  title?: string;
+  current_location?: string;
 }
 
 const initialFormData: FormData = {
-    title: '',
-    item_code: '',
-    item_type: 'SOFTWARE',
-    platform: '',
-    date_of_entry: '',
-    condition: 'GOOD',
-    is_complete: 'UNKNOWN',
-    is_functional: 'UNKNOWN',
-    description: '',
-    creator_publisher: '',
-    release_year: '',
-    version_edition: '',
-    media_type: '',
-    manufacturer: '',
-    model_number: '',
-    year_manufactured: '',
-    serial_number: '',
-    hardware_type: '',
-    item_subtype: '',
-    date_published: '',
-    publisher: '',
-    volume_number: '',
-    isbn_catalogue_number: '',
+  title: '',
+  item_code: '',
+  item_type: 'SOFTWARE',
+  platform: '',
+  description: '',
+  working_condition: true,
+  status: 'AVAILABLE',
+  current_location: '',
+  is_public_visible: true,
+  is_on_floor: false,
+  box: '',
 };
 
+const inputBaseClass =
+  'w-full rounded-xl border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none transition focus:border-neutral-900 focus:ring-2 focus:ring-neutral-200';
+
+const inputErrorClass =
+  'border-red-500 focus:border-red-500 focus:ring-red-100';
+
+const labelClass = 'mb-2 block text-sm font-medium text-neutral-800';
+const sectionTitleClass = 'text-base font-semibold text-neutral-900';
+const helperErrorClass = 'mt-1 text-sm text-red-600';
+
 const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, onSuccess, item }) => {
-    const [formData, setFormData] = useState<FormData>(initialFormData);
-    const [errors, setErrors] = useState<FormErrors>({});
-    const [apiError, setApiError] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        if (item) {
-            setFormData({
-                title: item.title || '',
-                item_code: item.item_code || '',
-                item_type: item.item_type || 'SOFTWARE',
-                platform: item.platform || '',
-                date_of_entry: item.date_of_entry || '',
-                condition: item.condition || 'GOOD',
-                is_complete: item.is_complete || 'UNKNOWN',
-                is_functional: item.is_functional || 'UNKNOWN',
-                description: item.description || '',
-                creator_publisher: item.creator_publisher || '',
-                release_year: item.release_year || '',
-                version_edition: item.version_edition || '',
-                media_type: item.media_type || '',
-                manufacturer: item.manufacturer || '',
-                model_number: item.model_number || '',
-                year_manufactured: item.year_manufactured || '',
-                serial_number: item.serial_number || '',
-                hardware_type: item.hardware_type || '',
-                item_subtype: item.item_subtype || '',
-                date_published: item.date_published || '',
-                publisher: item.publisher || '',
-                volume_number: item.volume_number || '',
-                isbn_catalogue_number: item.isbn_catalogue_number || '',
-            });
-        }
-    }, [item]);
+  const { locations, loading: locationsLoading, error: locationsError } = useLocations();
+  const { boxes, loading: boxesLoading, error: boxesError } = useBoxes();
 
-    if (!isOpen || !item) return null;
+  useEffect(() => {
+    if (!item) return;
 
-    const validateForm = (): boolean => {
-        const newErrors: FormErrors = {};
+    setFormData({
+      title: item.title || '',
+      item_code: item.item_code || '',
+      item_type: item.item_type || 'SOFTWARE',
+      platform: item.platform || '',
+      description: item.description || '',
+      working_condition: item.working_condition ?? true,
+      status: item.status || 'AVAILABLE',
+      current_location: item.current_location?.id ?? '',
+      is_public_visible: item.is_public_visible ?? true,
+      is_on_floor: item.is_on_floor ?? false,
+      box: item.box ?? '',
+    });
+  }, [item]);
 
-        if (!formData.item_code.trim()) {
-            newErrors.item_code = 'MADE ID is required';
-        }
+  if (!isOpen || !item) return null;
 
-        if (!formData.title.trim()) {
-            newErrors.title = 'Item name is required';
-        }
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+    if (!formData.item_code.trim()) {
+      newErrors.item_code = 'MADE ID is required';
+    }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setApiError(null);
+    if (!formData.title.trim()) {
+      newErrors.title = 'Item name is required';
+    }
 
-        if (!validateForm()) return;
+    if (formData.current_location === '') {
+      newErrors.current_location = 'Location is required';
+    }
 
-        setIsSubmitting(true);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-        try {
-            await new Promise((resolve) => setTimeout(resolve, 500));
+  const handleClose = () => {
+    setErrors({});
+    setApiError(null);
+    onClose();
+  };
 
-            console.log('Item updated (mocked):', { id: item.id, ...formData });
-            onSuccess();
-            handleClose();
-        } catch {
-            setApiError('Failed to update item. Please try again.');
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
 
-    const handleClose = () => {
-        setErrors({});
-        setApiError(null);
-        onClose();
-    };
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        type === 'checkbox'
+          ? checked
+          : name === 'current_location' || name === 'box'
+          ? value === ''
+            ? ''
+            : Number(value)
+          : name === 'working_condition'
+          ? value === 'true'
+          : value,
+    }));
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        if (errors[name as keyof FormErrors]) {
-            setErrors((prev) => ({ ...prev, [name]: undefined }));
-        }
-    };
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
 
-    const renderSoftwareFields = () => (
-        <div className="form-section">
-            <div className="form-section-title">Software Details</div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Creator/Publisher</label>
-                    <input
-                        type="text"
-                        name="creator_publisher"
-                        value={formData.creator_publisher}
-                        onChange={handleChange}
-                        placeholder="Enter creator or publisher"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Release Year</label>
-                    <input
-                        type="text"
-                        name="release_year"
-                        value={formData.release_year}
-                        onChange={handleChange}
-                        placeholder="e.g., 1995"
-                    />
-                </div>
-            </div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Version/Edition</label>
-                    <input
-                        type="text"
-                        name="version_edition"
-                        value={formData.version_edition}
-                        onChange={handleChange}
-                        placeholder="e.g., 1.0, Collector's Edition"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Media Type</label>
-                    <input
-                        type="text"
-                        name="media_type"
-                        value={formData.media_type}
-                        onChange={handleChange}
-                        placeholder="e.g., CD, Cartridge, Digital"
-                    />
-                </div>
-            </div>
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiError(null);
+
+    if (!validateForm() || !item) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const payload: UpdateItemData = {
+        item_code: formData.item_code.trim(),
+        title: formData.title.trim(),
+        item_type: formData.item_type,
+        platform: formData.platform.trim(),
+        description: formData.description.trim(),
+        working_condition: formData.working_condition,
+        status: formData.status,
+        current_location: Number(formData.current_location),
+        is_public_visible: formData.is_public_visible,
+        is_on_floor: formData.is_on_floor,
+        box: formData.box === '' ? null : Number(formData.box),
+      };
+
+      await itemsApi.partialUpdate(item.id, payload);
+
+      onSuccess();
+      handleClose();
+    } catch (error: unknown) {
+      const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+      const responseData = axiosError?.response?.data;
+      const errorMessage =
+        responseData?.detail ||
+        responseData?.item_code?.[0] ||
+        responseData?.title?.[0] ||
+        responseData?.current_location?.[0] ||
+        responseData?.non_field_errors?.[0] ||
+        (error instanceof Error ? error.message : 'Failed to update item. Please try again.');
+
+      setApiError(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-0 sm:items-center sm:p-6"
+      onClick={handleClose}
+    >
+      <div
+        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:h-auto sm:max-h-[90vh] sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-4 sm:px-6">
+          <div>
+            <h2 className="text-xl font-semibold text-neutral-900">Edit Item</h2>
+            <p className="mt-1 text-sm text-neutral-500">
+              Update inventory details for this item.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleClose}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-2xl text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900"
+            aria-label="Close modal"
+          >
+            ×
+          </button>
         </div>
-    );
 
-    const renderHardwareFields = () => (
-        <div className="form-section">
-            <div className="form-section-title">Hardware Details</div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Manufacturer</label>
-                    <input
-                        type="text"
-                        name="manufacturer"
-                        value={formData.manufacturer}
-                        onChange={handleChange}
-                        placeholder="e.g., Nintendo, Sony"
-                    />
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">
+            <div className="space-y-6">
+              {apiError && (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {apiError}
                 </div>
-                <div className="form-group">
-                    <label>Model Number</label>
+              )}
+
+              <section>
+                <h3 className={sectionTitleClass}>Basic Details</h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>
+                      Item Name <span className="text-red-500">*</span>
+                    </label>
                     <input
-                        type="text"
-                        name="model_number"
-                        value={formData.model_number}
-                        onChange={handleChange}
-                        placeholder="Enter model number"
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleChange}
+                      placeholder="Enter item name"
+                      className={`${inputBaseClass} ${
+                        errors.title ? inputErrorClass : ''
+                      }`}
                     />
-                </div>
-            </div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Year Manufactured</label>
+                    {errors.title && (
+                      <div className={helperErrorClass}>{errors.title}</div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>
+                      MADE ID <span className="text-red-500">*</span>
+                    </label>
                     <input
-                        type="text"
-                        name="year_manufactured"
-                        value={formData.year_manufactured}
-                        onChange={handleChange}
-                        placeholder="e.g., 1996"
+                      type="text"
+                      name="item_code"
+                      value={formData.item_code}
+                      onChange={handleChange}
+                      placeholder="Enter MADE ID"
+                      className={`${inputBaseClass} ${
+                        errors.item_code ? inputErrorClass : ''
+                      }`}
                     />
+                    {errors.item_code && (
+                      <div className={helperErrorClass}>{errors.item_code}</div>
+                    )}
+                  </div>
                 </div>
-                <div className="form-group">
-                    <label>Serial Number</label>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>Item Type</label>
+                    <select
+                      name="item_type"
+                      value={formData.item_type}
+                      onChange={handleChange}
+                      className={inputBaseClass}
+                    >
+                      <option value="SOFTWARE">Software</option>
+                      <option value="HARDWARE">Hardware</option>
+                      <option value="NON_ELECTRONIC">Non-Electronic</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Platform</label>
                     <input
-                        type="text"
-                        name="serial_number"
-                        value={formData.serial_number}
-                        onChange={handleChange}
-                        placeholder="Enter serial number"
+                      type="text"
+                      name="platform"
+                      value={formData.platform}
+                      onChange={handleChange}
+                      placeholder="e.g. PS2, Windows, Shelf Label"
+                      className={inputBaseClass}
                     />
+                  </div>
                 </div>
-            </div>
-            <div className="form-group">
-                <label>Hardware Type</label>
-                <input
-                    type="text"
-                    name="hardware_type"
-                    value={formData.hardware_type}
+
+                <div>
+                  <label className={labelClass}>Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
                     onChange={handleChange}
-                    placeholder="e.g., Console, Controller, Peripheral"
-                />
-            </div>
-        </div>
-    );
+                    placeholder="Add notes about the item"
+                    className={`${inputBaseClass} min-h-30 resize-y`}
+                  />
+                </div>
+              </section>
 
-    const renderNonElectronicFields = () => (
-        <div className="form-section">
-            <div className="form-section-title">Non-Electronic Details</div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Item Type</label>
+              <section>
+                <h3 className={sectionTitleClass}>Inventory Settings</h3>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>Status</label>
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleChange}
+                      className={inputBaseClass}
+                    >
+                      <option value="AVAILABLE">Available</option>
+                      <option value="IN_TRANSIT">In Transit</option>
+                      <option value="CHECKED_OUT">Checked Out</option>
+                      <option value="MAINTENANCE">Maintenance</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Working Condition</label>
+                    <select
+                      name="working_condition"
+                      value={String(formData.working_condition)}
+                      onChange={handleChange}
+                      className={inputBaseClass}
+                    >
+                      <option value="true">Working</option>
+                      <option value="false">Not Working</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>
+                      Current Location <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="current_location"
+                      value={formData.current_location}
+                      onChange={handleChange}
+                      className={`${inputBaseClass} ${
+                        errors.current_location ? inputErrorClass : ''
+                      }`}
+                      disabled={locationsLoading}
+                    >
+                      <option value="">
+                        {locationsLoading ? 'Loading locations...' : 'Select a location'}
+                      </option>
+                      {locations.map((location) => (
+                        <option key={location.id} value={location.id}>
+                          {location.name}
+                          {'location_type_display' in location && location.location_type_display
+                            ? ` (${location.location_type_display})`
+                            : ''}
+                        </option>
+                      ))}
+                    </select>
+
+                    {errors.current_location && (
+                      <div className={helperErrorClass}>
+                        {errors.current_location}
+                      </div>
+                    )}
+
+                    {locationsError && (
+                      <div className="mt-1 text-sm text-red-600">
+                        {locationsError}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Box</label>
+                    <select
+                      name="box"
+                      value={formData.box}
+                      onChange={handleChange}
+                      className={inputBaseClass}
+                      disabled={boxesLoading}
+                    >
+                      <option value="">
+                        {boxesLoading ? 'Loading boxes...' : 'No box'}
+                      </option>
+                      {boxes.map((box) => (
+                        <option key={box.id} value={box.id}>
+                          {'box_code' in box && box.box_code
+                            ? box.box_code
+                            : `Box #${box.id}`}
+                          {'label' in box && box.label ? ` - ${box.label}` : ''}
+                        </option>
+                      ))}
+                    </select>
+
+                    {boxesError && (
+                      <div className="mt-1 text-sm text-red-600">{boxesError}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3">
+                  <label className="flex items-center gap-3 text-sm text-neutral-800">
                     <input
-                        type="text"
-                        name="item_subtype"
-                        value={formData.item_subtype}
-                        onChange={handleChange}
-                        placeholder="e.g., Book, Magazine, Board Game"
+                      type="checkbox"
+                      name="is_public_visible"
+                      checked={formData.is_public_visible}
+                      onChange={handleChange}
+                      className="h-4 w-4 rounded border-neutral-300"
                     />
-                </div>
-                <div className="form-group">
-                    <label>Model Number</label>
+                    Publicly visible
+                  </label>
+
+                  <label className="flex items-center gap-3 text-sm text-neutral-800">
                     <input
-                        type="text"
-                        name="model_number"
-                        value={formData.model_number}
-                        onChange={handleChange}
-                        placeholder="Enter model number"
+                      type="checkbox"
+                      name="is_on_floor"
+                      checked={formData.is_on_floor}
+                      onChange={handleChange}
+                      className="h-4 w-4 rounded border-neutral-300"
                     />
+                    On floor
+                  </label>
                 </div>
+              </section>
             </div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Date Published</label>
-                    <input
-                        type="text"
-                        name="date_published"
-                        value={formData.date_published}
-                        onChange={handleChange}
-                        placeholder="e.g., 1990"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>Publisher</label>
-                    <input
-                        type="text"
-                        name="publisher"
-                        value={formData.publisher}
-                        onChange={handleChange}
-                        placeholder="Enter publisher"
-                    />
-                </div>
+          </div>
+
+          <div className="border-t border-neutral-200 bg-white px-4 py-4 sm:px-6">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={handleClose}
+                className="inline-flex items-center justify-center rounded-xl border border-neutral-300 px-4 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex items-center justify-center rounded-xl bg-neutral-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </button>
             </div>
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Volume Number</label>
-                    <input
-                        type="text"
-                        name="volume_number"
-                        value={formData.volume_number}
-                        onChange={handleChange}
-                        placeholder="e.g., Vol. 1"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>ISBN/Catalogue Number</label>
-                    <input
-                        type="text"
-                        name="isbn_catalogue_number"
-                        value={formData.isbn_catalogue_number}
-                        onChange={handleChange}
-                        placeholder="Enter ISBN or catalogue number"
-                    />
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderConditionSection = () => (
-        <div className="form-section">
-            <div className="form-group">
-                <label>Condition</label>
-                <div className="radio-group">
-                    {(['EXCELLENT', 'GOOD', 'FAIR', 'POOR'] as Condition[]).map((c) => (
-                        <label key={c} className="radio-label">
-                            <input
-                                type="radio"
-                                name="condition"
-                                value={c}
-                                checked={formData.condition === c}
-                                onChange={handleChange}
-                            />
-                            <span>{c.charAt(0) + c.slice(1).toLowerCase()}</span>
-                        </label>
-                    ))}
-                </div>
-            </div>
-
-            {formData.item_type === 'HARDWARE' ? (
-                <div className="form-group">
-                    <label>Is Functional?</label>
-                    <div className="radio-group">
-                        {(['YES', 'NO', 'UNKNOWN'] as Completeness[]).map((c) => (
-                            <label key={c} className="radio-label">
-                                <input
-                                    type="radio"
-                                    name="is_functional"
-                                    value={c}
-                                    checked={formData.is_functional === c}
-                                    onChange={handleChange}
-                                />
-                                <span>{c.charAt(0) + c.slice(1).toLowerCase()}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="form-group">
-                    <label>Is Complete?</label>
-                    <div className="radio-group">
-                        {(['YES', 'NO', 'UNKNOWN'] as Completeness[]).map((c) => (
-                            <label key={c} className="radio-label">
-                                <input
-                                    type="radio"
-                                    name="is_complete"
-                                    value={c}
-                                    checked={formData.is_complete === c}
-                                    onChange={handleChange}
-                                />
-                                <span>{c.charAt(0) + c.slice(1).toLowerCase()}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-
-    const getFormTitle = () => {
-        switch (formData.item_type) {
-            case 'SOFTWARE':
-                return 'Edit Software';
-            case 'HARDWARE':
-                return 'Edit Hardware';
-            case 'NON_ELECTRONIC':
-                return 'Edit Non-Electronic Item';
-            default:
-                return 'Edit Item';
-        }
-    };
-
-    return (
-        <div className="modal-overlay" onClick={handleClose}>
-            <div className="add-item-modal add-item-modal-wide" onClick={(e) => e.stopPropagation()}>
-                <div className="add-item-modal-header">
-                    <h2>{getFormTitle()}</h2>
-                    <button className="modal-close-btn" onClick={handleClose}>×</button>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="add-item-modal-body">
-                        {apiError && <div className="api-error">{apiError}</div>}
-
-                        {/* Item Type Selector */}
-                        <div className="form-group">
-                            <label>Item Type <span className="required">*</span></label>
-                            <select
-                                name="item_type"
-                                value={formData.item_type}
-                                onChange={handleChange}
-                            >
-                                <option value="SOFTWARE">Software</option>
-                                <option value="HARDWARE">Hardware</option>
-                                <option value="NON_ELECTRONIC">Non-Electronic</option>
-                            </select>
-                        </div>
-
-                        {/* Common Required Fields */}
-                        <div className="form-row">
-                            <div className="form-group">
-                                <label>Item Name <span className="required">*</span></label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleChange}
-                                    placeholder="Enter item name"
-                                    className={errors.title ? 'error' : ''}
-                                />
-                                {errors.title && <div className="form-error">{errors.title}</div>}
-                            </div>
-                            <div className="form-group">
-                                <label>MADE ID <span className="required">*</span></label>
-                                <input
-                                    type="text"
-                                    name="item_code"
-                                    value={formData.item_code}
-                                    onChange={handleChange}
-                                    placeholder="Enter MADE ID"
-                                    className={errors.item_code ? 'error' : ''}
-                                />
-                                {errors.item_code && <div className="form-error">{errors.item_code}</div>}
-                            </div>
-                        </div>
-
-                        <div className="form-row">
-                            {formData.item_type === 'SOFTWARE' && (
-                                <div className="form-group">
-                                    <label>Platform</label>
-                                    <input
-                                        type="text"
-                                        name="platform"
-                                        value={formData.platform}
-                                        onChange={handleChange}
-                                        placeholder="e.g., SNES, PS2"
-                                    />
-                                </div>
-                            )}
-                            <div className="form-group">
-                                <label>Date of Entry</label>
-                                <input
-                                    type="date"
-                                    name="date_of_entry"
-                                    value={formData.date_of_entry}
-                                    onChange={handleChange}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Type-specific fields */}
-                        {formData.item_type === 'SOFTWARE' && renderSoftwareFields()}
-                        {formData.item_type === 'HARDWARE' && renderHardwareFields()}
-                        {formData.item_type === 'NON_ELECTRONIC' && renderNonElectronicFields()}
-
-                        {/* Condition Section */}
-                        {renderConditionSection()}
-
-                        {/* Description */}
-                        <div className="form-group">
-                            <label>Description</label>
-                            <textarea
-                                name="description"
-                                value={formData.description}
-                                onChange={handleChange}
-                                placeholder="Additional notes about this item"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="add-item-modal-footer">
-                        <button type="button" className="btn-cancel" onClick={handleClose}>
-                            Cancel
-                        </button>
-                        <button type="submit" className="btn-submit" disabled={isSubmitting}>
-                            {isSubmitting ? 'Saving...' : 'Save Changes'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default EditItemModal;
