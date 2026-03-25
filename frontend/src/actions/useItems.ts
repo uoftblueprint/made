@@ -1,10 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { itemsApi } from '../api/items.api';
+import { publicItemsApi, itemsApi } from '../api/items.api';
 import type { ItemFilter } from '../lib/filters';
 
-export const useItems = (filters?: ItemFilter) => {
+export const usePublicItems = (filters?: ItemFilter) => {
   return useQuery({
-    queryKey: ['items', 'list', filters],
+    queryKey: ['public-items', filters],
+    queryFn: () => publicItemsApi.getAll(filters),
+  });
+};
+
+export const useAdminItems = (filters?: ItemFilter) => {
+  return useQuery({
+    queryKey: ['admin-items', filters],
     queryFn: () => itemsApi.getAll(filters),
   });
 };
