@@ -93,19 +93,6 @@
 
 @media (max-width: 767px) {
   .header-nav {
-    padding: var(--spacing-sm) var(--spacing-md);
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-sm);
-  }
-
-  .header-right {
-    margin-left: 0;
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .header-links {
-    flex-wrap: wrap;
+    display: none;
   }
 }

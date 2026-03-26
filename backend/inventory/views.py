@@ -24,9 +24,7 @@ class CollectionItemViewSet(viewsets.ModelViewSet):
     queryset = CollectionItem.objects.all().select_related("box", "current_location")
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
-            return AdminCollectionItemSerializer
-        return CollectionItemSerializer
+        return AdminCollectionItemSerializer
 
     def get_permissions(self):
         # Match the Admin view: only Admins should be able to trigger 'destroy'
@@ -172,6 +170,7 @@ class AdminCollectionItemViewSet(viewsets.ModelViewSet):
     Supports POST, PUT, PATCH, DELETE.
     Only accessible to users with ADMIN or Volunteers role depending on operation with
     destory being Admin Only
+    NOT USED CURRENTLY
     """
 
     queryset = CollectionItem.objects.all().select_related("current_location")
