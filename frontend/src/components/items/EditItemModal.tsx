@@ -164,15 +164,19 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, onSucces
     } catch (error: unknown) {
       const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
       const responseData = axiosError?.response?.data;
+      const getFirstError = (value?: string | string[]): string | undefined => {
+        if (!value) return undefined;
+        return Array.isArray(value) ? value[0] : value;
+      };
       const errorMessage =
-        responseData?.detail ||
-        responseData?.item_code?.[0] ||
-        responseData?.title?.[0] ||
-        responseData?.current_location?.[0] ||
-        responseData?.non_field_errors?.[0] ||
+        getFirstError(responseData?.detail) ||
+        getFirstError(responseData?.item_code) ||
+        getFirstError(responseData?.title) ||
+        getFirstError(responseData?.current_location) ||
+        getFirstError(responseData?.non_field_errors) ||
         (error instanceof Error ? error.message : 'Failed to update item. Please try again.');
 
-      setApiError(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
+      setApiError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
