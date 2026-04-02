@@ -4,7 +4,7 @@ import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X } from 'lucide
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
 import { useItemRequests } from '../../actions/useRequests';
-import type { MovementRequest } from '../../lib/types';
+import type { AdminCollectionItem, MovementRequest } from '../../lib/types';
 import './ItemDetailsPage.css';
 import { ItemDetailsCard } from '../../components/items/ItemDetailCard';
 import EditItemModal from '../../components/items/EditItemModal';
