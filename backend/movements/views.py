@@ -1,8 +1,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import ItemMovementRequest
-from .serializers import ItemMovementRequestSerializer
+from .models import BoxMovementRequest, ItemMovementRequest
+from .serializers import BoxMovementRequestSerializer, ItemMovementRequestSerializer
 
 # from .models import Request
 # from .serializers import RequestSerializer
@@ -174,6 +174,102 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         if move_request.item.status != "IN_TRANSIT":
             return Response(
                 {"detail": "Item is not currently in transit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.complete_arrival(user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class BoxMovementRequestViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing box movement requests.
+    Supports creation, listing, retrieval, approval, rejection, and verification.
+    """
+
+    queryset = BoxMovementRequest.objects.all()
+    serializer_class = BoxMovementRequestSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            queryset = BoxMovementRequest.objects.all()
+        else:
+            queryset = BoxMovementRequest.objects.filter(requested_by=user)
+
+        status_filter = self.request.query_params.get("status")
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        move_request = serializer.save(requested_by=self.request.user)
+
+        # If the user does not require move approval, complete immediately as unverified
+        if not self.request.user.requires_move_approval:
+            move_request.complete_unverified(
+                user=self.request.user,
+                comment="Auto-completed: volunteer does not require move approval",
+            )
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def approve(self, request, pk=None):
+        move_request = self.get_object()
+
+        if move_request.status != "WAITING_APPROVAL":
+            return Response(
+                {"detail": "This request has already been processed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.approve(admin_user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def reject(self, request, pk=None):
+        move_request = self.get_object()
+
+        if move_request.status != "WAITING_APPROVAL":
+            return Response(
+                {"detail": "This request has already been processed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.reject(admin_user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def verify(self, request, pk=None):
+        """Verify an unverified box movement request and mark all items as verified."""
+        move_request = self.get_object()
+
+        if move_request.status != "COMPLETED_UNVERIFIED":
+            return Response(
+                {"detail": "Only completed unverified requests can be verified."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.verify(admin_user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="complete-arrival")
+    def complete_arrival(self, request, pk=None):
+        """Mark box as arrived at destination after approved movement."""
+        move_request = self.get_object()
+
+        if move_request.status != "APPROVED":
+            return Response(
+                {"detail": "Only approved requests can be marked as arrived."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

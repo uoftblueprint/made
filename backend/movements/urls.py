@@ -38,10 +38,11 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ItemMovementRequestViewSet
+from .views import BoxMovementRequestViewSet, ItemMovementRequestViewSet
 
 router = DefaultRouter()
 router.register(r"movement-requests", ItemMovementRequestViewSet, basename="movement-request")
+router.register(r"box-movement-requests", BoxMovementRequestViewSet, basename="box-movement-request")
 
 urlpatterns = [
     path("", include(router.urls)),

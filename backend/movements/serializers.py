@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ItemMovementRequest
+from .models import BoxMovementRequest, ItemMovementRequest
 from inventory.models import ItemHistory
 
 # from .models import Request
@@ -36,6 +36,8 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
     item_is_verified = serializers.BooleanField(source="item.is_verified", read_only=True)
     from_location_name = serializers.CharField(source="from_location.name", read_only=True)
     to_location_name = serializers.CharField(source="to_location.name", read_only=True)
+    from_box_code = serializers.CharField(source="from_box.box_code", read_only=True, default=None)
+    to_box_code = serializers.CharField(source="to_box.box_code", read_only=True, default=None)
 
     class Meta:
         model = ItemMovementRequest
@@ -46,6 +48,53 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "item_title",
             "item_platform",
             "item_is_verified",
+            "requested_by",
+            "requested_by_username",
+            "from_location",
+            "from_location_name",
+            "to_location",
+            "to_location_name",
+            "from_box",
+            "from_box_code",
+            "to_box",
+            "to_box_code",
+            "status",
+            "admin",
+            "admin_username",
+            "admin_comment",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "requested_by",
+            "status",
+            "admin",
+            "admin_comment",
+            "created_at",
+            "updated_at",
+        ]
+
+    def create(self, validated_data):
+        # Volunteer is the logged-in user.
+        return super().create(validated_data)
+
+
+class BoxMovementRequestSerializer(serializers.ModelSerializer):
+    requested_by_username = serializers.CharField(source="requested_by.username", read_only=True)
+    admin_username = serializers.CharField(source="admin.username", read_only=True, default=None)
+    box_code = serializers.CharField(source="box.box_code", read_only=True)
+    box_label = serializers.CharField(source="box.label", read_only=True)
+    from_location_name = serializers.CharField(source="from_location.name", read_only=True)
+    to_location_name = serializers.CharField(source="to_location.name", read_only=True)
+
+    class Meta:
+        model = BoxMovementRequest
+        fields = [
+            "id",
+            "box",
+            "box_code",
+            "box_label",
             "requested_by",
             "requested_by_username",
             "from_location",
@@ -70,5 +119,4 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        # Volunteer is the logged-in user.
         return super().create(validated_data)

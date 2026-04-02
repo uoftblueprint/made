@@ -14,18 +14,6 @@ const Header = () => {
       <Link to="/" className="header-logo">MADE</Link>
       
       <div className="header-links">
-        {/* Public navigation */}
-        {!isAuthenticated && (
-          <>
-            <Link to="/login" className={`header-link ${isActive('/login') ? 'active' : ''}`}>
-              Login
-            </Link>
-            <Link to="/volunteer_management" className={`header-link ${isActive('/volunteer_management') ? 'active' : ''}`}>
-              Volunteer Application
-            </Link>
-          </>
-        )}
-
         {/* Volunteer navigation */}
         {isAuthenticated && isVolunteer && !isAdmin && (
           <>

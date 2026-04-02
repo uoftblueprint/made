@@ -1,8 +1,8 @@
 // Movement Requests hooks
 import { useState, useEffect, useCallback } from 'react';
-import { requestsApi } from '../api/requests.api';
+import { boxRequestsApi, requestsApi } from '../api/requests.api';
 import type { CompleteArrivalInput, ReviewRequestInput } from '../api/requests.api';
-import type { MovementRequest, MovementRequestStatus } from '../lib/types';
+import type { BoxMovementRequest, MovementRequest, MovementRequestStatus } from '../lib/types';
 
 interface UseRequestsResult {
   requests: MovementRequest[];
@@ -146,5 +146,72 @@ export function useItemRequests(itemId: number | undefined): UseItemRequestsResu
     reject,
     completeArrival,
     verify,
+  };
+}
+
+interface UseBoxRequestsResult {
+  requests: BoxMovementRequest[];
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  approve: (id: number, data?: ReviewRequestInput) => Promise<void>;
+  reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
+  verify: (id: number, data?: ReviewRequestInput) => Promise<void>;
+  completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
+}
+
+export function useBoxRequests(status?: MovementRequestStatus): UseBoxRequestsResult {
+  const [requests, setRequests] = useState<BoxMovementRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = status
+        ? await boxRequestsApi.getAll({ status })
+        : await boxRequestsApi.getAll();
+      setRequests(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch box requests');
+    } finally {
+      setLoading(false);
+    }
+  }, [status]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const approve = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await boxRequestsApi.approve(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  const reject = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await boxRequestsApi.reject(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  const verify = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await boxRequestsApi.verify(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  const completeArrival = useCallback(async (id: number, data?: CompleteArrivalInput) => {
+    await boxRequestsApi.completeArrival(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  return {
+    requests,
+    loading,
+    error,
+    refetch: fetchRequests,
+    approve,
+    reject,
+    verify,
+    completeArrival,
   };
 }

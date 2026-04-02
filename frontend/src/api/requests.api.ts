@@ -1,6 +1,6 @@
 // Movement Requests API calls
 import apiClient from './apiClient';
-import type { MovementRequest, MovementRequestStatus } from '../lib/types';
+import type { BoxMovementRequest, MovementRequest, MovementRequestStatus } from '../lib/types';
 
 export interface MovementRequestFilter {
   status?: MovementRequestStatus;
@@ -8,6 +8,14 @@ export interface MovementRequestFilter {
 
 export interface CreateMovementRequestInput {
   item: number;
+  from_location: number;
+  to_location: number;
+  from_box?: number | null;
+  to_box?: number | null;
+}
+
+export interface CreateBoxMovementRequestInput {
+  box: number;
   from_location: number;
   to_location: number;
 }
@@ -70,6 +78,48 @@ export const requestsApi = {
 
   verify: async (id: number, data?: ReviewRequestInput): Promise<MovementRequest> => {
     const response = await apiClient.post(`/movements/movement-requests/${id}/verify/`, data ?? {});
+    return response.data;
+  },
+};
+
+export const boxRequestsApi = {
+  getAll: async (params?: MovementRequestFilter): Promise<BoxMovementRequest[]> => {
+    const queryParams: Record<string, string> = {};
+    if (params?.status) queryParams.status = params.status;
+
+    const response = await apiClient.get('/movements/box-movement-requests/', { params: queryParams });
+    return response.data.results ?? response.data;
+  },
+
+  getPending: async (): Promise<BoxMovementRequest[]> => {
+    const response = await apiClient.get('/movements/box-movement-requests/', {
+      params: { status: 'WAITING_APPROVAL' }
+    });
+    return response.data.results ?? response.data;
+  },
+
+  create: async (data: CreateBoxMovementRequestInput): Promise<BoxMovementRequest> => {
+    const response = await apiClient.post('/movements/box-movement-requests/', data);
+    return response.data;
+  },
+
+  approve: async (id: number, data?: ReviewRequestInput): Promise<BoxMovementRequest> => {
+    const response = await apiClient.post(`/movements/box-movement-requests/${id}/approve/`, data ?? {});
+    return response.data;
+  },
+
+  reject: async (id: number, data?: ReviewRequestInput): Promise<BoxMovementRequest> => {
+    const response = await apiClient.post(`/movements/box-movement-requests/${id}/reject/`, data ?? {});
+    return response.data;
+  },
+
+  completeArrival: async (id: number, data?: CompleteArrivalInput): Promise<BoxMovementRequest> => {
+    const response = await apiClient.post(`/movements/box-movement-requests/${id}/complete-arrival/`, data ?? {});
+    return response.data;
+  },
+
+  verify: async (id: number, data?: ReviewRequestInput): Promise<BoxMovementRequest> => {
+    const response = await apiClient.post(`/movements/box-movement-requests/${id}/verify/`, data ?? {});
     return response.data;
   },
 };

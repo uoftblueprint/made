@@ -10,6 +10,7 @@ export interface Volunteer {
   id: number;
   name: string;
   email: string;
+  phone_number?: string | null;
   motivation_text: string;
   submitted_at: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -20,6 +21,7 @@ export interface Volunteer {
   expires_at?: string | null;
   days_remaining?: number | null;
   requires_move_approval?: boolean;
+  user_role?: 'ADMIN' | 'VOLUNTEER' | null;
 }
 
 export interface VolunteerApplicationInput {
@@ -123,10 +125,33 @@ export interface MovementRequest {
   from_location_name?: string;
   to_location: number;
   to_location_name?: string;
+  from_box?: number | null;
+  from_box_code?: string | null;
+  to_box?: number | null;
+  to_box_code?: string | null;
   status: MovementRequestStatus;
   admin: number | null;
   admin_username: string | null;
   item_is_verified?: boolean;
+  admin_comment: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BoxMovementRequest {
+  id: number;
+  box: number;
+  box_code: string;
+  box_label: string;
+  requested_by: number;
+  requested_by_username: string;
+  from_location: number;
+  from_location_name: string;
+  to_location: number;
+  to_location_name: string;
+  status: MovementRequestStatus;
+  admin: number | null;
+  admin_username: string | null;
   admin_comment: string;
   created_at: string;
   updated_at: string;

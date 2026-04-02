@@ -93,6 +93,7 @@ class VolunteerApplication(models.Model):
 
     name = models.CharField(max_length=255)
     email = models.EmailField(max_length=255)
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
     motivation_text = models.TextField(blank=True, help_text="Why they want to help, etc.")
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")

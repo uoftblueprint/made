@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Edit2, MapPin, Check, X, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Edit2, MapPin, Check, X, AlertTriangle, ShieldCheck, ArrowRightLeft } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
+import { requestsApi } from '../../api/requests.api';
 import { useItemRequests } from '../../actions/useRequests';
+import { useLocations } from '../../actions/useLocations';
+import { useBoxes } from '../../actions/useBoxes';
 import type { AdminCollectionItem, MovementRequest } from '../../lib/types';
 import './ItemDetailsPage.css';
 import { ItemDetailsCard } from '../../components/items/ItemDetailCard';
 import EditItemModal from '../../components/items/EditItemModal';
+import Modal from '../../components/common/Modal';
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -41,6 +45,17 @@ const ItemDetailsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
   const [arrivalError, setArrivalError] = useState<string | null>(null);
+
+  const [showMoveModal, setShowMoveModal] = useState(false);
+  const [moveDestinationType, setMoveDestinationType] = useState<'location' | 'box'>('location');
+  const [moveToLocationId, setMoveToLocationId] = useState<number | ''>('');
+  const [moveToBoxId, setMoveToBoxId] = useState<number | ''>('');
+  const [moveComment, setMoveComment] = useState('');
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [movingItem, setMovingItem] = useState(false);
+
+  const { locations: allLocations } = useLocations();
+  const { boxes: allBoxes } = useBoxes();
 
   const { requests: movementRequests, approve, reject, completeArrival, verify } = useItemRequests(id ? parseInt(id) : undefined);
   const pendingRequests = movementRequests.filter(r => r.status === 'WAITING_APPROVAL');
@@ -137,6 +152,58 @@ const ItemDetailsPage: React.FC = () => {
       setArrivalError(getApiErrorMessage(err, 'Failed to mark item as arrived.'));
     } finally {
       setProcessingRequestId(null);
+    }
+  };
+
+  const handleOpenMoveModal = () => {
+    setMoveDestinationType('location');
+    setMoveToLocationId('');
+    setMoveToBoxId('');
+    setMoveComment('');
+    setMoveError(null);
+    setShowMoveModal(true);
+  };
+
+  const handleCloseMoveModal = () => {
+    setShowMoveModal(false);
+    setMoveError(null);
+  };
+
+  const handleSubmitMove = async () => {
+    if (!item) return;
+
+    let toLocationId: number;
+    let toBoxId: number | null = null;
+    let fromBoxId: number | null = item.box ?? null;
+
+    if (moveDestinationType === 'box') {
+      if (moveToBoxId === '') return;
+      const selectedBox = allBoxes.find(b => b.id === moveToBoxId);
+      if (!selectedBox) return;
+      toLocationId = selectedBox.location;
+      toBoxId = selectedBox.id;
+    } else {
+      if (moveToLocationId === '') return;
+      toLocationId = moveToLocationId as number;
+    }
+
+    setMovingItem(true);
+    setMoveError(null);
+
+    try {
+      await requestsApi.create({
+        item: item.id,
+        from_location: item.current_location?.id ?? 0,
+        to_location: toLocationId,
+        from_box: fromBoxId,
+        to_box: toBoxId,
+      });
+      handleCloseMoveModal();
+      await fetchItem();
+    } catch (err) {
+      setMoveError(getApiErrorMessage(err, 'Failed to create movement request.'));
+    } finally {
+      setMovingItem(false);
     }
   };
 
@@ -350,9 +417,12 @@ const ItemDetailsPage: React.FC = () => {
             <Edit2 size={16} />
             Edit Record
           </button>
-          <button className="item-action-btn secondary">
-            <MapPin size={16} />
-            Update Location
+          <button
+            className="item-action-btn secondary"
+            onClick={handleOpenMoveModal}
+          >
+            <ArrowRightLeft size={16} />
+            Move Item
           </button>
           {isInTransit && activeTransitRequest && (
             <button
@@ -416,6 +486,156 @@ const ItemDetailsPage: React.FC = () => {
         }}
         item={item}
       />
+
+      {/* Move Item Modal */}
+      <Modal open={showMoveModal} onClose={handleCloseMoveModal} title="Move Item">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '4px' }}>
+            Move: {item?.title || 'Item'}
+          </h2>
+          {moveError && (
+            <div style={{ padding: '8px 12px', background: '#fef2f2', color: '#991b1b', borderRadius: '6px', fontSize: '14px' }}>
+              {moveError}
+            </div>
+          )}
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
+              Current Location
+            </label>
+            <input
+              type="text"
+              value={item?.current_location?.name || 'Unknown'}
+              disabled
+              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#f9fafb' }}
+            />
+          </div>
+
+          {item?.box && (
+            <div>
+              <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
+                Current Box
+              </label>
+              <input
+                type="text"
+                value={`Box #${item.box}`}
+                disabled
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#f9fafb' }}
+              />
+            </div>
+          )}
+
+          <div>
+            <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
+              Destination Type
+            </label>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="destType"
+                  checked={moveDestinationType === 'location'}
+                  onChange={() => { setMoveDestinationType('location'); setMoveToBoxId(''); }}
+                />
+                Location
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="destType"
+                  checked={moveDestinationType === 'box'}
+                  onChange={() => { setMoveDestinationType('box'); setMoveToLocationId(''); }}
+                />
+                Box
+              </label>
+            </div>
+          </div>
+
+          {moveDestinationType === 'location' ? (
+            <div>
+              <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
+                Destination Location *
+              </label>
+              <select
+                value={moveToLocationId}
+                onChange={(e) => setMoveToLocationId(e.target.value ? Number(e.target.value) : '')}
+                disabled={movingItem}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                <option value="">Select location...</option>
+                {allLocations
+                  .filter(l => l.id !== item?.current_location?.id)
+                  .map(l => (
+                    <option key={l.id} value={l.id}>
+                      {l.name} ({l.location_type_display})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
+                Destination Box *
+              </label>
+              <select
+                value={moveToBoxId}
+                onChange={(e) => setMoveToBoxId(e.target.value ? Number(e.target.value) : '')}
+                disabled={movingItem}
+                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                <option value="">Select box...</option>
+                {allBoxes
+                  .filter(b => b.id !== item?.box)
+                  .map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.box_code} {b.label ? `- ${b.label}` : ''}
+                    </option>
+                  ))}
+              </select>
+              {moveToBoxId !== '' && (
+                <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                  Location: {allLocations.find(l => l.id === allBoxes.find(b => b.id === moveToBoxId)?.location)?.name || 'Unknown'}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
+            <button
+              onClick={handleCloseMoveModal}
+              disabled={movingItem}
+              style={{
+                padding: '8px 16px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                background: 'white',
+                cursor: 'pointer',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmitMove}
+              disabled={
+                movingItem ||
+                (moveDestinationType === 'location' && moveToLocationId === '') ||
+                (moveDestinationType === 'box' && moveToBoxId === '')
+              }
+              style={{
+                padding: '8px 16px',
+                border: 'none',
+                borderRadius: '6px',
+                background: '#1a56db',
+                color: 'white',
+                cursor: 'pointer',
+                opacity: movingItem ? 0.6 : 1,
+              }}
+            >
+              {movingItem ? 'Submitting...' : 'Submit Move Request'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -63,6 +63,36 @@ export const useToggleMoveApproval = () => {
   });
 };
 
+export const useUpdateVolunteer = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      applicationId,
+      userId,
+      applicationData,
+      userData,
+    }: {
+      applicationId: number;
+      userId?: number;
+      applicationData?: { name?: string; email?: string; phone_number?: string };
+      userData?: { name?: string; email?: string; role?: string };
+    }) => {
+      const promises: Promise<unknown>[] = [];
+      if (applicationData && Object.keys(applicationData).length > 0) {
+        promises.push(apiClient.patch(`/users/volunteer-applications/${applicationId}/`, applicationData));
+      }
+      if (userId && userData && Object.keys(userData).length > 0) {
+        promises.push(apiClient.patch(`/users/${userId}/`, userData));
+      }
+      await Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['volunteerStats'] });
+    },
+  });
+};
+
 export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError) => void) => {
   return useMutation<void, AxiosError, VolunteerApplicationInput>({
     mutationFn: async (applicationData) => {

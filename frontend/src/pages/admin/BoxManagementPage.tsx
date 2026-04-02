@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import axios from 'axios';
-import { Archive, MapPin, Package, ChevronRight } from 'lucide-react';
+import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
 import { useBoxDetail } from '../../actions/useBoxes';
 import type { CreateLocationData } from '../../api/locations.api';
 import { boxesApi } from '../../api/boxes.api';
+import { boxRequestsApi } from '../../api/requests.api';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import './BoxManagementPage.css';
@@ -32,6 +33,16 @@ const BoxManagementPage: React.FC = () => {
   const [arrivalComment, setArrivalComment] = useState('');
   const [markArrivedError, setMarkArrivedError] = useState<string | null>(null);
   const [markingArrived, setMarkingArrived] = useState(false);
+
+  // Move Box modal state
+  const [showMoveBoxModal, setShowMoveBoxModal] = useState(false);
+  const [moveBoxId, setMoveBoxId] = useState<number | null>(null);
+  const [moveBoxCode, setMoveBoxCode] = useState('');
+  const [moveBoxFromLocationId, setMoveBoxFromLocationId] = useState<number | null>(null);
+  const [moveBoxDestinationId, setMoveBoxDestinationId] = useState<number | ''>('');
+  const [moveBoxComment, setMoveBoxComment] = useState('');
+  const [moveBoxError, setMoveBoxError] = useState<string | null>(null);
+  const [movingBox, setMovingBox] = useState(false);
 
   const { locations, loading: locationsLoading, refetch: refetchLocations } = useLocations();
   const { location: selectedLocation, loading: locationLoading, refetch: refetchSelectedLocation } = useLocationDetail(selectedLocationId);
@@ -111,6 +122,47 @@ const BoxManagementPage: React.FC = () => {
       setMarkArrivedError(getApiErrorMessage(err, 'Failed to mark box as arrived.'));
     } finally {
       setMarkingArrived(false);
+    }
+  };
+
+  const handleOpenMoveBoxModal = (boxId: number, boxCode: string, fromLocationId: number) => {
+    setMoveBoxId(boxId);
+    setMoveBoxCode(boxCode);
+    setMoveBoxFromLocationId(fromLocationId);
+    setMoveBoxDestinationId('');
+    setMoveBoxComment('');
+    setMoveBoxError(null);
+    setShowMoveBoxModal(true);
+  };
+
+  const handleCloseMoveBoxModal = () => {
+    setShowMoveBoxModal(false);
+    setMoveBoxId(null);
+    setMoveBoxCode('');
+    setMoveBoxFromLocationId(null);
+    setMoveBoxDestinationId('');
+    setMoveBoxComment('');
+    setMoveBoxError(null);
+  };
+
+  const handleSubmitMoveBox = async () => {
+    if (!moveBoxId || moveBoxDestinationId === '' || !moveBoxFromLocationId) return;
+
+    setMovingBox(true);
+    setMoveBoxError(null);
+
+    try {
+      await boxRequestsApi.create({
+        box: moveBoxId,
+        from_location: moveBoxFromLocationId,
+        to_location: moveBoxDestinationId,
+      });
+      handleCloseMoveBoxModal();
+      await Promise.all([refetchLocations(), refetchSelectedLocation()]);
+    } catch (err) {
+      setMoveBoxError(getApiErrorMessage(err, 'Failed to create box movement request.'));
+    } finally {
+      setMovingBox(false);
     }
   };
 
@@ -225,14 +277,26 @@ const BoxManagementPage: React.FC = () => {
               ) : (
                 <div className="box-management-boxes-grid">
                   {selectedLocation.boxes?.map((box) => (
-                    <div 
-                      key={box.id} 
+                    <div
+                      key={box.id}
                       className={`box-card ${selectedBoxId === box.id ? 'active' : ''}`}
                       onClick={() => handleBoxClick(box.id)}
                     >
                       <div className="box-card-header">
                         <Package size={20} />
                         <span className="box-card-code">{box.box_code}</span>
+                        <Button
+                          variant="outline-black"
+                          size="xs"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenMoveBoxModal(box.id, box.box_code, selectedLocation!.id);
+                          }}
+                          title="Move Box"
+                          style={{ marginLeft: 'auto' }}
+                        >
+                          <ArrowRightLeft size={14} />
+                        </Button>
                       </div>
                       {box.label && <p className="box-card-label">{box.label}</p>}
                       {box.description && <p className="box-card-description">{box.description}</p>}
@@ -323,6 +387,71 @@ const BoxManagementPage: React.FC = () => {
           ) : null}
         </div>
       </div>
+
+      {/* Move Box Modal */}
+      <Modal open={showMoveBoxModal} onClose={handleCloseMoveBoxModal} title="Move Box">
+        <div className="box-management-modal-body">
+          <h2 className="text-xl font-semibold text-primary mb-4">Move Box: {moveBoxCode}</h2>
+          {moveBoxError && (
+            <div className="box-management-modal-error">{moveBoxError}</div>
+          )}
+          <div className="box-management-form-group">
+            <label>Current Location</label>
+            <input
+              type="text"
+              value={locations.find(l => l.id === moveBoxFromLocationId)?.name || ''}
+              disabled
+            />
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="move-box-destination">Destination Location *</label>
+            <select
+              id="move-box-destination"
+              value={moveBoxDestinationId}
+              onChange={(e) => setMoveBoxDestinationId(e.target.value ? Number(e.target.value) : '')}
+              disabled={movingBox}
+            >
+              <option value="">Select destination...</option>
+              {locations
+                .filter((location) => location.id !== moveBoxFromLocationId)
+                .map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.name} ({location.location_type_display})
+                  </option>
+                ))}
+            </select>
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="move-box-comment">Comment (optional)</label>
+            <textarea
+              id="move-box-comment"
+              value={moveBoxComment}
+              onChange={(e) => setMoveBoxComment(e.target.value)}
+              placeholder="Optional comment"
+              rows={3}
+              disabled={movingBox}
+            />
+          </div>
+        </div>
+        <div className="box-management-modal-footer">
+          <Button
+            variant="outline-gray"
+            size="md"
+            onClick={handleCloseMoveBoxModal}
+            disabled={movingBox}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSubmitMoveBox}
+            disabled={movingBox || moveBoxDestinationId === ''}
+          >
+            {movingBox ? 'Submitting...' : 'Submit Move Request'}
+          </Button>
+        </div>
+      </Modal>
 
       {/* Add Location Modal */}
       <Modal open={showAddModal} onClose={handleCloseModal} title="Add New Location">
