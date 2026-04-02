@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { validEmail, validName, validPhoneNumber } from '../../utils/index';
 import styles from './VolunteerApplication.module.css';
 import { useCreateVolunteer } from '../../actions/useVolunteers';
@@ -120,6 +121,13 @@ const VolunteerApplication = () => {
                 {isSubmitting ? "Submitting..." : "Submit"}
             </button>
         </form>
+
+        <p className="mt-4 text-sm text-gray-600 text-center">
+            Already have an account?{' '}
+            <Link to="/login" className="text-blue-600 hover:underline">
+                Log in
+            </Link>
+        </p>
     </div>
     );
 

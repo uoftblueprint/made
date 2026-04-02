@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts';
 import './LoginPage.css';
 
@@ -33,7 +33,7 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const destination = user.role === 'ADMIN' ? '/admin' : '/';
+      const destination = user.role === 'ADMIN' ? '/admin' : '/catalogue';
       // replace: true prevents the user from going "back" into the login redirect loop
       navigate(destination, { replace: true });
     }
@@ -98,6 +98,13 @@ const LoginPage = () => {
           {isLoggingIn ? 'Logging in...' : 'Login'}
         </button>
       </form>
+
+      <p className="mt-4 text-sm text-gray-600">
+        Want to volunteer?{' '}
+        <Link to="/volunteer_management" className="text-blue-600 hover:underline">
+          Apply here
+        </Link>
+      </p>
     </div>
   );
 };

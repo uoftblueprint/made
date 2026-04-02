@@ -192,10 +192,6 @@ const AdminCataloguePage: React.FC = () => {
     fetchItems();
   };
 
-  const handleMoveClick = (item: AdminCollectionItem) => {
-    console.log('Move item:', item.title);
-  };
-
   const handleDeleteConfirm = () => {
     // Mock delete removes local state (will replace with call once Issue #30 is done)
     if (selectedItem) {
@@ -443,12 +439,6 @@ const AdminCataloguePage: React.FC = () => {
                         title="Edit"
                       >
                         <Edit2 size={14} />
-                      </button>
-                      <button
-                        className="catalogue-action-btn catalogue-move-btn"
-                        onClick={() => handleMoveClick(raw)}
-                      >
-                        Move
                       </button>
                     </div>
                   </td>

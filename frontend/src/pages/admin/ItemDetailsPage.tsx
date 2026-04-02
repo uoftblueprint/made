@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X } from 'lucide-react';
+import { ArrowLeft, Edit2, MapPin, Check, X } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
 import { useItemRequests } from '../../actions/useRequests';
@@ -342,14 +342,6 @@ const ItemDetailsPage: React.FC = () => {
               {processingRequestId === activeTransitRequest.id ? 'Marking...' : 'Mark as Arrived'}
             </button>
           )}
-          <button className="item-action-btn secondary desktop-only-btn">
-            <ExternalLink size={16} />
-            View in Google Sheets
-          </button>
-          <button className="item-action-btn danger desktop-only-btn">
-            <Trash2 size={16} />
-            Archive (Recoverable)
-          </button>
 
           {/* Metadata */}
           <div className="item-sidebar-meta hidden md:block">

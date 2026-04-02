@@ -17,11 +17,8 @@ const Header = () => {
         {/* Public navigation */}
         {!isAuthenticated && (
           <>
-            <Link to="/" className={`header-link ${isActive('/') && location.pathname === '/' ? 'active' : ''}`}>
-              Home
-            </Link>
-            <Link to="/catalogue" className={`header-link ${isActive('/catalogue') ? 'active' : ''}`}>
-              Catalogue
+            <Link to="/login" className={`header-link ${isActive('/login') ? 'active' : ''}`}>
+              Login
             </Link>
             <Link to="/volunteer_management" className={`header-link ${isActive('/volunteer_management') ? 'active' : ''}`}>
               Volunteer Application
