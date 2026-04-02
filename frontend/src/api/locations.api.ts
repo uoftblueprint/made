@@ -31,7 +31,7 @@ export interface CreateLocationData {
 
 export const locationsApi = {
   getAll: async (): Promise<Location[]> => {
-    const response = await apiClient.get('/locations/');
+    const response = await apiClient.get('/locations/', { params: { page_size: '10000' } });
     // Handle paginated response or direct array
     const data = response.data;
     if (Array.isArray(data)) return data;

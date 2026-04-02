@@ -31,7 +31,7 @@ export interface CompleteArrivalInput {
 
 export const requestsApi = {
   getAll: async (params?: MovementRequestFilter): Promise<MovementRequest[]> => {
-    const queryParams: Record<string, string> = {};
+    const queryParams: Record<string, string> = { page_size: '10000' };
     if (params?.status) queryParams.status = params.status;
     if (params?.mine) queryParams.mine = 'true';
 
@@ -91,7 +91,7 @@ export const requestsApi = {
 
 export const boxRequestsApi = {
   getAll: async (params?: MovementRequestFilter): Promise<BoxMovementRequest[]> => {
-    const queryParams: Record<string, string> = {};
+    const queryParams: Record<string, string> = { page_size: '10000' };
     if (params?.status) queryParams.status = params.status;
     if (params?.mine) queryParams.mine = 'true';
 

@@ -64,6 +64,21 @@
       "name": "Temporary Exhibit B",
       "location_type": "EVENT",
       "description": "Rotating exhibit space B"
+    },
+    {
+      "name": "Demo - Storage Room",
+      "location_type": "STORAGE",
+      "description": "Demo storage location"
+    },
+    {
+      "name": "Demo - Exhibit Floor",
+      "location_type": "FLOOR",
+      "description": "Demo exhibit display area"
+    },
+    {
+      "name": "Demo - Event Space",
+      "location_type": "EVENT",
+      "description": "Demo event venue"
     }
   ],
   "boxes": [
@@ -432,6 +447,24 @@
       "label": "PC Collection D",
       "description": "Box containing PC items",
       "location": "Educational Workshop"
+    },
+    {
+      "box_code": "DEMO-BOX-01",
+      "label": "Demo Nintendo Collection",
+      "description": "Nintendo games for demo",
+      "location": "Demo - Storage Room"
+    },
+    {
+      "box_code": "DEMO-BOX-02",
+      "label": "Demo Sega Collection",
+      "description": "Sega games for demo",
+      "location": "Demo - Exhibit Floor"
+    },
+    {
+      "box_code": "DEMO-BOX-03",
+      "label": "Demo Arcade Collection",
+      "description": "Arcade classics for demo",
+      "location": "Demo - Event Space"
     }
   ],
   "items": [
@@ -8433,6 +8466,177 @@
       "serial_number": "SN156041373",
       "hardware_type": "Controller",
       "is_verified": true
+    },
+    {
+      "item_code": "DEMO-001",
+      "title": "Super Mario Bros. (Demo)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "box": "DEMO-BOX-01",
+      "location": "Demo - Storage Room",
+      "description": "Demo item",
+      "condition": "EXCELLENT",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Nintendo",
+      "release_year": "1985",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-002",
+      "title": "Legend of Zelda (Demo)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "box": "DEMO-BOX-01",
+      "location": "Demo - Storage Room",
+      "description": "Demo item",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Nintendo",
+      "release_year": "1986",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-003",
+      "title": "Donkey Kong (Demo)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "box": "DEMO-BOX-01",
+      "location": "Demo - Storage Room",
+      "description": "Demo item",
+      "condition": "FAIR",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Nintendo",
+      "release_year": "1981",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-004",
+      "title": "Sonic the Hedgehog (Demo)",
+      "platform": "Genesis",
+      "item_type": "SOFTWARE",
+      "box": "DEMO-BOX-02",
+      "location": "Demo - Exhibit Floor",
+      "description": "Demo item",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Sega",
+      "release_year": "1991",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-005",
+      "title": "N64 Console (Demo)",
+      "platform": "N64",
+      "item_type": "HARDWARE",
+      "location": "Demo - Storage Room",
+      "description": "Demo hardware",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "manufacturer": "Nintendo",
+      "model_number": "NUS-001",
+      "year_manufactured": "1996",
+      "hardware_type": "Console"
+    },
+    {
+      "item_code": "DEMO-006",
+      "title": "Metroid (Demo - Pending Move)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "box": "DEMO-BOX-01",
+      "location": "Demo - Storage Room",
+      "description": "This item has a pending move request",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Nintendo",
+      "release_year": "1986",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-007",
+      "title": "Mega Man 2 (Demo - Approved)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "location": "Demo - Storage Room",
+      "description": "This item has an approved move request ready to start transit",
+      "condition": "EXCELLENT",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Capcom",
+      "release_year": "1988",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-008",
+      "title": "Castlevania (Demo - In Transit)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "location": "Demo - Storage Room",
+      "description": "This item is currently in transit",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Konami",
+      "release_year": "1986",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-009",
+      "title": "Contra (Demo - Ready to Move)",
+      "platform": "NES",
+      "item_type": "SOFTWARE",
+      "location": "Demo - Exhibit Floor",
+      "description": "This item is available and ready for a demo move",
+      "condition": "FAIR",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Konami",
+      "release_year": "1987",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-010",
+      "title": "Pac-Man (Demo - In Box 03)",
+      "platform": "Arcade",
+      "item_type": "SOFTWARE",
+      "location": "Demo - Event Space",
+      "description": "In demo box 03 for box move demo",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Namco",
+      "release_year": "1980",
+      "media_type": "Cartridge"
+    },
+    {
+      "item_code": "DEMO-011",
+      "title": "Space Invaders (Demo - In Box 03)",
+      "platform": "Arcade",
+      "item_type": "SOFTWARE",
+      "location": "Demo - Event Space",
+      "description": "In demo box 03 for box move demo",
+      "condition": "GOOD",
+      "working_condition": true,
+      "status": "AVAILABLE",
+      "is_public_visible": true,
+      "creator_publisher": "Taito",
+      "release_year": "1978",
+      "media_type": "Cartridge"
     }
   ],
   "users": [
@@ -9338,6 +9542,27 @@
       "to_location": "Restoration Lab",
       "status": "WAITING_APPROVAL",
       "admin_comment": ""
+    },
+    {
+      "item_code": "DEMO-006",
+      "from_location": "Demo - Storage Room",
+      "to_location": "Demo - Exhibit Floor",
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
+    },
+    {
+      "item_code": "DEMO-007",
+      "from_location": "Demo - Storage Room",
+      "to_location": "Demo - Event Space",
+      "status": "APPROVED",
+      "admin_comment": "Approved for event setup"
+    },
+    {
+      "item_code": "DEMO-008",
+      "from_location": "Demo - Storage Room",
+      "to_location": "Demo - Exhibit Floor",
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Moving to exhibit"
     }
   ],
   "box_movement_requests": [
@@ -9374,6 +9599,13 @@
       "from_location": "Main Storage",
       "to_location": "Community Event Space",
       "status": "REJECTED",
+      "admin_comment": ""
+    },
+    {
+      "box_code": "DEMO-BOX-03",
+      "from_location": "Demo - Event Space",
+      "to_location": "Demo - Storage Room",
+      "status": "WAITING_APPROVAL",
       "admin_comment": ""
     }
   ]

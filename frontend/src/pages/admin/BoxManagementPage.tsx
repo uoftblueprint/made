@@ -106,7 +106,7 @@ const BoxManagementPage: React.FC = () => {
   const activeBoxRequests = useMemo(() => {
     const map = new Map<number, BoxMovementRequest>();
     for (const req of boxMoveRequests) {
-      if (req.status === 'APPROVED' || req.status === 'COMPLETED_UNVERIFIED') {
+      if ((req.status === 'APPROVED' || req.status === 'COMPLETED_UNVERIFIED') && !req.items_verified) {
         map.set(req.box, req);
       }
     }
@@ -125,7 +125,8 @@ const BoxManagementPage: React.FC = () => {
   const getInboundBoxes = useCallback((locationId: number) => {
     return boxMoveRequests.filter(req =>
       req.to_location === locationId &&
-      (req.status === 'APPROVED' || req.status === 'COMPLETED_UNVERIFIED')
+      (req.status === 'APPROVED' || req.status === 'COMPLETED_UNVERIFIED') &&
+      !req.items_verified
     );
   }, [boxMoveRequests]);
 

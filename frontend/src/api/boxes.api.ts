@@ -44,8 +44,7 @@ export interface CreateBoxInput {
 
 export const boxesApi = {
   getAll: async (): Promise<Box[]> => {
-    const response = await apiClient.get('/boxes/');
-    // Handle paginated response or direct array
+    const response = await apiClient.get('/boxes/', { params: { page_size: '10000' } });
     const data = response.data;
     if (Array.isArray(data)) return data;
     if (data?.results && Array.isArray(data.results)) return data.results;
