@@ -10,6 +10,7 @@ export interface Volunteer {
   id: number;
   name: string;
   email: string;
+  phone_number?: string | null;
   motivation_text: string;
   submitted_at: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -19,6 +20,8 @@ export interface Volunteer {
   user_id?: number;
   expires_at?: string | null;
   days_remaining?: number | null;
+  requires_move_approval?: boolean;
+  user_role?: 'ADMIN' | 'VOLUNTEER' | null;
 }
 
 export interface VolunteerApplicationInput {

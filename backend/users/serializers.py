@@ -16,6 +16,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "email",
+            "phone_number",
             "motivation_text",
             "status",
             "created_at",
@@ -48,6 +49,7 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "is_active",
             "access_expires_at",
+            "requires_move_approval",
         ]
         read_only_fields = [
             "id",
@@ -55,6 +57,7 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "is_active",
             "access_expires_at",
+            "requires_move_approval",
         ]
 
 
@@ -82,10 +85,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     """
-    Serializer for updating user is_active and access_expires_at.
-    Only these fields can be updated by admins.
+    Serializer for updating user details by admins.
+    Supports name, email, role, is_active, access_expires_at, and requires_move_approval.
     """
 
     class Meta:
         model = User
-        fields = ["is_active", "access_expires_at"]
+        fields = ["name", "email", "role", "is_active", "access_expires_at", "requires_move_approval"]
+
+    def validate_email(self, value):
+        """Ensure email is unique, excluding the current user."""
+        user = self.instance
+        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value

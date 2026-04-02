@@ -1,6 +1,6 @@
-import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions } from '../../actions/useVolunteers';
+import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval, useUpdateVolunteer } from '../../actions/useVolunteers';
 import { useState, useMemo } from 'react'
-import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown } from 'lucide-react';
+import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown, Edit2 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import type { Volunteer } from '../../lib/types';
@@ -40,6 +40,43 @@ const ManageVolunteers = () => {
     const { data: options } = useVolunteerOptions();
     const approveMutation = useUpdateVolunteerStatus();
     const extendMutation = useExtendVolunteerAccess();
+    const toggleMoveApprovalMutation = useToggleMoveApproval();
+    const updateVolunteerMutation = useUpdateVolunteer();
+
+    const [editModal, setEditModal] = useState<Volunteer | null>(null);
+    const [editName, setEditName] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+    const [editPhone, setEditPhone] = useState('');
+    const [editRole, setEditRole] = useState<'ADMIN' | 'VOLUNTEER'>('VOLUNTEER');
+
+    const openEditModal = (volunteer: Volunteer) => {
+        setEditName(volunteer.name);
+        setEditEmail(volunteer.email);
+        setEditPhone(volunteer.phone_number ?? '');
+        setEditRole(volunteer.user_role ?? 'VOLUNTEER');
+        setEditModal(volunteer);
+    };
+
+    const closeEditModal = () => setEditModal(null);
+
+    const submitEditModal = () => {
+        if (!editModal) return;
+        updateVolunteerMutation.mutate(
+            {
+                applicationId: editModal.id,
+                userId: editModal.user_id,
+                applicationData: {
+                    name: editName,
+                    email: editEmail,
+                    phone_number: editPhone,
+                },
+                userData: editModal.user_id
+                    ? { name: editName, email: editEmail, role: editRole }
+                    : undefined,
+            },
+            { onSuccess: closeEditModal }
+        );
+    };
 
     const openExpiryModal = (next: ExpiryModal) => {
         if (!next) return;
@@ -227,6 +264,7 @@ const ManageVolunteers = () => {
                             <th>Granted Date</th>
                             <th>Expires</th>
                             <th>Status</th>
+                            <th>Move Approval</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -267,7 +305,34 @@ const ManageVolunteers = () => {
                                     </span>
                                 </td>
                                 <td>
+                                    {volunteer.status === 'APPROVED' && volunteer.user_id ? (
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={volunteer.requires_move_approval ?? false}
+                                                onChange={(e) => {
+                                                    if (volunteer.user_id) {
+                                                        toggleMoveApprovalMutation.mutate({
+                                                            userId: volunteer.user_id,
+                                                            requires_move_approval: e.target.checked,
+                                                        });
+                                                    }
+                                                }}
+                                                disabled={toggleMoveApprovalMutation.isPending}
+                                            />
+                                            <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                                                {volunteer.requires_move_approval ? 'Required' : 'Not required'}
+                                            </span>
+                                        </label>
+                                    ) : (
+                                        <span style={{ fontSize: '0.85rem', color: '#9ca3af' }}>--</span>
+                                    )}
+                                </td>
+                                <td>
                                     <div className="volunteers-actions">
+                                        <button className="volunteers-action-btn icon-btn" title="Edit" onClick={() => openEditModal(volunteer)}>
+                                            <Edit2 size={14} />
+                                        </button>
                                         {volunteer.status === 'PENDING' && (
                                             <>
                                                 <Button variant="success" size="xs" className="!text-black !border !border-border" onClick={() => openExpiryModal({ mode: 'approve', applicationId: volunteer.id })}>
@@ -393,6 +458,65 @@ const ManageVolunteers = () => {
                 </div>
                 <div className="modal-actions">
                     <Button variant="outline-gray" size="md" onClick={() => setRenewModalOpen(false)}>Close</Button>
+                </div>
+            </Modal>
+
+            {/* Edit Volunteer Modal */}
+            <Modal open={editModal !== null} onClose={closeEditModal} title="Edit Volunteer">
+                <h2 className="text-xl font-semibold text-primary mb-2">Edit Volunteer</h2>
+                <p className="modal-subtitle">Update volunteer details.</p>
+                <div className="modal-form">
+                    <div className="modal-row">
+                        <div className="modal-field">
+                            <label>Name</label>
+                            <input
+                                type="text"
+                                value={editName}
+                                onChange={(e) => setEditName(e.target.value)}
+                            />
+                        </div>
+                        <div className="modal-field">
+                            <label>Email</label>
+                            <input
+                                type="email"
+                                value={editEmail}
+                                onChange={(e) => setEditEmail(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <div className="modal-row">
+                        <div className="modal-field">
+                            <label>Phone Number</label>
+                            <input
+                                type="tel"
+                                value={editPhone}
+                                onChange={(e) => setEditPhone(e.target.value)}
+                            />
+                        </div>
+                        {editModal?.user_id && (
+                            <div className="modal-field">
+                                <label>Role</label>
+                                <select
+                                    value={editRole}
+                                    onChange={(e) => setEditRole(e.target.value as 'ADMIN' | 'VOLUNTEER')}
+                                >
+                                    <option value="VOLUNTEER">Volunteer</option>
+                                    <option value="ADMIN">Admin</option>
+                                </select>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                <div className="modal-actions">
+                    <Button
+                        variant="primary"
+                        size="md"
+                        onClick={submitEditModal}
+                        disabled={updateVolunteerMutation.isPending || !editName.trim() || !editEmail.trim()}
+                    >
+                        {updateVolunteerMutation.isPending ? 'Saving...' : 'Save Changes'}
+                    </Button>
+                    <Button variant="outline-gray" size="md" onClick={closeEditModal}>Cancel</Button>
                 </div>
             </Modal>
 

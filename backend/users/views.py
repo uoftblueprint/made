@@ -127,10 +127,14 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
                     item["days_remaining"] = max(delta.days, 0)
                 else:
                     item["days_remaining"] = None
+                item["requires_move_approval"] = volunteer_user.requires_move_approval
+                item["user_role"] = volunteer_user.role
             else:
                 item["user_id"] = None
                 item["expires_at"] = None
                 item["days_remaining"] = None
+                item["requires_move_approval"] = False
+                item["user_role"] = None
 
         return response
 
