@@ -173,39 +173,63 @@ class Command(BaseCommand):
                 app.save()
         self.stdout.write(f"  Processed {len(data.get('applications', []))} applications")
 
-        # Create movement requests
+        # Create movement requests with realistic state
         self.stdout.write("Creating movement requests...")
-        volunteer_user = User.objects.filter(role="VOLUNTEER", is_active=True).first()
-        movements_created = 0
 
+        # Get typed users for realistic ownership
+        junior_user = User.objects.filter(role="VOLUNTEER", requires_move_approval=True, is_active=True).first()
+        senior_user = User.objects.filter(role="VOLUNTEER", requires_move_approval=False, is_active=True).first()
+
+        if not junior_user or not senior_user:
+            self.stderr.write("  Warning: Need both junior and senior volunteers for movement requests")
+
+        movements_created = 0
         for req_data in data.get("movement_requests", []):
             try:
                 item = CollectionItem.objects.get(item_code=req_data["item_code"])
                 from_location = locations.get(req_data["from_location"])
                 to_location = locations.get(req_data["to_location"])
-
                 if not from_location or not to_location:
                     continue
+
+                req_status = req_data.get("status", "WAITING_APPROVAL")
+
+                # Pick the right requester based on status
+                # WAITING_APPROVAL / APPROVED / REJECTED = junior submitted
+                # COMPLETED_UNVERIFIED = senior/admin auto-move
+                if req_status == "COMPLETED_UNVERIFIED":
+                    requester = senior_user or admin_user
+                else:
+                    requester = junior_user or senior_user
+
+                approver = admin_user if req_status in ("APPROVED", "REJECTED", "COMPLETED_UNVERIFIED") else None
 
                 request, created = ItemMovementRequest.objects.get_or_create(
                     item=item,
                     from_location=from_location,
                     to_location=to_location,
-                    status=req_data.get("status", "WAITING_APPROVAL"),
+                    status=req_status,
                     defaults={
-                        "requested_by": volunteer_user,
-                        "admin": admin_user if req_data.get("status") in ["APPROVED", "REJECTED"] else None,
+                        "requested_by": requester,
+                        "admin": approver,
                         "admin_comment": req_data.get("admin_comment", ""),
                     },
                 )
                 if created:
                     movements_created += 1
-                    # COMPLETED_UNVERIFIED = senior/admin auto-move → IN_TRANSIT
-                    # APPROVED = junior's request approved → stays AVAILABLE until they start transit
-                    if req_data.get("status") == "COMPLETED_UNVERIFIED":
+
+                    # Set item state to match the request status
+                    if req_status == "COMPLETED_UNVERIFIED":
+                        # Senior auto-move → item is IN_TRANSIT
                         item.status = "IN_TRANSIT"
                         item.is_verified = False
                         item.save(update_fields=["status", "is_verified", "updated_at"])
+                    elif req_status == "APPROVED":
+                        # Junior's request approved → item stays AVAILABLE, verified
+                        # (unchanged — item hasn't started transit yet)
+                        pass
+                    # WAITING_APPROVAL and REJECTED don't change item state
+
             except CollectionItem.DoesNotExist:
                 continue
         self.stdout.write(f"  Created {movements_created} movement requests")
@@ -218,29 +242,39 @@ class Command(BaseCommand):
                 box = boxes.get(req_data["box_code"])
                 from_location = locations.get(req_data["from_location"])
                 to_location = locations.get(req_data["to_location"])
-
                 if not box or not from_location or not to_location:
                     continue
+
+                req_status = req_data.get("status", "WAITING_APPROVAL")
+
+                if req_status == "COMPLETED_UNVERIFIED":
+                    requester = senior_user or admin_user
+                else:
+                    requester = junior_user or senior_user
+
+                approver = admin_user if req_status in ("APPROVED", "REJECTED", "COMPLETED_UNVERIFIED") else None
 
                 req, created = BoxMovementRequest.objects.get_or_create(
                     box=box,
                     from_location=from_location,
                     to_location=to_location,
-                    status=req_data.get("status", "WAITING_APPROVAL"),
+                    status=req_status,
                     defaults={
-                        "requested_by": volunteer_user,
-                        "admin": admin_user if req_data.get("status") in ["APPROVED", "REJECTED", "COMPLETED_UNVERIFIED"] else None,
+                        "requested_by": requester,
+                        "admin": approver,
                         "admin_comment": req_data.get("admin_comment", ""),
                     },
                 )
                 if created:
                     box_movements_created += 1
-                    # COMPLETED_UNVERIFIED = senior/admin auto-move → items IN_TRANSIT
-                    if req_data.get("status") == "COMPLETED_UNVERIFIED":
+
+                    if req_status == "COMPLETED_UNVERIFIED":
+                        # Senior auto-move → all items IN_TRANSIT
                         for item in box.items.all():
                             item.status = "IN_TRANSIT"
                             item.is_verified = False
                             item.save(update_fields=["status", "is_verified", "updated_at"])
+                    # APPROVED box requests: items unchanged (not in transit yet)
             except Exception:
                 continue
         self.stdout.write(f"  Created {box_movements_created} box movement requests")

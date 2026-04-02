@@ -114,9 +114,12 @@ const AdminDashboard: React.FC = () => {
 
   const filterByTab = (reqs: UnifiedRequest[], tab: RequestTab) => {
     if (tab === 'pending') return reqs.filter(r => r.status === 'WAITING_APPROVAL');
-    if (tab === 'approved') return reqs.filter(r => isActiveRequest(r) && r.item_status !== 'IN_TRANSIT' && r.item_status !== 'AVAILABLE');
+    // Approved: request approved, item hasn't started transit (still AVAILABLE + verified)
+    if (tab === 'approved') return reqs.filter(r => isActiveRequest(r) && r.item_status !== 'IN_TRANSIT' && r.item_is_verified !== false);
+    // In Transit: item is physically moving
     if (tab === 'in_transit') return reqs.filter(r => isActiveRequest(r) && r.item_status === 'IN_TRANSIT');
-    if (tab === 'arrived') return reqs.filter(r => isActiveRequest(r) && r.item_status === 'AVAILABLE' && !r.item_is_verified);
+    // Arrived: item arrived (AVAILABLE) but not yet verified
+    if (tab === 'arrived') return reqs.filter(r => isActiveRequest(r) && r.item_status !== 'IN_TRANSIT' && r.item_is_verified === false);
     return reqs.filter(r => r.status === 'REJECTED');
   };
 

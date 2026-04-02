@@ -635,7 +635,7 @@
       "box": "24.02.B45",
       "location": "Main Storage",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0012",
@@ -727,7 +727,7 @@
       "box": "24.02.B45",
       "location": "Main Storage",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0017",
@@ -818,7 +818,7 @@
       "box": "24.04.A72",
       "location": "Exhibit - Floor 2",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0022",
@@ -1696,7 +1696,7 @@
       "box": "24.08.A26",
       "location": "Offsite Storage B",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0070",
@@ -2702,7 +2702,7 @@
       "box": "24.22.C30",
       "location": "Main Storage",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0124",
@@ -3971,7 +3971,7 @@
       "box": "24.29.B14",
       "location": "Exhibit - Floor 1",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0193",
@@ -6224,7 +6224,7 @@
       "box": "24.50.A69",
       "location": "Educational Workshop",
       "is_public_visible": true,
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0315",
@@ -7241,7 +7241,7 @@
       "location": "Main Storage",
       "is_public_visible": true,
       "version_edition": "Game of the Year Edition",
-      "is_verified": false
+      "is_verified": true
     },
     {
       "item_code": "24.0370",
@@ -8432,7 +8432,7 @@
       "year_manufactured": "1995",
       "serial_number": "SN156041373",
       "hardware_type": "Controller",
-      "is_verified": false
+      "is_verified": true
     }
   ],
   "users": [
@@ -9133,29 +9133,29 @@
       "item_code": "24.0385",
       "from_location": "Offsite Storage A",
       "to_location": "Restoration Lab",
-      "status": "REJECTED",
-      "admin_comment": "Moving to storage for preservation"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0375",
       "from_location": "Main Storage",
       "to_location": "Community Event Space",
-      "status": "APPROVED",
-      "admin_comment": "Approved for transfer"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0069",
       "from_location": "Offsite Storage A",
       "to_location": "Offsite Storage B",
-      "status": "COMPLETED_UNVERIFIED",
-      "admin_comment": "Auto-completed by senior volunteer"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0051",
       "from_location": "Main Storage",
       "to_location": "Educational Workshop",
-      "status": "REJECTED",
-      "admin_comment": "Space constraints in destination"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0154",
@@ -9168,134 +9168,134 @@
       "item_code": "24.0185",
       "from_location": "Educational Workshop",
       "to_location": "Main Storage",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "APPROVED",
+      "admin_comment": "Approved - ready to move"
     },
     {
       "item_code": "24.0116",
       "from_location": "Educational Workshop",
       "to_location": "Exhibit - Floor 2",
       "status": "APPROVED",
-      "admin_comment": "Item needed for current exhibit"
+      "admin_comment": "Approved - ready to move"
     },
     {
       "item_code": "24.0211",
       "from_location": "Community Event Space",
       "to_location": "Offsite Storage B",
-      "status": "REJECTED",
-      "admin_comment": "Approved for exhibit display"
+      "status": "APPROVED",
+      "admin_comment": "Approved - ready to move"
     },
     {
       "item_code": "24.0106",
       "from_location": "Photography Studio",
       "to_location": "Main Storage",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "APPROVED",
+      "admin_comment": "Approved - ready to move"
     },
     {
       "item_code": "24.0113",
       "from_location": "Temporary Exhibit B",
       "to_location": "Archive Storage",
-      "status": "REJECTED",
-      "admin_comment": "Requested for educational program"
+      "status": "APPROVED",
+      "admin_comment": "Approved - ready to move"
     },
     {
       "item_code": "24.0232",
       "from_location": "Educational Workshop",
       "to_location": "Exhibit - Floor 1",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed by senior volunteer"
     },
     {
       "item_code": "24.0248",
       "from_location": "Community Event Space",
       "to_location": "Community Event Space",
-      "status": "APPROVED",
-      "admin_comment": "Moving to storage for preservation"
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed by senior volunteer"
     },
     {
       "item_code": "24.0190",
       "from_location": "Educational Workshop",
       "to_location": "Offsite Storage A",
-      "status": "APPROVED",
-      "admin_comment": "Approved - please handle with care"
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed by senior volunteer"
     },
     {
       "item_code": "24.0258",
       "from_location": "Photography Studio",
       "to_location": "Temporary Exhibit A",
-      "status": "REJECTED",
-      "admin_comment": "Requested for educational program"
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed by senior volunteer"
     },
     {
       "item_code": "24.0349",
       "from_location": "Educational Workshop",
       "to_location": "Educational Workshop",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed by senior volunteer"
     },
     {
       "item_code": "24.0006",
       "from_location": "Main Storage",
       "to_location": "Main Storage",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "REJECTED",
+      "admin_comment": "Item needs to stay in current location"
     },
     {
       "item_code": "24.0211",
       "from_location": "Temporary Exhibit A",
       "to_location": "Offsite Storage A",
-      "status": "APPROVED",
-      "admin_comment": "Item needed for current exhibit"
+      "status": "REJECTED",
+      "admin_comment": "Item needs to stay in current location"
     },
     {
       "item_code": "24.0301",
       "from_location": "Temporary Exhibit A",
       "to_location": "Exhibit - Floor 2",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "REJECTED",
+      "admin_comment": "Item needs to stay in current location"
     },
     {
       "item_code": "24.0240",
       "from_location": "Educational Workshop",
       "to_location": "Temporary Exhibit A",
-      "status": "APPROVED",
-      "admin_comment": "Approved for exhibit display"
+      "status": "REJECTED",
+      "admin_comment": "Item needs to stay in current location"
     },
     {
       "item_code": "24.0029",
       "from_location": "Archive Storage",
       "to_location": "Educational Workshop",
-      "status": "APPROVED",
+      "status": "WAITING_APPROVAL",
       "admin_comment": ""
     },
     {
       "item_code": "24.0078",
       "from_location": "Offsite Storage A",
       "to_location": "Archive Storage",
-      "status": "REJECTED",
-      "admin_comment": "Requested for educational program"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0298",
       "from_location": "Exhibit - Floor 3",
       "to_location": "Offsite Storage B",
-      "status": "APPROVED",
-      "admin_comment": "Approved - please handle with care"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0350",
       "from_location": "Exhibit - Floor 2",
       "to_location": "Restoration Lab",
-      "status": "REJECTED",
-      "admin_comment": "Requested for educational program"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0265",
       "from_location": "Exhibit - Floor 1",
       "to_location": "Temporary Exhibit B",
-      "status": "APPROVED",
-      "admin_comment": "Approved for exhibit display"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0248",
@@ -9308,36 +9308,36 @@
       "item_code": "24.0011",
       "from_location": "Main Storage",
       "to_location": "Exhibit - Floor 1",
-      "status": "COMPLETED_UNVERIFIED",
-      "admin_comment": "Moved for display"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0016",
       "from_location": "Archive Storage",
       "to_location": "Exhibit - Floor 2",
-      "status": "COMPLETED_UNVERIFIED",
-      "admin_comment": "Auto-completed"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0021",
       "from_location": "Exhibit - Floor 1",
       "to_location": "Main Storage",
-      "status": "COMPLETED_UNVERIFIED",
-      "admin_comment": "Returned to storage"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0026",
       "from_location": "Exhibit - Floor 2",
       "to_location": "Community Event Space",
-      "status": "APPROVED",
-      "admin_comment": "For gaming event"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     },
     {
       "item_code": "24.0031",
       "from_location": "Archive Storage",
       "to_location": "Restoration Lab",
-      "status": "APPROVED",
-      "admin_comment": "Needs repair"
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
     }
   ],
   "box_movement_requests": [
@@ -9345,21 +9345,21 @@
       "box_code": "24.01.A43",
       "from_location": "Archive Storage",
       "to_location": "Exhibit - Floor 1",
-      "status": "COMPLETED_UNVERIFIED",
+      "status": "WAITING_APPROVAL",
       "admin_comment": "Moved for new exhibit setup"
     },
     {
       "box_code": "24.04.A72",
       "from_location": "Exhibit - Floor 2",
       "to_location": "Main Storage",
-      "status": "WAITING_APPROVAL",
+      "status": "APPROVED",
       "admin_comment": ""
     },
     {
       "box_code": "24.05.B09",
       "from_location": "Temporary Exhibit B",
       "to_location": "Archive Storage",
-      "status": "APPROVED",
+      "status": "COMPLETED_UNVERIFIED",
       "admin_comment": "Approved - temporary exhibit ending"
     },
     {
@@ -9373,7 +9373,7 @@
       "box_code": "24.03.C07",
       "from_location": "Main Storage",
       "to_location": "Community Event Space",
-      "status": "WAITING_APPROVAL",
+      "status": "REJECTED",
       "admin_comment": ""
     }
   ]
