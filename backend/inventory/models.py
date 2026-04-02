@@ -1,6 +1,6 @@
 from django.db import models, transaction
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 import logging
@@ -305,3 +305,39 @@ def update_item_location_on_history_change(sender, instance, created, **kwargs):
         except Exception as e:
             # Log error but don't raise to prevent disrupting the original save
             logger.error(f"Failed to update item location for item {instance.item_id}: {e}")
+
+
+@receiver(post_save, sender=Box)
+def sync_items_location_on_box_move(sender, instance, **kwargs):
+    """
+    When a box's location changes, update all items in that box to the same location.
+    """
+    try:
+        box_location = instance.location
+        items_in_box = CollectionItem.objects.filter(box=instance).exclude(current_location=box_location)
+        if items_in_box.exists():
+            is_on_floor = box_location.location_type == "FLOOR"
+            items_in_box.update(
+                current_location=box_location,
+                is_on_floor=is_on_floor,
+                updated_at=timezone.now()
+            )
+            logger.info(f"Synced {items_in_box.count()} items in box {instance.box_code} to location {box_location.name}")
+    except Exception as e:
+        logger.error(f"Failed to sync items location for box {instance.box_code}: {e}")
+
+
+@receiver(pre_save, sender=CollectionItem)
+def sync_item_location_to_box(sender, instance, **kwargs):
+    """
+    When an item is assigned to a box, sync the item's location to the box's location.
+    """
+    if instance.box_id:
+        try:
+            # Get the box's location
+            box = instance.box
+            if box and instance.current_location_id != box.location_id:
+                instance.current_location = box.location
+                instance.is_on_floor = box.location.location_type == "FLOOR"
+        except Exception as e:
+            logger.error(f"Failed to sync item {instance.item_code} location to box: {e}")

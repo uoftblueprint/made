@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQueryState } from '../../hooks/useQueryState';
 import { AlertCircle, Layers, Archive, Check, X, XCircle, Truck, ShieldCheck, Eye } from 'lucide-react';
 import { useRequests, useBoxRequests } from '../../actions/useRequests';
@@ -25,6 +25,7 @@ function formatTimeAgo(dateString: string): string {
 }
 
 const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { isAdmin, isSeniorVolunteer } = useAuth();
   const canApprove = isAdmin || isSeniorVolunteer;
   // "Your Activity" — always filtered to current user
@@ -414,12 +415,24 @@ const AdminDashboard: React.FC = () => {
 
       {/* Quick Actions */}
       <div className="admin-quick-actions">
-        <Link to="/admin/catalogue" className="block">
-          <Button variant="outline-black" size="lg" icon="plus" layout="stacked" fullWidth>
-            Add New Item
-          </Button>
-        </Link>
-        <Button variant="outline-black" size="lg" icon="archive" layout="stacked" fullWidth>
+        <Button
+          variant="outline-black"
+          size="lg"
+          icon="plus"
+          layout="stacked"
+          fullWidth
+          onClick={() => navigate('/admin/catalogue', { state: { openAddModal: true } })}
+        >
+          Add New Item
+        </Button>
+        <Button
+          variant="outline-black"
+          size="lg"
+          icon="archive"
+          layout="stacked"
+          fullWidth
+          onClick={() => navigate('/admin/boxes', { state: { openAddBoxModal: true } })}
+        >
           Create Container
         </Button>
         <Button variant="outline-black" size="lg" icon="download" layout="stacked" fullWidth onClick={() => setIsExportModalOpen(true)}>

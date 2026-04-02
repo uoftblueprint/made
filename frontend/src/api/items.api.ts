@@ -97,6 +97,16 @@ export const itemsApi = {
   delete: async (id: string | number): Promise<void> => {
     await apiClient.delete(`/inventory/items/${id}/`);
   },
+
+  getByItemCode: async (itemCode: string): Promise<AdminCollectionItem | null> => {
+    const response = await apiClient.get('/inventory/items/', {
+      params: { search: itemCode, page_size: '100' },
+    });
+    const data = response.data;
+    const items = Array.isArray(data) ? data : data?.results ?? [];
+    // Find exact match by item_code
+    return items.find((item: AdminCollectionItem) => item.item_code === itemCode) ?? null;
+  },
 };
 
 

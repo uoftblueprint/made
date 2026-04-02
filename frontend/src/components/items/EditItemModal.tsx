@@ -96,27 +96,6 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, onSucces
   useEffect(() => {
     if (!item) return;
 
-    const extItem = item as AdminCollectionItem & {
-      date_of_entry?: string;
-      condition?: ConditionType;
-      is_complete?: CompletenessType;
-      is_functional?: CompletenessType;
-      creator_publisher?: string;
-      release_year?: string;
-      version_edition?: string;
-      media_type?: string;
-      manufacturer?: string;
-      model_number?: string;
-      year_manufactured?: string;
-      serial_number?: string;
-      hardware_type?: string;
-      item_subtype?: string;
-      date_published?: string;
-      publisher?: string;
-      volume_number?: string;
-      isbn_catalogue_number?: string;
-    };
-
     setFormData({
       title: item.title || '',
       item_code: item.item_code || '',
@@ -129,24 +108,24 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, onSucces
       is_public_visible: item.is_public_visible ?? true,
       is_on_floor: item.is_on_floor ?? false,
       box: item.box ?? '',
-      date_of_entry: extItem.date_of_entry || '',
-      condition: extItem.condition || 'GOOD',
-      is_complete: extItem.is_complete || 'UNKNOWN',
-      is_functional: extItem.is_functional || 'UNKNOWN',
-      creator_publisher: extItem.creator_publisher || '',
-      release_year: extItem.release_year || '',
-      version_edition: extItem.version_edition || '',
-      media_type: extItem.media_type || '',
-      manufacturer: extItem.manufacturer || '',
-      model_number: extItem.model_number || '',
-      year_manufactured: extItem.year_manufactured || '',
-      serial_number: extItem.serial_number || '',
-      hardware_type: extItem.hardware_type || '',
-      item_subtype: extItem.item_subtype || '',
-      date_published: extItem.date_published || '',
-      publisher: extItem.publisher || '',
-      volume_number: extItem.volume_number || '',
-      isbn_catalogue_number: extItem.isbn_catalogue_number || '',
+      date_of_entry: item.date_of_entry || '',
+      condition: item.condition || 'GOOD',
+      is_complete: item.is_complete || 'UNKNOWN',
+      is_functional: item.is_functional || 'UNKNOWN',
+      creator_publisher: item.creator_publisher || '',
+      release_year: item.release_year || '',
+      version_edition: item.version_edition || '',
+      media_type: item.media_type || '',
+      manufacturer: item.manufacturer || '',
+      model_number: item.model_number || '',
+      year_manufactured: item.year_manufactured || '',
+      serial_number: item.serial_number || '',
+      hardware_type: item.hardware_type || '',
+      item_subtype: item.item_subtype || '',
+      date_published: item.date_published || '',
+      publisher: item.publisher || '',
+      volume_number: item.volume_number || '',
+      isbn_catalogue_number: item.isbn_catalogue_number || '',
     });
   }, [item]);
 
@@ -183,19 +162,30 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ isOpen, onClose, onSucces
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]:
-        type === 'checkbox'
-          ? checked
-          : name === 'current_location' || name === 'box'
-          ? value === ''
-            ? ''
-            : Number(value)
-          : name === 'working_condition'
-          ? value === 'true'
-          : value,
-    }));
+    setFormData((prev) => {
+      const updates: Partial<FormData> = {
+        [name]:
+          type === 'checkbox'
+            ? checked
+            : name === 'current_location' || name === 'box'
+            ? value === ''
+              ? ''
+              : Number(value)
+            : name === 'working_condition'
+            ? value === 'true'
+            : value,
+      };
+
+      // Auto-update location when box is selected
+      if (name === 'box' && value !== '') {
+        const selectedBox = boxes.find(b => b.id === Number(value));
+        if (selectedBox) {
+          updates.current_location = selectedBox.location;
+        }
+      }
+
+      return { ...prev, ...updates };
+    });
 
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));

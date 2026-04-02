@@ -68,6 +68,24 @@ export interface AdminCollectionItem extends BaseCollectionItem {
   box: number | null;
   created_at?: string;
   updated_at?: string;
+  condition?: ConditionType;
+  is_complete?: CompletenessType;
+  is_functional?: CompletenessType;
+  date_of_entry?: string;
+  creator_publisher?: string;
+  release_year?: string;
+  version_edition?: string;
+  media_type?: string;
+  manufacturer?: string;
+  model_number?: string;
+  year_manufactured?: string;
+  serial_number?: string;
+  hardware_type?: string;
+  item_subtype?: string;
+  date_published?: string;
+  publisher?: string;
+  volume_number?: string;
+  isbn_catalogue_number?: string;
 }
 
 export interface ExpiringVolunteer {

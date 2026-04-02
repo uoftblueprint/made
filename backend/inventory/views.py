@@ -229,30 +229,6 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
         return queryset
 
 
-class AdminCollectionItemViewSet(viewsets.ModelViewSet):
-    """
-    Admin/volunteer ViewSet for managing collection items.
-    Supports POST, PUT, PATCH, DELETE.
-    Only accessible to users with ADMIN or Volunteers role depending on operation with
-    destory being Admin Only
-    NOT USED CURRENTLY
-    """
-
-    queryset = CollectionItem.objects.all().select_related("current_location")
-    serializer_class = AdminCollectionItemSerializer
-    permission_classes = [IsVolunteer]
-
-    def get_permissions(self):
-        if self.action == "destroy":
-            return [IsAdmin()]
-        return [IsVolunteer()]
-
-    def destroy(self, request, *args, **kwargs):
-        """Soft delete: set is_public_visible=False instead of removing from DB."""
-        instance = self.get_object()
-        instance.is_public_visible = False
-        instance.save(update_fields=["is_public_visible", "updated_at"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @api_view(["GET"])

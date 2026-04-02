@@ -1,12 +1,12 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown, Check, ShieldCheck } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
 import { useBoxes, useBoxDetail, useCreateBox } from '../../actions/useBoxes';
 import { useBoxRequests } from '../../actions/useRequests';
 import type { CreateLocationData } from '../../api/locations.api';
-import type { BoxDetail, Box } from '../../api/boxes.api';
+import type { BoxDetail } from '../../api/boxes.api';
 import type { BoxMovementRequest } from '../../lib/types';
 import { boxesApi } from '../../api/boxes.api';
 import { boxRequestsApi } from '../../api/requests.api';
@@ -32,6 +32,7 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
 type BoxTransitStatus = 'available' | 'in_transit' | 'arrived';
 
 const BoxManagementPage: React.FC = () => {
+  const location = useLocation();
   const { isJuniorVolunteer, isAdmin, isSeniorVolunteer } = useAuth();
   const canApprove = isAdmin || isSeniorVolunteer;
   const navigate = useNavigate();
@@ -89,7 +90,6 @@ const BoxManagementPage: React.FC = () => {
   const [moveBoxCode, setMoveBoxCode] = useState('');
   const [moveBoxFromLocationId, setMoveBoxFromLocationId] = useState<number | null>(null);
   const [moveBoxDestinationId, setMoveBoxDestinationId] = useState<number | ''>('');
-  const [moveBoxComment, setMoveBoxComment] = useState('');
   const [moveBoxError, setMoveBoxError] = useState<string | null>(null);
   const [movingBox, setMovingBox] = useState(false);
 
@@ -155,6 +155,17 @@ const BoxManagementPage: React.FC = () => {
   const [newBoxLabel, setNewBoxLabel] = useState('');
   const [newBoxDescription, setNewBoxDescription] = useState('');
   const [newBoxLocationId, setNewBoxLocationId] = useState<number | ''>('');
+
+  // Handle navigation state to open Add Box modal from dashboard
+  useEffect(() => {
+    const state = location.state as { openAddBoxModal?: boolean } | null;
+    if (state?.openAddBoxModal) {
+      window.scrollTo(0, 0);
+      setShowAddBoxModal(true);
+      // Clear the state so it doesn't reopen on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleAddBox = async () => {
     if (!newBoxCode.trim() || newBoxLocationId === '') return;
@@ -296,7 +307,6 @@ const BoxManagementPage: React.FC = () => {
     setMoveBoxCode(boxCode);
     setMoveBoxFromLocationId(fromLocationId);
     setMoveBoxDestinationId('');
-    setMoveBoxComment('');
     setMoveBoxError(null);
     setShowMoveBoxModal(true);
   };
@@ -307,7 +317,6 @@ const BoxManagementPage: React.FC = () => {
     setMoveBoxCode('');
     setMoveBoxFromLocationId(null);
     setMoveBoxDestinationId('');
-    setMoveBoxComment('');
     setMoveBoxError(null);
   };
 

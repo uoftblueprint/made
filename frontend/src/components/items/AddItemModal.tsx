@@ -172,7 +172,19 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => {
+            const updates: Partial<FormData> = { [name]: value };
+
+            // Auto-update location when box is selected
+            if (name === 'box' && value !== '') {
+                const selectedBox = boxes.find(b => b.id === Number(value));
+                if (selectedBox) {
+                    updates.current_location = String(selectedBox.location);
+                }
+            }
+
+            return { ...prev, ...updates };
+        });
         if (errors[name as keyof FormErrors]) {
             setErrors((prev) => ({ ...prev, [name]: undefined }));
         }

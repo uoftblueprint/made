@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Edit2, MapPin, Check, X, AlertTriangle, ShieldCheck, ArrowRightLeft } from 'lucide-react';
-import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
 import { requestsApi } from '../../api/requests.api';
 import { useItemRequests } from '../../actions/useRequests';
@@ -26,14 +26,30 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
-interface ItemDetails extends AdminCollectionItem {
-  date_of_entry?: string;
-  condition?: string;
-  is_complete?: string;
-  is_functional?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+const STATUS_LABELS: Record<string, string> = {
+  AVAILABLE: 'Available',
+  IN_TRANSIT: 'In Transit',
+  CHECKED_OUT: 'Checked Out',
+  MAINTENANCE: 'Maintenance',
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  SOFTWARE: 'Software',
+  HARDWARE: 'Hardware',
+  NON_ELECTRONIC: 'Non-Electronic',
+};
+
+const getStatusLabel = (status?: string) => {
+  if (!status) return '--';
+  return STATUS_LABELS[status] || status;
+};
+
+const getTypeLabel = (type?: string) => {
+  if (!type) return '--';
+  return TYPE_LABELS[type] || type;
+};
+
+type ItemDetails = AdminCollectionItem;
 
 const ItemDetailsPage: React.FC = () => {
   const { isAdmin, isSeniorVolunteer } = useAuth();
@@ -52,7 +68,6 @@ const ItemDetailsPage: React.FC = () => {
   const [moveDestinationType, setMoveDestinationType] = useState<'location' | 'box'>('location');
   const [moveToLocationId, setMoveToLocationId] = useState<number | ''>('');
   const [moveToBoxId, setMoveToBoxId] = useState<number | ''>('');
-  const [moveComment, setMoveComment] = useState('');
   const [moveError, setMoveError] = useState<string | null>(null);
   const [movingItem, setMovingItem] = useState(false);
   const [moveSuccessMessage, setMoveSuccessMessage] = useState<string | null>(null);
@@ -161,7 +176,6 @@ const ItemDetailsPage: React.FC = () => {
     setMoveDestinationType('location');
     setMoveToLocationId('');
     setMoveToBoxId('');
-    setMoveComment('');
     setMoveError(null);
     setShowMoveModal(true);
   };
@@ -176,7 +190,7 @@ const ItemDetailsPage: React.FC = () => {
 
     let toLocationId: number;
     let toBoxId: number | null = null;
-    let fromBoxId: number | null = item.box ?? null;
+    const fromBoxId: number | null = item.box ?? null;
 
     if (moveDestinationType === 'box') {
       if (moveToBoxId === '') return;
@@ -265,9 +279,9 @@ const ItemDetailsPage: React.FC = () => {
           {isInTransit && (
             <span className="item-badge in-transit">In Transit</span>
           )}
-          {isUnverified && (
+          {!isInTransit && isUnverified && (
             <span className="item-badge unverified">
-              <AlertTriangle size={12} /> Unverified Location
+              <AlertTriangle size={12} /> Unverified
             </span>
           )}
           <span className="item-badge type hidden md:block">
@@ -354,7 +368,7 @@ const ItemDetailsPage: React.FC = () => {
               </div>
               <div className="item-field">
                 <span className="item-field-label">Type</span>
-                <span className="item-field-value">{item.item_type || '--'}</span>
+                <span className="item-field-value">{getTypeLabel(item.item_type)}</span>
               </div>
             </div>
           </div>
@@ -396,7 +410,7 @@ const ItemDetailsPage: React.FC = () => {
             <div className="item-field">
               <span className="item-field-label">Status</span>
               <span className="item-field-value">
-                {item.status || '--'}
+                {getStatusLabel(item.status)}
               </span>
             </div>
           </div>

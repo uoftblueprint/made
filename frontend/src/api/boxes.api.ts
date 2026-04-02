@@ -66,4 +66,11 @@ export const boxesApi = {
     const response = await apiClient.post(`/boxes/${id}/mark-arrived/`, data);
     return response.data;
   },
+
+  getByBoxCode: async (boxCode: string): Promise<Box | null> => {
+    const response = await apiClient.get('/boxes/');
+    const data = response.data;
+    const boxes: Box[] = Array.isArray(data) ? data : data?.results ?? [];
+    return boxes.find((box) => box.box_code === boxCode) ?? null;
+  },
 };

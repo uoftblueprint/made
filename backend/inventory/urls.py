@@ -3,7 +3,6 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     CollectionItemViewSet,
     PublicCollectionItemViewSet,
-    AdminCollectionItemViewSet,
     dashboard_stats,
     export_items,
 )

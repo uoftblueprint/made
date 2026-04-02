@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts';
-import { User } from 'lucide-react';
+import { User, Scan } from 'lucide-react';
+import ScanModal from '../common/ScanModal';
 import './Header.css';
 
 const Header = () => {
   const { isAuthenticated, isAdmin, isVolunteer, user } = useAuth();
   const location = useLocation();
+  const [isScanModalOpen, setIsScanModalOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
@@ -53,6 +56,18 @@ const Header = () => {
       </div>
 
       <div className="header-right">
+        {/* Scan Button - only for authenticated users */}
+        {isAuthenticated && (isVolunteer || isAdmin) && (
+          <button
+            className="header-scan-btn"
+            onClick={() => setIsScanModalOpen(true)}
+            title="Scan MADE ID"
+          >
+            <Scan size={18} />
+            <span className="header-scan-text">Scan</span>
+          </button>
+        )}
+
         {!isAuthenticated ? (
           <Link to="/login" className="header-link">Login</Link>
         ) : (
@@ -67,6 +82,12 @@ const Header = () => {
           </>
         )}
       </div>
+
+      {/* Scan Modal */}
+      <ScanModal
+        isOpen={isScanModalOpen}
+        onClose={() => setIsScanModalOpen(false)}
+      />
     </nav>
   );
 };

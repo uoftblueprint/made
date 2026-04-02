@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { AddItemModal, EditItemModal, DeleteItemDialog, ExportModal } from '../../components/items';
 import { itemsApi } from '../../api/items.api';
 import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useQueryState } from '../../hooks/useQueryState';
 import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check, AlertTriangle } from 'lucide-react';
 import Button from '../../components/common/Button';
@@ -59,7 +59,11 @@ const getLocationLabel = (locationType: InventoryItem['location_type'], location
   return typeLabel;
 };
 
-const getStatusLabel = (status?: ItemStatus) => {
+const getStatusLabel = (status?: ItemStatus, isVerified?: boolean) => {
+  // If unverified (regardless of status), show "Unverified"
+  if (isVerified === false) {
+    return 'Unverified';
+  }
   const labels: Record<ItemStatus, string> = {
     AVAILABLE: 'Available',
     IN_TRANSIT: 'In Transit',
@@ -96,6 +100,7 @@ const statusOptions = [
   { value: '', label: 'All Status' },
   { value: 'AVAILABLE', label: 'Available' },
   { value: 'IN_TRANSIT', label: 'In Transit' },
+  { value: 'UNVERIFIED', label: 'Unverified' },
   { value: 'CHECKED_OUT', label: 'Checked Out' },
   { value: 'MAINTENANCE', label: 'Maintenance' },
 ] as const;
@@ -143,6 +148,7 @@ const MobileFilterGroup: React.FC<MobileFilterGroupProps> = ({
 };
 
 const AdminCataloguePage: React.FC = () => {
+  const location = useLocation();
   const { isAdmin, isSeniorVolunteer } = useAuth();
   const canEdit = isAdmin || isSeniorVolunteer;
   const [searchQuery, setSearchQuery] = useQueryState('q');
@@ -156,6 +162,17 @@ const AdminCataloguePage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Handle navigation state to open Add Item modal from dashboard
+  useEffect(() => {
+    const state = location.state as { openAddModal?: boolean } | null;
+    if (state?.openAddModal) {
+      window.scrollTo(0, 0);
+      setIsAddModalOpen(true);
+      // Clear the state so it doesn't reopen on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
@@ -191,10 +208,12 @@ const AdminCataloguePage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
+      // Handle UNVERIFIED as a special client-side filter (not a real backend status)
+      const isUnverifiedFilter = statusFilter === 'UNVERIFIED';
       const params: import('../../lib/filters').ItemFilter = {
         search: debouncedSearch || undefined,
         item_type: (typeFilter as import('../../lib/types').ItemType) || undefined,
-        status: (statusFilter as import('../../lib/types').ItemStatus) || undefined,
+        status: isUnverifiedFilter ? undefined : (statusFilter as import('../../lib/types').ItemStatus) || undefined,
         location_type: (locationFilter as import('../../lib/types').LocationInfo['location_type']) || undefined,
         box__box_code: debouncedBoxCode || undefined,
         working_condition:
@@ -202,7 +221,11 @@ const AdminCataloguePage: React.FC = () => {
           workingConditionFilter === 'false' ? false :
           undefined,
       };
-      const apiItems = await itemsApi.getAll(params);
+      let apiItems = await itemsApi.getAll(params);
+      // Client-side filter for unverified items
+      if (isUnverifiedFilter) {
+        apiItems = apiItems.filter(item => item.is_verified === false);
+      }
       setItems(apiItems || []);
     } catch (err) {
       console.error('Failed to fetch items:', err);
@@ -512,15 +535,11 @@ const AdminCataloguePage: React.FC = () => {
                   </td>
                   <td>
                     <span
-                      className={`status-badge ${display.status.toLowerCase().replace('_', '-')}`}
+                      className={`status-badge ${!display.is_verified ? 'unverified' : display.status.toLowerCase().replace('_', '-')}`}
                     >
-                      {display.status ? getStatusLabel(display.status) : 'Unknown'}
+                      {!display.is_verified && <AlertTriangle size={12} />}
+                      {getStatusLabel(display.status, display.is_verified)}
                     </span>
-                    {!display.is_verified && (
-                      <span className="status-badge unverified" title="Location not verified">
-                        <AlertTriangle size={12} /> Unverified
-                      </span>
-                    )}
                   </td>
                   <td>
                     <div className="catalogue-actions">
