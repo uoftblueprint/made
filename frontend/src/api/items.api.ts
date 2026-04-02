@@ -39,6 +39,11 @@ export const itemsApi = {
     if (params?.item_type) queryParams.item_type = params.item_type;
     if (params?.status) queryParams.status = params.status;
     if (params?.location_type) queryParams.location_type = params.location_type;
+    if (params?.box) queryParams.box = String(params.box);
+    if (params?.box__box_code) queryParams['box__box_code'] = params.box__box_code;
+    if (params?.working_condition !== undefined && params?.working_condition !== null) {
+      queryParams.working_condition = params.working_condition ? 'true' : 'false';
+    }
 
     queryParams.page_size = '10000';
 

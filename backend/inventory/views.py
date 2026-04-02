@@ -26,6 +26,16 @@ class CollectionItemViewSet(viewsets.ModelViewSet):
     """
 
     queryset = CollectionItem.objects.all().select_related("box", "current_location")
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = [
+        "title",
+        "item_code",
+        "platform",
+        "box__box_code",
+        "box__label",
+        "description",
+    ]
+    ordering_fields = ["title", "platform", "created_at"]
 
     def get_serializer_class(self):
         return AdminCollectionItemSerializer
@@ -35,6 +45,56 @@ class CollectionItemViewSet(viewsets.ModelViewSet):
         if self.action == "destroy":
             return [IsAdmin()]
         return [IsVolunteer()]
+
+    def get_queryset(self):
+        """
+        Filter queryset based on query parameters.
+        Supports filtering by platform, is_on_floor, item_type, status,
+        location_type, box, box__box_code, and working_condition.
+        """
+        queryset = super().get_queryset()
+
+        platform = self.request.query_params.get("platform", None)
+        if platform:
+            queryset = queryset.filter(platform=platform)
+
+        is_on_floor = self.request.query_params.get("is_on_floor", None)
+        if is_on_floor is not None:
+            is_on_floor_str = is_on_floor.strip().lower()
+            if is_on_floor_str in ("false", "0", "no"):
+                queryset = queryset.filter(is_on_floor=False)
+            elif is_on_floor_str in ("true", "1", "yes"):
+                queryset = queryset.filter(is_on_floor=True)
+
+        item_type = self.request.query_params.get("item_type", None)
+        if item_type:
+            queryset = queryset.filter(item_type=item_type)
+
+        item_status = self.request.query_params.get("status", None)
+        if item_status:
+            queryset = queryset.filter(status=item_status)
+
+        location_type = self.request.query_params.get("location_type", None)
+        if location_type:
+            queryset = queryset.filter(current_location__location_type=location_type)
+
+        box_id = self.request.query_params.get("box", None)
+        if box_id:
+            queryset = queryset.filter(box__id=box_id)
+
+        box_code = self.request.query_params.get("box__box_code", None)
+        if box_code:
+            queryset = queryset.filter(box__box_code__icontains=box_code)
+
+        working_condition = self.request.query_params.get("working_condition", None)
+        if working_condition is not None:
+            wc_str = working_condition.strip().lower()
+            if wc_str in ("false", "0", "no"):
+                queryset = queryset.filter(working_condition=False)
+            elif wc_str in ("true", "1", "yes"):
+                queryset = queryset.filter(working_condition=True)
+
+        return queryset
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -138,7 +198,7 @@ class PublicCollectionItemViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PublicCollectionItemSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ["title", "description", "item_code"]
+    search_fields = ["title", "description", "item_code", "platform"]
     ordering_fields = ["title", "platform", "created_at"]
 
     def get_queryset(self):
