@@ -25,9 +25,9 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <div className="h-screen flex flex-col overflow-hidden">
+          <div className="min-h-screen flex flex-col">
             <Header />
-            <main className='w-full flex-1 flex flex-col min-h-0 overflow-auto'>
+            <main className='w-full flex-1 flex flex-col'>
               <Routes >
                 {/* --- Public Routes --- */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -82,8 +82,8 @@ const App: React.FC = () => {
                 {/* --- Catch-all 404 Route --- */}
                 {/* <Route path="*" element={<NotFoundPage />} /> */}
               </Routes>
+              <Footer />
             </main>
-            <Footer />
           </div>
         </AuthProvider>
       </BrowserRouter>
