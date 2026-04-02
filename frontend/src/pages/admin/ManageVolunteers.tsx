@@ -1,4 +1,4 @@
-import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions } from '../../actions/useVolunteers';
+import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval } from '../../actions/useVolunteers';
 import { useState, useMemo } from 'react'
 import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown } from 'lucide-react';
 import Button from '../../components/common/Button';
@@ -40,6 +40,7 @@ const ManageVolunteers = () => {
     const { data: options } = useVolunteerOptions();
     const approveMutation = useUpdateVolunteerStatus();
     const extendMutation = useExtendVolunteerAccess();
+    const toggleMoveApprovalMutation = useToggleMoveApproval();
 
     const openExpiryModal = (next: ExpiryModal) => {
         if (!next) return;
@@ -227,6 +228,7 @@ const ManageVolunteers = () => {
                             <th>Granted Date</th>
                             <th>Expires</th>
                             <th>Status</th>
+                            <th>Move Approval</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -265,6 +267,30 @@ const ManageVolunteers = () => {
                                         {volunteer.status === 'PENDING' && <Clock size={16} className="volunteer-status-icon" />}
                                         {getStatusLabel(volunteer.status)}
                                     </span>
+                                </td>
+                                <td>
+                                    {volunteer.status === 'APPROVED' && volunteer.user_id ? (
+                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={volunteer.requires_move_approval ?? false}
+                                                onChange={(e) => {
+                                                    if (volunteer.user_id) {
+                                                        toggleMoveApprovalMutation.mutate({
+                                                            userId: volunteer.user_id,
+                                                            requires_move_approval: e.target.checked,
+                                                        });
+                                                    }
+                                                }}
+                                                disabled={toggleMoveApprovalMutation.isPending}
+                                            />
+                                            <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                                                {volunteer.requires_move_approval ? 'Required' : 'Not required'}
+                                            </span>
+                                        </label>
+                                    ) : (
+                                        <span style={{ fontSize: '0.85rem', color: '#9ca3af' }}>--</span>
+                                    )}
                                 </td>
                                 <td>
                                     <div className="volunteers-actions">

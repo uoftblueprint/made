@@ -33,6 +33,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
     item_code = serializers.CharField(source="item.item_code", read_only=True)
     item_title = serializers.CharField(source="item.title", read_only=True)
     item_platform = serializers.CharField(source="item.platform", read_only=True)
+    item_is_verified = serializers.BooleanField(source="item.is_verified", read_only=True)
     from_location_name = serializers.CharField(source="from_location.name", read_only=True)
     to_location_name = serializers.CharField(source="to_location.name", read_only=True)
 
@@ -44,6 +45,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "item_code",
             "item_title",
             "item_platform",
+            "item_is_verified",
             "requested_by",
             "requested_by_username",
             "from_location",

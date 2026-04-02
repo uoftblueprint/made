@@ -83,7 +83,14 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(requested_by=self.request.user)
+        move_request = serializer.save(requested_by=self.request.user)
+
+        # If the user does not require move approval, complete immediately as unverified
+        if not self.request.user.requires_move_approval:
+            move_request.complete_unverified(
+                user=self.request.user,
+                comment="Auto-completed: volunteer does not require move approval",
+            )
 
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
     def approve(self, request, pk=None):
@@ -112,6 +119,43 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
 
         comment = request.data.get("comment", "")
         move_request.reject(admin_user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    def verify(self, request, pk=None):
+        """Verify an unverified movement request and mark the item as verified."""
+        from inventory.models import ItemHistory
+
+        move_request = self.get_object()
+
+        if move_request.status != "COMPLETED_UNVERIFIED":
+            return Response(
+                {"detail": "Only completed unverified requests can be verified."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Mark item as verified
+        move_request.item.is_verified = True
+        move_request.item.save(update_fields=["is_verified", "updated_at"])
+
+        # Update movement request status
+        move_request.status = "APPROVED"
+        move_request.admin = request.user
+        move_request.admin_comment = request.data.get("comment", "")
+        move_request.save()
+
+        # Create VERIFIED history event
+        ItemHistory.objects.create(
+            item=move_request.item,
+            event_type="VERIFIED",
+            from_location=move_request.from_location,
+            to_location=move_request.to_location,
+            movement_request=move_request,
+            acted_by=request.user,
+            notes=request.data.get("comment", "") or "Location verified by admin",
+        )
+
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

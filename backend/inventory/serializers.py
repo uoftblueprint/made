@@ -97,6 +97,7 @@ class CollectionItemSerializer(serializers.ModelSerializer):
             "current_location",
             "is_public_visible",
             "is_on_floor",
+            "is_verified",
             "created_at",
             "updated_at",
         ]
@@ -112,6 +113,7 @@ class CollectionItemSerializer(serializers.ModelSerializer):
             "current_location",
             "is_public_visible",
             "is_on_floor",
+            "is_verified",
             "created_at",
             "updated_at",
         ]
@@ -198,6 +200,7 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
             "current_location",
             "is_public_visible",
             "is_on_floor",
+            "is_verified",
             "box",
         ]
         read_only_fields = ["id"]

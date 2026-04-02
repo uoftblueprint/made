@@ -47,6 +47,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     access_expires_at = models.DateTimeField(null=True, blank=True, help_text="Null = no expiry (for admins etc.)")
     is_active = models.BooleanField(default=True)
+    requires_move_approval = models.BooleanField(
+        default=False,
+        help_text="If True, movement requests require admin approval before location updates",
+    )
 
     # Required for Django admin
     is_staff = models.BooleanField(default=False)

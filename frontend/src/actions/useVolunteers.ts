@@ -51,6 +51,18 @@ export const useExtendVolunteerAccess = (onSuccessCallback?: () => void, onError
   });
 };
 
+export const useToggleMoveApproval = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, requires_move_approval }: { userId: number; requires_move_approval: boolean }) => {
+      await apiClient.patch(`/users/${userId}/`, { requires_move_approval });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
+    },
+  });
+};
+
 export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError) => void) => {
   return useMutation<void, AxiosError, VolunteerApplicationInput>({
     mutationFn: async (applicationData) => {

@@ -3,7 +3,7 @@ import { AddItemModal, EditItemModal, DeleteItemDialog, ExportModal } from '../.
 import { itemsApi } from '../../api/items.api';
 import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types';
 import { Link } from 'react-router-dom';
-import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check } from 'lucide-react';
+import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check, AlertTriangle } from 'lucide-react';
 import Button from '../../components/common/Button';
 import './AdminCataloguePage.css';
 
@@ -20,6 +20,7 @@ interface InventoryItem {
   location_type: 'FLOOR' | 'STORAGE' | 'EVENT' | 'OTHER';
   location_name: string;
   box_code: string;
+  is_verified: boolean;
 }
 
 const mapApiToInventoryItem = (item: AdminCollectionItem): InventoryItem => ({
@@ -35,6 +36,7 @@ const mapApiToInventoryItem = (item: AdminCollectionItem): InventoryItem => ({
   location_type: item.current_location?.location_type ?? 'OTHER',
   location_name: item.current_location?.name ?? 'Unknown',
   box_code: item.box ? String(item.box) : '--',
+  is_verified: item.is_verified !== false,
 });
 
 const getLocationLabel = (locationType: InventoryItem['location_type'], locationName: string) => {
@@ -423,6 +425,11 @@ const AdminCataloguePage: React.FC = () => {
                     >
                       {display.status ? getStatusLabel(display.status) : 'Unknown'}
                     </span>
+                    {!display.is_verified && (
+                      <span className="status-badge unverified" title="Location not verified">
+                        <AlertTriangle size={12} /> Unverified
+                      </span>
+                    )}
                   </td>
                   <td>
                     <div className="catalogue-actions">
@@ -469,6 +476,11 @@ const AdminCataloguePage: React.FC = () => {
                   <span className="catalogue-mobile-type-pill">
                     {getTypeLabel(display.item_type)}
                   </span>
+                  {!display.is_verified && (
+                    <span className="status-badge unverified" style={{ fontSize: '0.7rem', padding: '2px 6px' }}>
+                      <AlertTriangle size={10} /> Unverified
+                    </span>
+                  )}
 
                   <span className="catalogue-mobile-location">
                     <MapPin size={16} />
