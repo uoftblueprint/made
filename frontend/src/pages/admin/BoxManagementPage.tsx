@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import axios from 'axios';
-import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft } from 'lucide-react';
+import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
-import { useBoxDetail } from '../../actions/useBoxes';
+import { useBoxes, useBoxDetail } from '../../actions/useBoxes';
 import type { CreateLocationData } from '../../api/locations.api';
+import type { BoxDetail } from '../../api/boxes.api';
 import { boxesApi } from '../../api/boxes.api';
 import { boxRequestsApi } from '../../api/requests.api';
 import Button from '../../components/common/Button';
@@ -34,7 +35,14 @@ const BoxManagementPage: React.FC = () => {
   const [markArrivedError, setMarkArrivedError] = useState<string | null>(null);
   const [markingArrived, setMarkingArrived] = useState(false);
 
+  // All Containers tab state
+  const [containerSearch, setContainerSearch] = useState('');
+  const [expandedBoxId, setExpandedBoxId] = useState<number | null>(null);
+  const [expandedBoxDetail, setExpandedBoxDetail] = useState<BoxDetail | null>(null);
+  const [expandedBoxLoading, setExpandedBoxLoading] = useState(false);
+
   // Move Box modal state
+  const [moveBoxSuccessMessage, setMoveBoxSuccessMessage] = useState<string | null>(null);
   const [showMoveBoxModal, setShowMoveBoxModal] = useState(false);
   const [moveBoxId, setMoveBoxId] = useState<number | null>(null);
   const [moveBoxCode, setMoveBoxCode] = useState('');
@@ -47,6 +55,7 @@ const BoxManagementPage: React.FC = () => {
   const { locations, loading: locationsLoading, refetch: refetchLocations } = useLocations();
   const { location: selectedLocation, loading: locationLoading, refetch: refetchSelectedLocation } = useLocationDetail(selectedLocationId);
   const { box: selectedBox, loading: boxLoading, refetch: refetchSelectedBox } = useBoxDetail(selectedBoxId);
+  const { boxes: allBoxes, loading: boxesLoading, refetch: refetchAllBoxes } = useBoxes();
   const { createLocation, creating: creatingLocation, error: createError } = useCreateLocation();
 
   const handleAddLocation = async () => {
@@ -83,6 +92,46 @@ const BoxManagementPage: React.FC = () => {
     if (!Array.isArray(locations)) return 0;
     return locations.reduce((sum, loc) => sum + loc.item_count, 0);
   }, [locations]);
+
+  const locationMap = useMemo(() => {
+    const map = new Map<number, string>();
+    if (Array.isArray(locations)) {
+      locations.forEach(loc => map.set(loc.id, loc.name));
+    }
+    return map;
+  }, [locations]);
+
+  const filteredBoxes = useMemo(() => {
+    if (!Array.isArray(allBoxes)) return [];
+    const query = containerSearch.toLowerCase().trim();
+    if (!query) return allBoxes;
+    return allBoxes.filter(box => {
+      const codeMatch = box.box_code.toLowerCase().includes(query);
+      const labelMatch = box.label?.toLowerCase().includes(query);
+      const locationName = locationMap.get(box.location) || '';
+      const locationMatch = locationName.toLowerCase().includes(query);
+      return codeMatch || labelMatch || locationMatch;
+    });
+  }, [allBoxes, containerSearch, locationMap]);
+
+  const handleToggleExpandBox = async (boxId: number) => {
+    if (expandedBoxId === boxId) {
+      setExpandedBoxId(null);
+      setExpandedBoxDetail(null);
+      return;
+    }
+    setExpandedBoxId(boxId);
+    setExpandedBoxDetail(null);
+    setExpandedBoxLoading(true);
+    try {
+      const detail = await boxesApi.getById(boxId);
+      setExpandedBoxDetail(detail);
+    } catch {
+      // silently fail, user can retry
+    } finally {
+      setExpandedBoxLoading(false);
+    }
+  };
 
   const handleLocationClick = (locationId: number) => {
     setSelectedLocationId(locationId);
@@ -152,13 +201,19 @@ const BoxManagementPage: React.FC = () => {
     setMoveBoxError(null);
 
     try {
-      await boxRequestsApi.create({
+      const response = await boxRequestsApi.create({
         box: moveBoxId,
         from_location: moveBoxFromLocationId,
         to_location: moveBoxDestinationId,
       });
       handleCloseMoveBoxModal();
-      await Promise.all([refetchLocations(), refetchSelectedLocation()]);
+      if (response.status === 'COMPLETED_UNVERIFIED') {
+        setMoveBoxSuccessMessage('Box moved successfully.');
+      } else {
+        setMoveBoxSuccessMessage('Movement request submitted for approval.');
+      }
+      setTimeout(() => setMoveBoxSuccessMessage(null), 5000);
+      await Promise.all([refetchLocations(), refetchSelectedLocation(), refetchAllBoxes()]);
     } catch (err) {
       setMoveBoxError(getApiErrorMessage(err, 'Failed to create box movement request.'));
     } finally {
@@ -194,208 +249,329 @@ const BoxManagementPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="box-management-content">
-        <div className="box-management-sidebar">
-          <div className="box-management-sidebar-header">
-            <Archive size={16} />
-            <span>All Locations ({locationsLoading ? '...' : (Array.isArray(locations) ? locations.length : 0)})</span>
+      {moveBoxSuccessMessage && (
+        <div className="box-management-success-banner">{moveBoxSuccessMessage}</div>
+      )}
+
+      {activeTab === 'containers' ? (
+        <div className="all-containers-view">
+          <div className="all-containers-search-row">
+            <div className="all-containers-search-wrapper">
+              <Search size={16} className="all-containers-search-icon" />
+              <input
+                type="text"
+                className="all-containers-search"
+                placeholder="Search by box code, label, or location..."
+                value={containerSearch}
+                onChange={(e) => setContainerSearch(e.target.value)}
+              />
+            </div>
+            <span className="all-containers-count">
+              {filteredBoxes.length} container{filteredBoxes.length !== 1 ? 's' : ''}
+            </span>
           </div>
-          
-          {locationsLoading ? (
-            <div className="box-management-loading">Loading locations...</div>
-          ) : !Array.isArray(locations) || locations.length === 0 ? (
-            <div className="box-management-empty-state">
-              <p>No locations found.</p>
+
+          {boxesLoading ? (
+            <div className="box-management-loading-dark">Loading containers...</div>
+          ) : filteredBoxes.length === 0 ? (
+            <div className="all-containers-empty">
+              <Package size={32} />
+              <p>{containerSearch ? 'No containers match your search.' : 'No containers found.'}</p>
             </div>
           ) : (
-            <ul className="box-management-location-list">
-              {locations.map((location) => (
-                <li 
-                  key={location.id}
-                  className={`box-management-location-item ${selectedLocationId === location.id ? 'active' : ''}`}
-                  onClick={() => handleLocationClick(location.id)}
-                >
-                  <div className="location-item-info">
-                    <span className="location-item-name">{location.name}</span>
-                    <span className="location-item-type">{location.location_type_display}</span>
-                  </div>
-                  <div className="location-item-counts">
-                    <span>{location.box_count} boxes</span>
-                    <span>{location.item_count} items</span>
-                  </div>
-                  <ChevronRight size={16} className="location-item-arrow" />
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <div className="box-management-summary">
-            <h4>System Summary</h4>
-            <div className="box-management-summary-item">
-              <span>Total Locations</span>
-              <span>{locationsLoading ? '--' : locations.length}</span>
-            </div>
-            <div className="box-management-summary-item">
-              <span>Total Containers</span>
-              <span>{locationsLoading ? '--' : totalBoxes}</span>
-            </div>
-            <div className="box-management-summary-item">
-              <span>Total Items</span>
-              <span>{locationsLoading ? '--' : totalItems}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="box-management-main">
-          {!selectedLocationId ? (
-            <div className="box-management-placeholder">
-              <MapPin size={48} />
-              <h3>Select a Location</h3>
-              <p>Choose a location from the sidebar to view its containers and items.</p>
-            </div>
-          ) : locationLoading ? (
-            <div className="box-management-loading">Loading location details...</div>
-          ) : selectedLocation ? (
-            <div className="box-management-detail">
-              <div className="box-management-detail-header">
-                <h2>{selectedLocation.name}</h2>
-                <span className="location-type-badge">{selectedLocation.location_type_display}</span>
-              </div>
-              {selectedLocation.description && (
-                <p className="box-management-detail-description">{selectedLocation.description}</p>
-              )}
-              
-              <h3 className="box-management-section-title">
-                Boxes ({selectedLocation.boxes?.length || 0})
-              </h3>
-              
-              {selectedLocation.boxes?.length === 0 ? (
-                <div className="box-management-empty-boxes">
-                  <Package size={32} />
-                  <p>No boxes in this location</p>
-                </div>
-              ) : (
-                <div className="box-management-boxes-grid">
-                  {selectedLocation.boxes?.map((box) => (
-                    <div
-                      key={box.id}
-                      className={`box-card ${selectedBoxId === box.id ? 'active' : ''}`}
-                      onClick={() => handleBoxClick(box.id)}
+            <table className="all-containers-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Box Code</th>
+                  <th>Label</th>
+                  <th>Location</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredBoxes.map((box) => (
+                  <React.Fragment key={box.id}>
+                    <tr
+                      className={`all-containers-row ${expandedBoxId === box.id ? 'expanded' : ''}`}
+                      onClick={() => handleToggleExpandBox(box.id)}
                     >
-                      <div className="box-card-header">
-                        <Package size={20} />
-                        <span className="box-card-code">{box.box_code}</span>
+                      <td className="all-containers-expand-cell">
+                        <ChevronDown
+                          size={16}
+                          className={`all-containers-expand-icon ${expandedBoxId === box.id ? 'rotated' : ''}`}
+                        />
+                      </td>
+                      <td><strong>{box.box_code}</strong></td>
+                      <td>{box.label || '--'}</td>
+                      <td>{locationMap.get(box.location) || 'Unknown'}</td>
+                      <td>
                         <Button
                           variant="outline-black"
                           size="xs"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleOpenMoveBoxModal(box.id, box.box_code, selectedLocation!.id);
+                            handleOpenMoveBoxModal(box.id, box.box_code, box.location);
                           }}
                           title="Move Box"
-                          style={{ marginLeft: 'auto' }}
                         >
                           <ArrowRightLeft size={14} />
                         </Button>
-                      </div>
-                      {box.label && <p className="box-card-label">{box.label}</p>}
-                      {box.description && <p className="box-card-description">{box.description}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
+                      </td>
+                    </tr>
+                    {expandedBoxId === box.id && (
+                      <tr className="all-containers-detail-row">
+                        <td colSpan={5}>
+                          <div className="all-containers-detail-content">
+                            {expandedBoxLoading ? (
+                              <p className="all-containers-detail-loading">Loading items...</p>
+                            ) : expandedBoxDetail ? (
+                              expandedBoxDetail.items?.length === 0 ? (
+                                <p className="all-containers-detail-empty">No items in this box</p>
+                              ) : (
+                                <table className="box-management-items-table">
+                                  <thead>
+                                    <tr>
+                                      <th>Item Code</th>
+                                      <th>Title</th>
+                                      <th>Platform</th>
+                                      <th>Type</th>
+                                      <th>Status</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {expandedBoxDetail.items?.map((item) => (
+                                      <tr key={item.id}>
+                                        <td><strong>{item.item_code}</strong></td>
+                                        <td>{item.title}</td>
+                                        <td>{item.platform || '--'}</td>
+                                        <td>{item.item_type}</td>
+                                        <td>
+                                          <span className={`item-status ${item.working_condition ? 'working' : 'not-working'}`}>
+                                            {item.working_condition ? 'Working' : 'Not Working'}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )
+                            ) : (
+                              <p className="all-containers-detail-empty">Failed to load items.</p>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      ) : (
+        <div className="box-management-content">
+          <div className="box-management-sidebar">
+            <div className="box-management-sidebar-header">
+              <Archive size={16} />
+              <span>All Locations ({locationsLoading ? '...' : (Array.isArray(locations) ? locations.length : 0)})</span>
+            </div>
 
-              {/* Box Details */}
-              {selectedBoxId && (
-                <div className="box-management-box-detail">
-                  {boxLoading ? (
-                    <div className="box-management-loading">Loading box details...</div>
-                  ) : selectedBox ? (
-                    <>
-                      <div className="box-arrival-panel">
-                        {markArrivedError && <p className="box-arrival-error">{markArrivedError}</p>}
-                        <div className="box-arrival-controls">
-                          <select
-                            value={arrivalDestinationId}
-                            onChange={(e) => setArrivalDestinationId(e.target.value ? Number(e.target.value) : '')}
-                            disabled={markingArrived}
-                          >
-                            <option value="">Select destination location</option>
-                            {locations
-                              .filter((location) => location.id !== selectedLocationId)
-                              .map((location) => (
-                                <option key={location.id} value={location.id}>
-                                  {location.name} ({location.location_type_display})
-                                </option>
-                              ))}
-                          </select>
-                          <input
-                            type="text"
-                            value={arrivalComment}
-                            onChange={(e) => setArrivalComment(e.target.value)}
-                            placeholder="Optional note"
-                            disabled={markingArrived}
-                          />
+            {locationsLoading ? (
+              <div className="box-management-loading">Loading locations...</div>
+            ) : !Array.isArray(locations) || locations.length === 0 ? (
+              <div className="box-management-empty-state">
+                <p>No locations found.</p>
+              </div>
+            ) : (
+              <ul className="box-management-location-list">
+                {locations.map((location) => (
+                  <li
+                    key={location.id}
+                    className={`box-management-location-item ${selectedLocationId === location.id ? 'active' : ''}`}
+                    onClick={() => handleLocationClick(location.id)}
+                  >
+                    <div className="location-item-info">
+                      <span className="location-item-name">{location.name}</span>
+                      <span className="location-item-type">{location.location_type_display}</span>
+                    </div>
+                    <div className="location-item-counts">
+                      <span>{location.box_count} boxes</span>
+                      <span>{location.item_count} items</span>
+                    </div>
+                    <ChevronRight size={16} className="location-item-arrow" />
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="box-management-summary">
+              <h4>System Summary</h4>
+              <div className="box-management-summary-item">
+                <span>Total Locations</span>
+                <span>{locationsLoading ? '--' : locations.length}</span>
+              </div>
+              <div className="box-management-summary-item">
+                <span>Total Containers</span>
+                <span>{locationsLoading ? '--' : totalBoxes}</span>
+              </div>
+              <div className="box-management-summary-item">
+                <span>Total Items</span>
+                <span>{locationsLoading ? '--' : totalItems}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="box-management-main">
+            {!selectedLocationId ? (
+              <div className="box-management-placeholder">
+                <MapPin size={48} />
+                <h3>Select a Location</h3>
+                <p>Choose a location from the sidebar to view its containers and items.</p>
+              </div>
+            ) : locationLoading ? (
+              <div className="box-management-loading">Loading location details...</div>
+            ) : selectedLocation ? (
+              <div className="box-management-detail">
+                <div className="box-management-detail-header">
+                  <h2>{selectedLocation.name}</h2>
+                  <span className="location-type-badge">{selectedLocation.location_type_display}</span>
+                </div>
+                {selectedLocation.description && (
+                  <p className="box-management-detail-description">{selectedLocation.description}</p>
+                )}
+
+                <h3 className="box-management-section-title">
+                  Boxes ({selectedLocation.boxes?.length || 0})
+                </h3>
+
+                {selectedLocation.boxes?.length === 0 ? (
+                  <div className="box-management-empty-boxes">
+                    <Package size={32} />
+                    <p>No boxes in this location</p>
+                  </div>
+                ) : (
+                  <div className="box-management-boxes-grid">
+                    {selectedLocation.boxes?.map((box) => (
+                      <div
+                        key={box.id}
+                        className={`box-card ${selectedBoxId === box.id ? 'active' : ''}`}
+                        onClick={() => handleBoxClick(box.id)}
+                      >
+                        <div className="box-card-header">
+                          <Package size={20} />
+                          <span className="box-card-code">{box.box_code}</span>
                           <Button
-                            variant="primary"
-                            size="md"
-                            onClick={handleMarkBoxArrived}
-                            disabled={markingArrived || arrivalDestinationId === ''}
+                            variant="outline-black"
+                            size="xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenMoveBoxModal(box.id, box.box_code, selectedLocation!.id);
+                            }}
+                            title="Move Box"
+                            style={{ marginLeft: 'auto' }}
                           >
-                            {markingArrived ? 'Updating...' : 'Mark as Arrived'}
+                            <ArrowRightLeft size={14} />
                           </Button>
                         </div>
+                        {box.label && <p className="box-card-label">{box.label}</p>}
+                        {box.description && <p className="box-card-description">{box.description}</p>}
                       </div>
-                      <h3 className="box-management-section-title">
-                        Items in {selectedBox.box_code} ({selectedBox.items?.length || 0})
-                      </h3>
-                      {selectedBox.items?.length === 0 ? (
-                        <p className="box-management-empty-items">No items in this box</p>
-                      ) : (
-                        <table className="box-management-items-table">
-                          <thead>
-                            <tr>
-                              <th>Item Code</th>
-                              <th>Title</th>
-                              <th>Platform</th>
-                              <th>Type</th>
-                              <th>Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedBox.items?.map((item) => (
-                              <tr key={item.id}>
-                                <td><strong>{item.item_code}</strong></td>
-                                <td>{item.title}</td>
-                                <td>{item.platform || '--'}</td>
-                                <td>{item.item_type}</td>
-                                <td>
-                                  <span className={`item-status ${item.working_condition ? 'working' : 'not-working'}`}>
-                                    {item.working_condition ? 'Working' : 'Not Working'}
-                                  </span>
-                                </td>
+                    ))}
+                  </div>
+                )}
+
+                {/* Box Details */}
+                {selectedBoxId && (
+                  <div className="box-management-box-detail">
+                    {boxLoading ? (
+                      <div className="box-management-loading">Loading box details...</div>
+                    ) : selectedBox ? (
+                      <>
+                        <div className="box-arrival-panel">
+                          {markArrivedError && <p className="box-arrival-error">{markArrivedError}</p>}
+                          <div className="box-arrival-controls">
+                            <select
+                              value={arrivalDestinationId}
+                              onChange={(e) => setArrivalDestinationId(e.target.value ? Number(e.target.value) : '')}
+                              disabled={markingArrived}
+                            >
+                              <option value="">Select destination location</option>
+                              {locations
+                                .filter((location) => location.id !== selectedLocationId)
+                                .map((location) => (
+                                  <option key={location.id} value={location.id}>
+                                    {location.name} ({location.location_type_display})
+                                  </option>
+                                ))}
+                            </select>
+                            <input
+                              type="text"
+                              value={arrivalComment}
+                              onChange={(e) => setArrivalComment(e.target.value)}
+                              placeholder="Optional note"
+                              disabled={markingArrived}
+                            />
+                            <Button
+                              variant="primary"
+                              size="md"
+                              onClick={handleMarkBoxArrived}
+                              disabled={markingArrived || arrivalDestinationId === ''}
+                            >
+                              {markingArrived ? 'Updating...' : 'Mark as Arrived'}
+                            </Button>
+                          </div>
+                        </div>
+                        <h3 className="box-management-section-title">
+                          Items in {selectedBox.box_code} ({selectedBox.items?.length || 0})
+                        </h3>
+                        {selectedBox.items?.length === 0 ? (
+                          <p className="box-management-empty-items">No items in this box</p>
+                        ) : (
+                          <table className="box-management-items-table">
+                            <thead>
+                              <tr>
+                                <th>Item Code</th>
+                                <th>Title</th>
+                                <th>Platform</th>
+                                <th>Type</th>
+                                <th>Status</th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      )}
-                    </>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          ) : null}
+                            </thead>
+                            <tbody>
+                              {selectedBox.items?.map((item) => (
+                                <tr key={item.id}>
+                                  <td><strong>{item.item_code}</strong></td>
+                                  <td>{item.title}</td>
+                                  <td>{item.platform || '--'}</td>
+                                  <td>{item.item_type}</td>
+                                  <td>
+                                    <span className={`item-status ${item.working_condition ? 'working' : 'not-working'}`}>
+                                      {item.working_condition ? 'Working' : 'Not Working'}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Move Box Modal */}
-      <Modal open={showMoveBoxModal} onClose={handleCloseMoveBoxModal} title="Move Box">
-        <div className="box-management-modal-body">
-          <h2 className="text-xl font-semibold text-primary mb-4">Move Box: {moveBoxCode}</h2>
+      <Modal open={showMoveBoxModal} onClose={handleCloseMoveBoxModal} title={`Move Box: ${moveBoxCode}`}>
+        <div className="modal-form">
           {moveBoxError && (
             <div className="box-management-modal-error">{moveBoxError}</div>
           )}
-          <div className="box-management-form-group">
+          <div className="modal-field">
             <label>Current Location</label>
             <input
               type="text"
@@ -403,8 +579,8 @@ const BoxManagementPage: React.FC = () => {
               disabled
             />
           </div>
-          <div className="box-management-form-group">
-            <label htmlFor="move-box-destination">Destination Location *</label>
+          <div className="modal-field">
+            <label htmlFor="move-box-destination">Destination Location <span className="required">*</span></label>
             <select
               id="move-box-destination"
               value={moveBoxDestinationId}
@@ -421,19 +597,8 @@ const BoxManagementPage: React.FC = () => {
                 ))}
             </select>
           </div>
-          <div className="box-management-form-group">
-            <label htmlFor="move-box-comment">Comment (optional)</label>
-            <textarea
-              id="move-box-comment"
-              value={moveBoxComment}
-              onChange={(e) => setMoveBoxComment(e.target.value)}
-              placeholder="Optional comment"
-              rows={3}
-              disabled={movingBox}
-            />
-          </div>
         </div>
-        <div className="box-management-modal-footer">
+        <div className="modal-actions">
           <Button
             variant="outline-gray"
             size="md"
@@ -456,7 +621,6 @@ const BoxManagementPage: React.FC = () => {
       {/* Add Location Modal */}
       <Modal open={showAddModal} onClose={handleCloseModal} title="Add New Location">
         <div className="box-management-modal-body">
-          <h2 className="text-xl font-semibold text-primary mb-4">Add New Location</h2>
           {createError && (
             <div className="box-management-modal-error">{createError}</div>
           )}

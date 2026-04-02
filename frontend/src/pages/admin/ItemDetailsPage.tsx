@@ -12,6 +12,7 @@ import './ItemDetailsPage.css';
 import { ItemDetailsCard } from '../../components/items/ItemDetailCard';
 import EditItemModal from '../../components/items/EditItemModal';
 import Modal from '../../components/common/Modal';
+import Button from '../../components/common/Button';
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
@@ -53,6 +54,7 @@ const ItemDetailsPage: React.FC = () => {
   const [moveComment, setMoveComment] = useState('');
   const [moveError, setMoveError] = useState<string | null>(null);
   const [movingItem, setMovingItem] = useState(false);
+  const [moveSuccessMessage, setMoveSuccessMessage] = useState<string | null>(null);
 
   const { locations: allLocations } = useLocations();
   const { boxes: allBoxes } = useBoxes();
@@ -191,7 +193,7 @@ const ItemDetailsPage: React.FC = () => {
     setMoveError(null);
 
     try {
-      await requestsApi.create({
+      const response = await requestsApi.create({
         item: item.id,
         from_location: item.current_location?.id ?? 0,
         to_location: toLocationId,
@@ -199,6 +201,12 @@ const ItemDetailsPage: React.FC = () => {
         to_box: toBoxId,
       });
       handleCloseMoveModal();
+      if (response.status === 'COMPLETED_UNVERIFIED') {
+        setMoveSuccessMessage('Item moved successfully.');
+      } else {
+        setMoveSuccessMessage('Movement request submitted for approval.');
+      }
+      setTimeout(() => setMoveSuccessMessage(null), 5000);
       await fetchItem();
     } catch (err) {
       setMoveError(getApiErrorMessage(err, 'Failed to create movement request.'));
@@ -247,6 +255,10 @@ const ItemDetailsPage: React.FC = () => {
         {backText}
       </Link>
 
+      {moveSuccessMessage && (
+        <div className="item-details-success-banner">{moveSuccessMessage}</div>
+      )}
+
       <div className="item-details-header mt-5 md:mt-0">
         <div className="item-details-header-left">
           <h1>{item.title || 'Untitled Item'}</h1>
@@ -263,7 +275,7 @@ const ItemDetailsPage: React.FC = () => {
             <span className="item-badge in-transit">In Transit</span>
           )}
           {isUnverified && (
-            <span className="item-badge in-transit" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b' }}>
+            <span className="item-badge unverified">
               <AlertTriangle size={12} /> Unverified Location
             </span>
           )}
@@ -436,10 +448,9 @@ const ItemDetailsPage: React.FC = () => {
           )}
           {isUnverified && unverifiedRequests.length > 0 && (
             <button
-              className="item-action-btn primary"
+              className="item-action-btn verify"
               onClick={handleVerify}
               disabled={processingRequestId === unverifiedRequests[0]?.id}
-              style={{ background: '#f59e0b', borderColor: '#d97706' }}
             >
               <ShieldCheck size={16} />
               {processingRequestId === unverifiedRequests[0]?.id ? 'Verifying...' : 'Verify Location'}
@@ -488,49 +499,28 @@ const ItemDetailsPage: React.FC = () => {
       />
 
       {/* Move Item Modal */}
-      <Modal open={showMoveModal} onClose={handleCloseMoveModal} title="Move Item">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 0' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '4px' }}>
-            Move: {item?.title || 'Item'}
-          </h2>
+      <Modal open={showMoveModal} onClose={handleCloseMoveModal} title={`Move: ${item?.title || 'Item'}`}>
+        <div className="modal-form">
           {moveError && (
-            <div style={{ padding: '8px 12px', background: '#fef2f2', color: '#991b1b', borderRadius: '6px', fontSize: '14px' }}>
-              {moveError}
-            </div>
+            <div className="volunteers-error">{moveError}</div>
           )}
 
-          <div>
-            <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
-              Current Location
-            </label>
-            <input
-              type="text"
-              value={item?.current_location?.name || 'Unknown'}
-              disabled
-              style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#f9fafb' }}
-            />
+          <div className="modal-field">
+            <label>Current Location</label>
+            <input type="text" value={item?.current_location?.name || 'Unknown'} disabled />
           </div>
 
           {item?.box && (
-            <div>
-              <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
-                Current Box
-              </label>
-              <input
-                type="text"
-                value={`Box #${item.box}`}
-                disabled
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', background: '#f9fafb' }}
-              />
+            <div className="modal-field">
+              <label>Current Box</label>
+              <input type="text" value={`Box #${item.box}`} disabled />
             </div>
           )}
 
-          <div>
-            <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
-              Destination Type
-            </label>
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+          <div className="modal-field">
+            <label>Destination Type</label>
+            <div className="modal-radio-group">
+              <label className="modal-radio-label">
                 <input
                   type="radio"
                   name="destType"
@@ -539,7 +529,7 @@ const ItemDetailsPage: React.FC = () => {
                 />
                 Location
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+              <label className="modal-radio-label">
                 <input
                   type="radio"
                   name="destType"
@@ -552,15 +542,12 @@ const ItemDetailsPage: React.FC = () => {
           </div>
 
           {moveDestinationType === 'location' ? (
-            <div>
-              <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
-                Destination Location *
-              </label>
+            <div className="modal-field">
+              <label>Destination Location <span className="required">*</span></label>
               <select
                 value={moveToLocationId}
                 onChange={(e) => setMoveToLocationId(e.target.value ? Number(e.target.value) : '')}
                 disabled={movingItem}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
               >
                 <option value="">Select location...</option>
                 {allLocations
@@ -573,15 +560,12 @@ const ItemDetailsPage: React.FC = () => {
               </select>
             </div>
           ) : (
-            <div>
-              <label style={{ display: 'block', fontWeight: 500, marginBottom: '4px', fontSize: '14px' }}>
-                Destination Box *
-              </label>
+            <div className="modal-field">
+              <label>Destination Box <span className="required">*</span></label>
               <select
                 value={moveToBoxId}
                 onChange={(e) => setMoveToBoxId(e.target.value ? Number(e.target.value) : '')}
                 disabled={movingItem}
-                style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px' }}
               >
                 <option value="">Select box...</option>
                 {allBoxes
@@ -593,47 +577,29 @@ const ItemDetailsPage: React.FC = () => {
                   ))}
               </select>
               {moveToBoxId !== '' && (
-                <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>
+                <p className="modal-subtitle">
                   Location: {allLocations.find(l => l.id === allBoxes.find(b => b.id === moveToBoxId)?.location)?.name || 'Unknown'}
                 </p>
               )}
             </div>
           )}
-
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px' }}>
-            <button
-              onClick={handleCloseMoveModal}
-              disabled={movingItem}
-              style={{
-                padding: '8px 16px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                background: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmitMove}
-              disabled={
-                movingItem ||
-                (moveDestinationType === 'location' && moveToLocationId === '') ||
-                (moveDestinationType === 'box' && moveToBoxId === '')
-              }
-              style={{
-                padding: '8px 16px',
-                border: 'none',
-                borderRadius: '6px',
-                background: '#1a56db',
-                color: 'white',
-                cursor: 'pointer',
-                opacity: movingItem ? 0.6 : 1,
-              }}
-            >
-              {movingItem ? 'Submitting...' : 'Submit Move Request'}
-            </button>
-          </div>
+        </div>
+        <div className="modal-actions">
+          <Button variant="outline-gray" size="md" onClick={handleCloseMoveModal} disabled={movingItem}>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSubmitMove}
+            disabled={
+              movingItem ||
+              (moveDestinationType === 'location' && moveToLocationId === '') ||
+              (moveDestinationType === 'box' && moveToBoxId === '')
+            }
+          >
+            {movingItem ? 'Submitting...' : 'Submit Move Request'}
+          </Button>
         </div>
       </Modal>
     </div>
