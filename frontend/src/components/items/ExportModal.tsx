@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { boxesApi } from '../../api/boxes.api';
 import type { Box } from '../../api/boxes.api';
 import apiClient from '../../api/apiClient';
+import Modal from '../common/Modal';
+import Button from '../common/Button';
 import './ExportModal.css';
 
 interface ExportModalProps {
@@ -62,8 +64,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
             URL.revokeObjectURL(url);
 
             handleClose();
-        } catch (err) {
-            console.error('Export failed:', err);
+        } catch {
             setError('Failed to export data. Please try again.');
         } finally {
             setIsExporting(false);
@@ -80,86 +81,79 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={handleClose}>
-            <div className="export-modal" onClick={(e) => e.stopPropagation()}>
-                <div className="export-modal-header">
-                    <h2>Export Collection Data</h2>
-                    <button className="modal-close-btn" onClick={handleClose}>×</button>
-                </div>
+        <Modal open={isOpen} onClose={handleClose} title="Export Collection Data">
+            <p className="export-modal-description">
+                Select filters to narrow your export, or leave all fields empty to export the entire collection.
+            </p>
 
-                <div className="export-modal-body">
-                    <p className="export-modal-description">
-                        Select filters to narrow your export, or leave all fields empty to export the entire collection.
-                    </p>
+            {error && <div className="export-error">{error}</div>}
 
-                    {error && <div className="export-error">{error}</div>}
-
-                    {/* Date Range */}
-                    <div className="export-date-row">
-                        <div className="form-group">
-                            <label>Start Date</label>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>End Date</label>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
-                        </div>
+            <div className="modal-form">
+                {/* Date Range */}
+                <div className="modal-row">
+                    <div className="modal-field">
+                        <label>Start Date</label>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                        />
                     </div>
-
-                    {/* Box Filter */}
-                    <div className="form-group">
-                        <label>Box</label>
-                        <select
-                            value={boxId}
-                            onChange={(e) => setBoxId(e.target.value)}
-                        >
-                            <option value="">All Boxes</option>
-                            {boxes.map((box) => (
-                                <option key={box.id} value={box.id}>
-                                    {box.box_code}{box.label ? ` – ${box.label}` : ''}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Record Type Filter */}
-                    <div className="form-group">
-                        <label>Record Type</label>
-                        <select
-                            value={recordType}
-                            onChange={(e) => setRecordType(e.target.value)}
-                        >
-                            <option value="">All Types</option>
-                            <option value="SOFTWARE">Software</option>
-                            <option value="HARDWARE">Hardware</option>
-                            <option value="NON_ELECTRONIC">Non-Electronic</option>
-                        </select>
+                    <div className="modal-field">
+                        <label>End Date</label>
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                        />
                     </div>
                 </div>
 
-                <div className="export-modal-footer">
-                    <button type="button" className="btn-cancel" onClick={handleClose}>
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        className="btn-submit"
-                        onClick={handleExport}
-                        disabled={isExporting}
+                {/* Box Filter */}
+                <div className="modal-field">
+                    <label>Box</label>
+                    <select
+                        value={boxId}
+                        onChange={(e) => setBoxId(e.target.value)}
                     >
-                        {isExporting ? 'Exporting...' : 'Export CSV'}
-                    </button>
+                        <option value="">All Boxes</option>
+                        {boxes.map((box) => (
+                            <option key={box.id} value={box.id}>
+                                {box.box_code}{box.label ? ` – ${box.label}` : ''}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Record Type Filter */}
+                <div className="modal-field">
+                    <label>Record Type</label>
+                    <select
+                        value={recordType}
+                        onChange={(e) => setRecordType(e.target.value)}
+                    >
+                        <option value="">All Types</option>
+                        <option value="SOFTWARE">Software</option>
+                        <option value="HARDWARE">Hardware</option>
+                        <option value="NON_ELECTRONIC">Non-Electronic</option>
+                    </select>
                 </div>
             </div>
-        </div>
+
+            <div className="modal-actions">
+                <Button variant="outline-gray" size="md" onClick={handleClose}>
+                    Cancel
+                </Button>
+                <Button
+                    variant="primary"
+                    size="md"
+                    onClick={handleExport}
+                    disabled={isExporting}
+                >
+                    {isExporting ? 'Exporting...' : 'Export CSV'}
+                </Button>
+            </div>
+        </Modal>
     );
 };
 

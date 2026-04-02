@@ -1,5 +1,6 @@
 import * as React from "react"
 import { Dialog, DialogPanel} from "@headlessui/react"
+import './Modal.css'
 
 type ModalProps = {
   open: boolean

@@ -11,20 +11,6 @@
     line-height: 20px;
 }
 
-/* Field error text */
-.modal-field-error {
-    display: block;
-    margin-top: var(--spacing-xs);
-    font-size: 13px;
-    color: var(--color-error);
-}
-
-/* Error state on inputs */
-.modal-field input.error,
-.modal-field textarea.error {
-    border-color: var(--color-error);
-}
-
 /* Section dividers for type-specific fields */
 .add-item-section {
     margin-top: var(--spacing-sm);
@@ -55,10 +41,3 @@
     accent-color: var(--color-primary);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-    .modal-row {
-        flex-direction: column;
-        gap: 0;
-    }
-}

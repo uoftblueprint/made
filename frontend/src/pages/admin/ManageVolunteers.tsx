@@ -1,5 +1,6 @@
-import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval, useUpdateVolunteer } from '../../actions/useVolunteers';
+import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval, useUpdateVolunteer, useCreateVolunteer } from '../../actions/useVolunteers';
 import { useState, useMemo, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query';
 import { useQueryState } from '../../hooks/useQueryState';
 import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, Edit2 } from 'lucide-react';
 import Button from '../../components/common/Button';
@@ -43,6 +44,61 @@ const ManageVolunteers = () => {
     const extendMutation = useExtendVolunteerAccess();
     const toggleMoveApprovalMutation = useToggleMoveApproval();
     const updateVolunteerMutation = useUpdateVolunteer();
+
+    // Add Volunteer form state
+    const [addFirstName, setAddFirstName] = useState('');
+    const [addLastName, setAddLastName] = useState('');
+    const [addEmail, setAddEmail] = useState('');
+    const [addPhone, setAddPhone] = useState('');
+    const [addRole, setAddRole] = useState('');
+    const [addStartDate, setAddStartDate] = useState('');
+    const [addEventType, setAddEventType] = useState('');
+    const [addError, setAddError] = useState<string | null>(null);
+
+    const queryClient = useQueryClient();
+    const createVolunteerMutation = useCreateVolunteer(
+        () => {
+            setShowAddModal(false);
+            resetAddForm();
+            queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
+            queryClient.invalidateQueries({ queryKey: ['volunteerStats'] });
+        },
+        (error) => {
+            const axiosErr = error as { response?: { data?: Record<string, string | string[]> } };
+            const data = axiosErr?.response?.data;
+            if (data) {
+                const firstError = Object.values(data)[0];
+                setAddError(Array.isArray(firstError) ? firstError[0] : String(firstError));
+            } else {
+                setAddError('Failed to create volunteer. Please try again.');
+            }
+        }
+    );
+
+    const resetAddForm = () => {
+        setAddFirstName('');
+        setAddLastName('');
+        setAddEmail('');
+        setAddPhone('');
+        setAddRole('');
+        setAddStartDate('');
+        setAddEventType('');
+        setAddError(null);
+    };
+
+    const handleAddVolunteer = () => {
+        setAddError(null);
+        if (!addFirstName.trim() || !addLastName.trim() || !addEmail.trim()) {
+            setAddError('Please fill in all required fields.');
+            return;
+        }
+        createVolunteerMutation.mutate({
+            name: `${addFirstName.trim()} ${addLastName.trim()}`,
+            email: addEmail.trim(),
+            password: crypto.randomUUID().slice(0, 16),
+            motivation_text: `Role: ${addRole || 'Not specified'}. Phone: ${addPhone || 'Not provided'}. Start date: ${addStartDate || 'Not specified'}.`,
+        });
+    };
 
     const [editModal, setEditModal] = useState<Volunteer | null>(null);
     const [editName, setEditName] = useState('');
@@ -518,37 +574,37 @@ const ManageVolunteers = () => {
             </Modal>
 
             {/* Add Volunteer Modal */}
-            <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Grant Access to New Volunteer">
-                <h2 className="text-xl font-semibold text-primary mb-2">Grant Access to New Volunteer</h2>
-                <p className="modal-subtitle">Fill out fields marked with * to create an entry. Everything else is optional and can be added later.</p>
-                
+            <Modal open={showAddModal} onClose={() => { setShowAddModal(false); resetAddForm(); }} title="Grant Access to New Volunteer">
+                <p className="modal-subtitle">Fill out fields marked with <span className="required">*</span> to create an entry. Everything else is optional and can be added later.</p>
+
                 <div className="modal-form">
+                    {addError && <div className="volunteers-error">{addError}</div>}
                     <div className="modal-row">
                         <div className="modal-field">
                             <label>First Name <span className="required">*</span></label>
-                            <input type="text" placeholder="" />
+                            <input type="text" value={addFirstName} onChange={(e) => setAddFirstName(e.target.value)} />
                         </div>
                         <div className="modal-field">
                             <label>Last Name <span className="required">*</span></label>
-                            <input type="text" placeholder="" />
+                            <input type="text" value={addLastName} onChange={(e) => setAddLastName(e.target.value)} />
                         </div>
                     </div>
                     <div className="modal-row">
                         <div className="modal-field">
                             <label>Email Address <span className="required">*</span></label>
-                            <input type="email" placeholder="This will be used for login credentials" />
+                            <input type="email" placeholder="This will be used for login credentials" value={addEmail} onChange={(e) => setAddEmail(e.target.value)} />
                         </div>
                         <div className="modal-field">
-                            <label>Available Start Date <span className="required">*</span></label>
-                            <input type="date" />
+                            <label>Available Start Date</label>
+                            <input type="date" value={addStartDate} onChange={(e) => setAddStartDate(e.target.value)} />
                         </div>
                     </div>
-                    
+
                     <h3>Volunteer Details</h3>
                     <div className="modal-row">
                         <div className="modal-field">
-                            <label>Preferred Role <span className="required">*</span></label>
-                            <select>
+                            <label>Preferred Role</label>
+                            <select value={addRole} onChange={(e) => setAddRole(e.target.value)}>
                                 <option value="">Please select a role</option>
                                 {roles.filter(r => r.value !== 'admin').map((role) => (
                                     <option key={role.value} value={role.value}>{role.label}</option>
@@ -556,13 +612,13 @@ const ManageVolunteers = () => {
                             </select>
                         </div>
                         <div className="modal-field">
-                            <label>Phone Number <span className="required">*</span></label>
-                            <input type="tel" placeholder="" />
+                            <label>Phone Number</label>
+                            <input type="tel" value={addPhone} onChange={(e) => setAddPhone(e.target.value)} />
                         </div>
                     </div>
                     <div className="modal-field">
                         <label>Interested Event Types</label>
-                        <select>
+                        <select value={addEventType} onChange={(e) => setAddEventType(e.target.value)}>
                             <option value="">Select option</option>
                             {eventTypes.map((eventType) => (
                                 <option key={eventType.value} value={eventType.value}>{eventType.label}</option>
@@ -572,8 +628,15 @@ const ManageVolunteers = () => {
                 </div>
 
                 <div className="modal-actions">
-                    <Button variant="outline-gray" size="md" onClick={() => setShowAddModal(false)}>Cancel</Button>
-                    <Button variant="primary" size="md">Create Volunteer</Button>
+                    <Button variant="outline-gray" size="md" onClick={() => { setShowAddModal(false); resetAddForm(); }}>Cancel</Button>
+                    <Button
+                        variant="primary"
+                        size="md"
+                        onClick={handleAddVolunteer}
+                        disabled={createVolunteerMutation.isPending || !addFirstName.trim() || !addLastName.trim() || !addEmail.trim()}
+                    >
+                        {createVolunteerMutation.isPending ? 'Creating...' : 'Create Volunteer'}
+                    </Button>
                 </div>
             </Modal>
         </div>

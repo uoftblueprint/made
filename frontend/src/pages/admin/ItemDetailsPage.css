@@ -97,21 +97,6 @@
     border: 1px solid #fcd34d;
 }
 
-/* Radio group in modals */
-.modal-radio-group {
-    display: flex;
-    gap: var(--spacing-md);
-}
-
-.modal-radio-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    color: var(--color-primary);
-}
-
 .item-badge.unverified {
     background: var(--color-warning-bg);
     color: #92400e;
@@ -151,6 +136,15 @@
     font-weight: 600;
     color: var(--color-primary);
     margin: 0 0 var(--spacing-md);
+}
+
+.item-details-warning-card {
+    border-color: var(--color-warning-border);
+    background: var(--color-warning-bg);
+}
+
+.item-details-warning-card h3 {
+    color: #92400e;
 }
 
 /* Grid */
@@ -436,6 +430,80 @@
 
 .item-sidebar-safety li::before {
     content: "• ";
+}
+
+/* Box Details */
+.box-details-description-field {
+    margin-top: var(--spacing-md);
+}
+
+.box-details-request-card {
+    border-color: var(--color-warning-border);
+    background: var(--color-warning-bg);
+}
+
+.box-details-request-card h3 {
+    color: #92400e;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.box-details-empty-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-xl);
+    color: var(--color-muted);
+}
+
+.box-details-items-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.box-details-items-table th {
+    text-align: left;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.box-details-items-table td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 13px;
+    color: var(--color-secondary);
+    border-bottom: 1px solid var(--color-border-light);
+}
+
+.box-details-item-row {
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.box-details-item-row:hover {
+    background: var(--color-background-gray);
+}
+
+.box-details-item-row td strong {
+    color: var(--color-primary);
+}
+
+.item-status.working {
+    color: var(--color-available);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.item-status.not-working {
+    color: var(--color-error);
+    font-size: 12px;
+    font-weight: 500;
 }
 
 /* Movement Requests */

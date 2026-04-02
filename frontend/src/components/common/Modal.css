@@ -1,0 +1,139 @@
+/* Shared modal form classes */
+
+.modal-subtitle {
+    font-size: 13px;
+    color: var(--color-secondary);
+    margin: 0 0 var(--spacing-lg);
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.modal-form h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: var(--spacing-md) 0 0;
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.modal-row {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.modal-row > * {
+    flex: 1;
+    min-width: 0;
+}
+
+.modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.modal-field label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-primary);
+}
+
+.modal-field .required {
+    color: var(--color-error);
+}
+
+.modal-field input,
+.modal-field select,
+.modal-field textarea {
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-field textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.modal-field input:focus,
+.modal-field select:focus,
+.modal-field textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.modal-field input:disabled,
+.modal-field select:disabled {
+    background: var(--color-background-light);
+    color: var(--color-muted);
+}
+
+.modal-field input.error,
+.modal-field textarea.error {
+    border-color: var(--color-error);
+}
+
+.modal-field-error {
+    display: block;
+    margin-top: var(--spacing-xs);
+    font-size: 13px;
+    color: var(--color-error);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.modal-radio-group {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.modal-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--color-primary);
+}
+
+.modal-radio-label input[type="radio"] {
+    width: auto;
+    padding: 0;
+    accent-color: var(--color-primary);
+}
+
+.modal-checkbox-field label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.modal-checkbox-field input[type="checkbox"] {
+    width: auto;
+    padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-row {
+        flex-direction: column;
+    }
+}

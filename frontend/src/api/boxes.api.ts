@@ -17,6 +17,8 @@ export interface Box {
   label: string;
   description: string;
   location: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface BoxDetail extends Box {

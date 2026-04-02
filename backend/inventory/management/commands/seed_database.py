@@ -162,6 +162,7 @@ class Command(BaseCommand):
                 defaults={
                     "name": app_data["name"],
                     "phone_number": app_data.get("phone_number", ""),
+                    "password_hash": app_data.get("password_hash", ""),
                     "motivation_text": app_data.get("motivation_text", ""),
                     "status": app_data.get("status", "PENDING"),
                 },
@@ -199,8 +200,9 @@ class Command(BaseCommand):
                 )
                 if created:
                     movements_created += 1
-                    # Set item status to match the request state
-                    if req_data.get("status") in ("APPROVED", "COMPLETED_UNVERIFIED"):
+                    # COMPLETED_UNVERIFIED = senior/admin auto-move → IN_TRANSIT
+                    # APPROVED = junior's request approved → stays AVAILABLE until they start transit
+                    if req_data.get("status") == "COMPLETED_UNVERIFIED":
                         item.status = "IN_TRANSIT"
                         item.is_verified = False
                         item.save(update_fields=["status", "is_verified", "updated_at"])
@@ -233,8 +235,8 @@ class Command(BaseCommand):
                 )
                 if created:
                     box_movements_created += 1
-                    # Set all items in box to IN_TRANSIT
-                    if req_data.get("status") in ("APPROVED", "COMPLETED_UNVERIFIED"):
+                    # COMPLETED_UNVERIFIED = senior/admin auto-move → items IN_TRANSIT
+                    if req_data.get("status") == "COMPLETED_UNVERIFIED":
                         for item in box.items.all():
                             item.status = "IN_TRANSIT"
                             item.is_verified = False

@@ -65,3 +65,9 @@
     background: #f87171;
     cursor: not-allowed;
 }
+
+.delete-dialog-error {
+    color: var(--color-error);
+    font-size: 13px;
+    margin: 0 0 var(--spacing-sm);
+}

@@ -513,6 +513,10 @@
     color: var(--color-warning);
 }
 
+.admin-request-status.approved {
+    color: var(--color-success);
+}
+
 .admin-request-status.rejected {
     color: var(--color-error);
 }

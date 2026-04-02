@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { itemsApi } from '../../api/items.api';
 import './DeleteItemDialog.css';
 
 interface DeleteItemDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
+    itemId: number | string;
     itemTitle: string;
 }
 
@@ -12,24 +14,28 @@ const DeleteItemDialog: React.FC<DeleteItemDialogProps> = ({
     isOpen,
     onClose,
     onConfirm,
+    itemId,
     itemTitle,
 }) => {
     const [isDeleting, setIsDeleting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     if (!isOpen) return null;
 
     const handleDelete = async () => {
         setIsDeleting(true);
+        setError(null);
 
-        // Mock API call - will be replaced with real API
         try {
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            console.log('Item deleted (mocked):', itemTitle);
+            await itemsApi.delete(itemId);
             onConfirm();
             onClose();
-        } catch (error) {
-            console.error('Delete failed:', error);
+        } catch (err) {
+            const axiosError = err as { response?: { data?: { detail?: string } } };
+            setError(
+                axiosError?.response?.data?.detail ||
+                (err instanceof Error ? err.message : 'Delete failed. Please try again.')
+            );
         } finally {
             setIsDeleting(false);
         }
@@ -43,6 +49,7 @@ const DeleteItemDialog: React.FC<DeleteItemDialogProps> = ({
                     Are you sure you want to delete <span className="item-name">"{itemTitle}"</span>?
                     This action cannot be undone.
                 </p>
+                {error && <p className="delete-dialog-error">{error}</p>}
                 <div className="delete-dialog-actions">
                     <button type="button" className="btn-cancel" onClick={onClose}>
                         Cancel

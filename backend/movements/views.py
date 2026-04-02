@@ -127,6 +127,28 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["post"], url_path="start-transit")
+    def start_transit(self, request, pk=None):
+        """Start physical transit for an approved item movement request."""
+        move_request = self.get_object()
+
+        if move_request.status not in ("APPROVED", "COMPLETED_UNVERIFIED"):
+            return Response(
+                {"detail": "Only approved requests can be put in transit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if move_request.item.status == "IN_TRANSIT":
+            return Response(
+                {"detail": "Item is already in transit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.start_transit(user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def verify(self, request, pk=None):
         """Verify a movement request after item has arrived."""
@@ -258,6 +280,22 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
 
         comment = request.data.get("comment", "")
         move_request.reject(admin_user=request.user, comment=comment)
+        serializer = self.get_serializer(move_request)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=["post"], url_path="start-transit")
+    def start_transit(self, request, pk=None):
+        """Start physical transit for an approved box movement request."""
+        move_request = self.get_object()
+
+        if move_request.status not in ("APPROVED", "COMPLETED_UNVERIFIED"):
+            return Response(
+                {"detail": "Only approved requests can be put in transit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        comment = request.data.get("comment", "")
+        move_request.start_transit(user=request.user, comment=comment)
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 

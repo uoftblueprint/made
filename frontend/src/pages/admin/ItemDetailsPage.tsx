@@ -27,12 +27,10 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
 }
 
 interface ItemDetails extends AdminCollectionItem {
-  cataloger?: string;
   date_of_entry?: string;
-  physical_description?: string;
-  does_it_work?: string;
-  notes?: string;
-  source?: string;
+  condition?: string;
+  is_complete?: string;
+  is_functional?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -243,12 +241,7 @@ const ItemDetailsPage: React.FC = () => {
 
   const locationName = item.current_location?.name ?? '--';
 
-  const workStatus =
-    item.does_it_work !== undefined
-      ? item.does_it_work
-      : item.working_condition
-      ? 'Yes'
-      : 'No';
+  const workStatus = item.working_condition ? 'Yes' : 'No';
 
   return (
     <div className="item-details-layout">
@@ -293,8 +286,8 @@ const ItemDetailsPage: React.FC = () => {
 
           {/* Pending Move Request Info */}
           {pendingRequests.length > 0 && (
-            <div className="item-details-card" style={{ borderColor: 'var(--color-warning-border)', background: 'var(--color-warning-bg)' }}>
-              <h3 style={{ color: '#92400e' }}>Move Request — Pending</h3>
+            <div className="item-details-card item-details-warning-card">
+              <h3>Move Request — Pending</h3>
               <div className="item-details-grid">
                 <div className="item-field">
                   <span className="item-field-label">From</span>
@@ -314,8 +307,8 @@ const ItemDetailsPage: React.FC = () => {
 
           {/* In Transit Info */}
           {isInTransit && (approvedRequests.length > 0 || unverifiedRequests.length > 0) && (
-            <div className="item-details-card" style={{ borderColor: 'var(--color-warning-border)', background: 'var(--color-warning-bg)' }}>
-              <h3 style={{ color: '#92400e' }}>In Transit — Awaiting Arrival</h3>
+            <div className="item-details-card item-details-warning-card">
+              <h3>In Transit — Awaiting Arrival</h3>
               <div className="item-details-grid">
                 <div className="item-field">
                   <span className="item-field-label">From</span>
@@ -360,8 +353,8 @@ const ItemDetailsPage: React.FC = () => {
                 <span className="item-field-value">{formatDate(item.date_of_entry || item.created_at)}</span>
               </div>
               <div className="item-field">
-                <span className="item-field-label">Cataloger</span>
-                <span className="item-field-value">{item.cataloger || '--'}</span>
+                <span className="item-field-label">Type</span>
+                <span className="item-field-value">{item.item_type || '--'}</span>
               </div>
             </div>
           </div>
@@ -389,21 +382,21 @@ const ItemDetailsPage: React.FC = () => {
           <div className="item-details-card hidden md:block">
             <h3>Optional Metadata</h3>
             <div className="item-field">
-              <span className="item-field-label">Physical Description</span>
-              <span className={`item-field-value ${!item.physical_description ? 'muted' : ''}`}>
-                {item.physical_description || 'Not filled - can add during review'}
+              <span className="item-field-label">Description</span>
+              <span className={`item-field-value ${!item.description ? 'muted' : ''}`}>
+                {item.description || 'Not filled - can add during review'}
               </span>
             </div>
             <div className="item-field">
-              <span className="item-field-label">Does it work?</span>
-              <span className={`item-field-value ${item.does_it_work === undefined && item.working_condition === undefined ? 'muted' : ''}`}>
-                {item.does_it_work || (item.working_condition !== undefined ? (item.working_condition ? 'Yes' : 'No') : 'Not tested yet')}
+              <span className="item-field-label">Working Condition</span>
+              <span className="item-field-value">
+                {item.working_condition ? 'Yes' : 'No'}
               </span>
             </div>
             <div className="item-field">
-              <span className="item-field-label">Notes</span>
-              <span className={`item-field-value ${!item.notes ? 'muted' : ''}`}>
-                {item.notes || 'None'}
+              <span className="item-field-label">Status</span>
+              <span className="item-field-value">
+                {item.status || '--'}
               </span>
             </div>
           </div>
@@ -414,7 +407,7 @@ const ItemDetailsPage: React.FC = () => {
             {locationName !== '--' ? (
               <div className="item-location-history">
                 <div className="location-history-entry">
-                  <span className="location-history-date">{formatDate(item.date_of_entry || item.created_at)}</span>
+                  <span className="location-history-date">{formatDate(item.created_at)}</span>
                   <div className="location-history-details">
                     <span className="location-history-box">{locationName}</span>
                     <span className="location-history-note">Initial Entry</span>
@@ -458,7 +451,7 @@ const ItemDetailsPage: React.FC = () => {
                 platform: item.platform || 'Software',
                 location: locationName !== '--' ? locationName : 'None',
               }}
-              onUpdateLocation={() => console.log('open modal')}
+              onUpdateLocation={handleOpenMoveModal}
             />
           </div>
 
@@ -505,10 +498,6 @@ const ItemDetailsPage: React.FC = () => {
 
           {/* Metadata */}
           <div className="item-sidebar-meta hidden md:block">
-            <div className="item-meta-field">
-              <span className="item-meta-label">Source</span>
-              <span className="item-meta-value">{item.source || 'Public Entry Form'}</span>
-            </div>
             <div className="item-meta-field">
               <span className="item-meta-label">Created</span>
               <span className="item-meta-value">{formatDate(item.created_at)}</span>

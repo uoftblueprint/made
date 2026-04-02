@@ -14,6 +14,7 @@ interface UseRequestsResult {
   reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
   completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
   verify: (id: number, data?: ReviewRequestInput) => Promise<void>;
+  startTransit: (id: number) => Promise<void>;
 }
 
 export function useRequests(status?: MovementRequestStatus, mine?: boolean): UseRequestsResult {
@@ -61,6 +62,11 @@ export function useRequests(status?: MovementRequestStatus, mine?: boolean): Use
     await fetchRequests();
   }, [fetchRequests]);
 
+  const startTransit = useCallback(async (id: number) => {
+    await requestsApi.startTransit(id);
+    await fetchRequests();
+  }, [fetchRequests]);
+
   const pendingRequests = requests.filter(r => r.status === 'WAITING_APPROVAL');
 
   return {
@@ -73,6 +79,7 @@ export function useRequests(status?: MovementRequestStatus, mine?: boolean): Use
     reject,
     completeArrival,
     verify,
+    startTransit,
   };
 }
 
@@ -159,6 +166,7 @@ interface UseBoxRequestsResult {
   reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
   verify: (id: number, data?: ReviewRequestInput) => Promise<void>;
   completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
+  startTransit: (id: number) => Promise<void>;
 }
 
 export function useBoxRequests(status?: MovementRequestStatus, mine?: boolean): UseBoxRequestsResult {
@@ -206,6 +214,11 @@ export function useBoxRequests(status?: MovementRequestStatus, mine?: boolean): 
     await fetchRequests();
   }, [fetchRequests]);
 
+  const startTransit = useCallback(async (id: number) => {
+    await boxRequestsApi.startTransit(id);
+    await fetchRequests();
+  }, [fetchRequests]);
+
   return {
     requests,
     loading,
@@ -215,6 +228,7 @@ export function useBoxRequests(status?: MovementRequestStatus, mine?: boolean): 
     reject,
     verify,
     completeArrival,
+    startTransit,
   };
 }
 

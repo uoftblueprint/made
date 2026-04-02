@@ -82,6 +82,11 @@ export const requestsApi = {
     const response = await apiClient.post(`/movements/movement-requests/${id}/verify/`, data ?? {});
     return response.data;
   },
+
+  startTransit: async (id: number): Promise<MovementRequest> => {
+    const response = await apiClient.post(`/movements/movement-requests/${id}/start-transit/`, {});
+    return response.data;
+  },
 };
 
 export const boxRequestsApi = {
@@ -130,6 +135,11 @@ export const boxRequestsApi = {
 
   verify: async (id: number, data?: ReviewRequestInput): Promise<BoxMovementRequest> => {
     const response = await apiClient.post(`/movements/box-movement-requests/${id}/verify/`, data ?? {});
+    return response.data;
+  },
+
+  startTransit: async (id: number): Promise<BoxMovementRequest> => {
+    const response = await apiClient.post(`/movements/box-movement-requests/${id}/start-transit/`, {});
     return response.data;
   },
 };

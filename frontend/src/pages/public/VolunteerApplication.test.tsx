@@ -48,6 +48,8 @@ it("submits when valid, shows loading message when pending, created correct payl
   await user.type(screen.getByLabelText(/Last Name/i), "Vladmir")
   await user.type(screen.getByLabelText(/Email/i), "edw22@gmail.com")
   await user.type(screen.getByLabelText(/Phone Number/i), "(416) 622-6983")
+  await user.type(screen.getByLabelText(/^Password$/i), "securepass123")
+  await user.type(screen.getByLabelText(/Confirm Password/i), "securepass123")
   await user.type(screen.getByLabelText(/Why do you want to volunteer\?/i), "i want to help")
 
   let resolvePost: (value?: unknown) => void = () => {}
@@ -65,6 +67,7 @@ it("submits when valid, shows loading message when pending, created correct payl
   expect(postMock).toHaveBeenCalledWith("/users/volunteer-applications/", {
     name: "Bob Vladmir",
     email: "edw22@gmail.com",
+    password: "securepass123",
     motivation_text: "i want to help",
   })
 

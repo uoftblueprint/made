@@ -185,7 +185,7 @@ const BoxDetailsPage: React.FC = () => {
               </div>
             </div>
             {box.description && (
-              <div className="item-field" style={{ marginTop: 'var(--spacing-md)' }}>
+              <div className="item-field box-details-description-field">
                 <span className="item-field-label">Description</span>
                 <span className="item-field-value">{box.description}</span>
               </div>
@@ -338,6 +338,22 @@ const BoxDetailsPage: React.FC = () => {
               <span className="item-meta-label">Total Items</span>
               <span className="item-meta-value">{box.items?.length ?? 0}</span>
             </div>
+            {box.created_at && (
+              <div className="item-meta-field">
+                <span className="item-meta-label">Created</span>
+                <span className="item-meta-value">
+                  {new Date(box.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            )}
+            {box.updated_at && (
+              <div className="item-meta-field">
+                <span className="item-meta-label">Last Updated</span>
+                <span className="item-meta-value">
+                  {new Date(box.updated_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

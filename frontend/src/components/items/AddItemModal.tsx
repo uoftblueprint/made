@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
+import { itemsApi, type CreateItemData } from '../../api/items.api';
 import './AddItemModal.css';
 
 type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
@@ -99,12 +100,59 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
         if (!validateForm()) return;
         setIsSubmitting(true);
         try {
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            console.log('Item create:', formData);
+            const payload: CreateItemData = {
+                item_code: formData.item_code.trim(),
+                title: formData.title.trim(),
+                item_type: formData.item_type,
+                platform: formData.platform.trim(),
+                current_location: Number(formData.current_location),
+                description: formData.description.trim(),
+                condition: formData.condition,
+                is_complete: formData.is_complete,
+                is_functional: formData.is_functional,
+                working_condition: formData.condition === 'EXCELLENT' || formData.condition === 'GOOD',
+                status: 'AVAILABLE',
+                is_public_visible: true,
+                is_on_floor: false,
+                box: formData.box ? Number(formData.box) : null,
+            };
+
+            if (formData.date_of_entry) {
+                payload.date_of_entry = formData.date_of_entry;
+            }
+
+            // Add type-specific fields
+            if (formData.item_type === 'SOFTWARE') {
+                if (formData.creator_publisher) payload.creator_publisher = formData.creator_publisher.trim();
+                if (formData.release_year) payload.release_year = formData.release_year.trim();
+                if (formData.version_edition) payload.version_edition = formData.version_edition.trim();
+                if (formData.media_type) payload.media_type = formData.media_type.trim();
+            } else if (formData.item_type === 'HARDWARE') {
+                if (formData.manufacturer) payload.manufacturer = formData.manufacturer.trim();
+                if (formData.model_number) payload.model_number = formData.model_number.trim();
+                if (formData.year_manufactured) payload.year_manufactured = formData.year_manufactured.trim();
+                if (formData.serial_number) payload.serial_number = formData.serial_number.trim();
+                if (formData.hardware_type) payload.hardware_type = formData.hardware_type.trim();
+            } else if (formData.item_type === 'NON_ELECTRONIC') {
+                if (formData.item_subtype) payload.item_subtype = formData.item_subtype.trim();
+                if (formData.publisher) payload.publisher = formData.publisher.trim();
+                if (formData.date_published) payload.date_published = formData.date_published.trim();
+                if (formData.volume_number) payload.volume_number = formData.volume_number.trim();
+                if (formData.isbn_catalogue_number) payload.isbn_catalogue_number = formData.isbn_catalogue_number.trim();
+            }
+
+            await itemsApi.create(payload);
             onSuccess();
             handleClose();
-        } catch {
-            setApiError('Item failed to create');
+        } catch (error: unknown) {
+            const axiosError = error as { response?: { data?: Record<string, string | string[]> } };
+            const responseData = axiosError?.response?.data;
+            if (responseData) {
+                const firstError = Object.values(responseData)[0];
+                setApiError(Array.isArray(firstError) ? firstError[0] : String(firstError));
+            } else {
+                setApiError('Item failed to create. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }

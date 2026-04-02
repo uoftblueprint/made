@@ -440,20 +440,7 @@ button.role-badge,
     color: var(--color-error);
 }
 
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
+/* Volunteers-specific modal styles */
 .volunteers-modal {
     background: var(--color-background);
     border-radius: var(--radius-lg);
@@ -471,132 +458,13 @@ button.role-badge,
     margin: 0 0 var(--spacing-sm);
 }
 
-.modal-subtitle {
-    font-size: 13px;
-    color: var(--color-secondary);
-    margin: 0 0 var(--spacing-lg);
-}
-
-.modal-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-}
-
-.modal-form h3 {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--color-primary);
-    margin: var(--spacing-md) 0 0;
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--color-border);
-}
-
-.modal-row {
-    display: flex;
-    gap: var(--spacing-md);
-}
-
-.modal-row > * {
-    flex: 1;
-    min-width: 0;
-}
-
-.modal-field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-}
-
-.modal-field label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--color-primary);
-}
-
-.modal-field .required {
-    color: var(--color-error);
-}
-
-.modal-field input,
-.modal-field select,
-.modal-field textarea {
-    padding: 10px 14px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-family: inherit;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.modal-field textarea {
-    resize: vertical;
-    min-height: 60px;
-}
-
-.modal-field input:focus,
-.modal-field select:focus,
-.modal-field textarea:focus {
-    outline: none;
-    border-color: var(--color-primary);
-}
-
-.modal-field input:disabled,
-.modal-field select:disabled {
-    background: var(--color-background-light);
-    color: var(--color-muted);
-}
-
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-lg);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--color-border);
-}
-
-.modal-btn {
-    padding: 10px 20px;
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-}
-
-.modal-btn.primary {
-    background: var(--color-primary);
-    color: var(--color-background);
-    border: none;
-}
-
-.modal-btn.primary:hover {
-    background: var(--color-accent-hover);
-}
-
-.modal-btn.secondary {
-    background: var(--color-background);
-    color: var(--color-secondary);
-    border: 1px solid var(--color-border);
-}
-
-.modal-btn.secondary:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .volunteers-stats-bar {
         flex-wrap: wrap;
     }
-    
+
     .volunteers-filters {
-        flex-direction: column;
-    }
-    
-    .modal-row {
         flex-direction: column;
     }
 }
@@ -622,15 +490,6 @@ button.role-badge,
 .volunteers-renew-expiry {
     color: var(--color-secondary);
     font-size: 13px;
-}
-
-/* Checkbox field in modals */
-.modal-checkbox-field label {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    font-size: 14px;
-    cursor: pointer;
 }
 
 /* Tab bar */

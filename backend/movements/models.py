@@ -61,7 +61,7 @@ class ItemMovementRequest(models.Model):
         return f"Request #{self.id}: {self.item.item_code} from {self.from_location.name} to {self.to_location.name}"
 
     def approve(self, admin_user, comment=""):
-        """Approve the movement request. Item goes to IN_TRANSIT — location updates on arrival."""
+        """Approve the movement request. Item stays unchanged until transit is started."""
         from inventory.models import ItemHistory
 
         self.status = "APPROVED"
@@ -69,12 +69,6 @@ class ItemMovementRequest(models.Model):
         self.admin_comment = comment
         self.save()
 
-        # Set item to IN_TRANSIT but don't update location/box yet
-        self.item.status = "IN_TRANSIT"
-        self.item.is_verified = False
-        self.item.save(update_fields=["status", "is_verified", "updated_at"])
-
-        # Create history event for approval
         ItemHistory.objects.create(
             item=self.item,
             event_type="MOVE_APPROVED",
@@ -85,15 +79,22 @@ class ItemMovementRequest(models.Model):
             notes=comment,
         )
 
-        # Create IN_TRANSIT history event
+    def start_transit(self, user, comment=""):
+        """Start the physical transit. Item goes to IN_TRANSIT."""
+        from inventory.models import ItemHistory
+
+        self.item.status = "IN_TRANSIT"
+        self.item.is_verified = False
+        self.item.save(update_fields=["status", "is_verified", "updated_at"])
+
         ItemHistory.objects.create(
             item=self.item,
             event_type="IN_TRANSIT",
             from_location=self.from_location,
             to_location=self.to_location,
             movement_request=self,
-            acted_by=admin_user,
-            notes=f"Item in transit to {self.to_location.name}",
+            acted_by=user,
+            notes=comment or f"Item in transit to {self.to_location.name}",
         )
 
     def reject(self, admin_user, comment=""):
@@ -146,18 +147,16 @@ class ItemMovementRequest(models.Model):
         )
 
     def complete_unverified(self, user, comment=""):
-        """Auto-approve movement for senior/admin. Item goes to IN_TRANSIT — location updates on arrival."""
+        """Auto-approve and start transit for senior/admin."""
         from inventory.models import ItemHistory
 
         self.status = "COMPLETED_UNVERIFIED"
         self.save()
 
-        # Set item to IN_TRANSIT but don't update location yet
         self.item.status = "IN_TRANSIT"
         self.item.is_verified = False
         self.item.save(update_fields=["status", "is_verified", "updated_at"])
 
-        # Create IN_TRANSIT history event
         ItemHistory.objects.create(
             item=self.item,
             event_type="IN_TRANSIT",
@@ -165,7 +164,7 @@ class ItemMovementRequest(models.Model):
             to_location=self.to_location,
             movement_request=self,
             acted_by=user,
-            notes=comment or f"Item in transit to {self.to_location.name}",
+            notes=f"Item in transit to {self.to_location.name}",
         )
 
 
@@ -219,7 +218,7 @@ class BoxMovementRequest(models.Model):
         return f"Box Request #{self.id}: {self.box.box_code} from {self.from_location.name} to {self.to_location.name}"
 
     def approve(self, admin_user, comment=""):
-        """Approve the box movement request. Set all items in the box to IN_TRANSIT."""
+        """Approve the box movement request. Items stay unchanged until transit is started."""
         from inventory.models import ItemHistory
 
         self.status = "APPROVED"
@@ -227,7 +226,21 @@ class BoxMovementRequest(models.Model):
         self.admin_comment = comment
         self.save()
 
-        # Set all items to IN_TRANSIT but don't move location yet
+        items = list(self.box.items.all())
+        for item in items:
+            ItemHistory.objects.create(
+                item=item,
+                event_type="MOVE_APPROVED",
+                from_location=self.from_location,
+                to_location=self.to_location,
+                acted_by=admin_user,
+                notes=comment or f"Box {self.box.box_code} move approved",
+            )
+
+    def start_transit(self, user, comment=""):
+        """Start the physical transit. All items go to IN_TRANSIT."""
+        from inventory.models import ItemHistory
+
         items = list(self.box.items.all())
         for item in items:
             item.status = "IN_TRANSIT"
@@ -239,7 +252,7 @@ class BoxMovementRequest(models.Model):
                 event_type="IN_TRANSIT",
                 from_location=self.from_location,
                 to_location=self.to_location,
-                acted_by=admin_user,
+                acted_by=user,
                 notes=comment or f"Box {self.box.box_code} in transit to {self.to_location.name}",
             )
 
@@ -264,13 +277,12 @@ class BoxMovementRequest(models.Model):
             )
 
     def complete_unverified(self, user, comment=""):
-        """Auto-approve box movement for senior/admin. Items go to IN_TRANSIT — location updates on arrival."""
+        """Auto-approve and start transit for senior/admin."""
         from inventory.models import ItemHistory
 
         self.status = "COMPLETED_UNVERIFIED"
         self.save()
 
-        # Don't move box location yet — that happens on arrival
         items = list(self.box.items.all())
         for item in items:
             item.status = "IN_TRANSIT"
@@ -283,7 +295,7 @@ class BoxMovementRequest(models.Model):
                 from_location=self.from_location,
                 to_location=self.to_location,
                 acted_by=user,
-                notes=comment or f"Box {self.box.box_code} in transit to {self.to_location.name}",
+                notes=f"Box {self.box.box_code} in transit to {self.to_location.name}",
             )
 
     def complete_arrival(self, user, comment=""):

@@ -33,8 +33,8 @@ class LocationSerializer(serializers.ModelSerializer):
 class BoxSerializer(serializers.ModelSerializer):
     class Meta:
         model = Box
-        fields = ["id", "box_code", "label", "description", "location"]
-        read_only_fields = ["id"]
+        fields = ["id", "box_code", "label", "description", "location", "created_at", "updated_at"]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class LocationDetailSerializer(serializers.ModelSerializer):
@@ -70,7 +70,7 @@ class BoxDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Box
-        fields = ["id", "box_code", "label", "description", "location", "items"]
+        fields = ["id", "box_code", "label", "description", "location", "items", "created_at", "updated_at"]
         read_only_fields = [
             "id",
             "box_code",
@@ -78,6 +78,8 @@ class BoxDetailSerializer(serializers.ModelSerializer):
             "description",
             "location",
             "items",
+            "created_at",
+            "updated_at",
         ]
 
 
@@ -195,15 +197,35 @@ class AdminCollectionItemSerializer(serializers.ModelSerializer):
             "platform",
             "description",
             "item_type",
+            "condition",
+            "is_complete",
+            "is_functional",
             "working_condition",
             "status",
+            "date_of_entry",
             "current_location",
             "is_public_visible",
             "is_on_floor",
             "is_verified",
             "box",
+            "creator_publisher",
+            "release_year",
+            "version_edition",
+            "media_type",
+            "manufacturer",
+            "model_number",
+            "year_manufactured",
+            "serial_number",
+            "hardware_type",
+            "item_subtype",
+            "date_published",
+            "publisher",
+            "volume_number",
+            "isbn_catalogue_number",
+            "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "created_at", "updated_at"]
         extra_kwargs = {
             "item_code": {
                 "required": True,

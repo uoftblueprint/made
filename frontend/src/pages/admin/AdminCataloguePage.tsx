@@ -630,6 +630,7 @@ const AdminCataloguePage: React.FC = () => {
           setSelectedItem(null);
         }}
         onConfirm={handleDeleteConfirm}
+        itemId={selectedItem?.id ?? 0}
         itemTitle={selectedItem?.title || ''}
       />
 

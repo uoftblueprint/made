@@ -20,6 +20,24 @@ export interface CreateItemData {
   is_public_visible: boolean;
   is_on_floor: boolean;
   box: number | null;
+  condition?: string;
+  is_complete?: string;
+  is_functional?: string;
+  date_of_entry?: string;
+  creator_publisher?: string;
+  release_year?: string;
+  version_edition?: string;
+  media_type?: string;
+  manufacturer?: string;
+  model_number?: string;
+  year_manufactured?: string;
+  serial_number?: string;
+  hardware_type?: string;
+  item_subtype?: string;
+  date_published?: string;
+  publisher?: string;
+  volume_number?: string;
+  isbn_catalogue_number?: string;
 }
 
 export type UpdateItemData = Partial<CreateItemData>;
@@ -74,6 +92,10 @@ export const itemsApi = {
   ): Promise<AdminCollectionItem> => {
     const response = await apiClient.patch(`/inventory/items/${id}/`, data);
     return response.data;
+  },
+
+  delete: async (id: string | number): Promise<void> => {
+    await apiClient.delete(`/inventory/items/${id}/`);
   },
 };
 

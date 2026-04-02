@@ -8600,189 +8600,219 @@
       "email": "laura.hall@applicant.com",
       "phone_number": "416-555-0123",
       "motivation_text": "Arcade restoration hobbyist with knowledge of hardware repair.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$8WRJNggdaUviS01WUNLrsQ$5Bhc7HNIXRok96u5uP2FYz+9NZUYo48w4GvF8a04K58="
     },
     {
       "name": "Volunteer User",
       "email": "volunteer@made.org",
       "phone_number": "647-555-0456",
       "motivation_text": "Photography enthusiast who can help document the collection.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "Patricia Allen",
       "email": "patricia.allen@applicant.com",
       "phone_number": "905-555-0789",
       "motivation_text": "Data entry specialist with attention to detail and love for video games.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$Amr6tsysATZSr08CoTI2h0$O7ZaW1vcJQlMOUODDr8K3oVj7JPZnP+rafDy32gUL2E="
     },
     {
       "name": "Timothy Johnson",
       "email": "timothy.johnson@email.com",
       "phone_number": "647-555-0567",
       "motivation_text": "History teacher who uses video games to engage students with technology history.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "Paul Clark",
       "email": "paul.clark@applicant.com",
       "phone_number": "416-555-0234",
       "motivation_text": "Computer science student researching the history of game development.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$0opmZFPdvOSxinqqPFuG8b$f43nZNRFVkPtswitmLxL09xyR1a/C9/4MyGJqgxnlbM="
     },
     {
       "name": "Daniel Brown",
       "email": "daniel.brown@applicant.com",
       "phone_number": "905-555-0345",
       "motivation_text": "Computer science student researching the history of game development.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$ZY8K5BtfJEJJeocAN8YumX$PgpJkxG6utE/MAbHGVaqsBVXt7l0e8GWD5CrP8ivcP8="
     },
     {
       "name": "Patricia Thompson",
       "email": "patricia.thompson@email.com",
       "phone_number": "416-555-0678",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "George Torres",
       "email": "george.torres@applicant.com",
       "motivation_text": "Arcade restoration hobbyist with knowledge of hardware repair.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$1spf1uWzlvku9CHTbfm8vH$XU4aY18v54N5HZMiFjD6fO5QS3WUJPcRafRuhRFTtNU="
     },
     {
       "name": "Michael Wright",
       "email": "michael.wright@applicant.com",
       "phone_number": "647-555-0890",
       "motivation_text": "Software developer who wants to contribute to the museum's mission on weekends.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$wkzYWtMvUF152zmeabzbWI$+F0ixmTO4EwLl831mJ54oOUR3XuasGNMoqh73K+cn4U="
     },
     {
       "name": "Patricia Williams",
       "email": "patricia.williams@email.com",
       "motivation_text": "Photography enthusiast who can help document the collection.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "Mark Johnson",
       "email": "mark.johnson@email.com",
       "motivation_text": "Data entry specialist with attention to detail and love for video games.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "Steven Lewis",
       "email": "steven.lewis@applicant.com",
       "motivation_text": "Library science student interested in digital preservation and archival work.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$N1UPiNhAkN8vDm8asVBhMH$vcwbBEmDYGtwrPqqzZ5KnezhHj/SEQ3S9bS6yn58YKs="
     },
     {
       "name": "Karen Mitchell",
       "email": "karen.mitchell@applicant.com",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$VqBs40SHHvVT2nV7Lf6pUH$o3nQpFLctd/NhyEsTvd2VB3TW5Pg5296bKjnYnAoDAk="
     },
     {
       "name": "Jeffrey Baker",
       "email": "jeffrey.baker@applicant.com",
       "motivation_text": "Marketing professional who can help with social media and outreach.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$HfWucWEUfBU3TdmLRIpKSS$LH47RN1yxRJ4D0OEozF2fjSP0TQt6AddqKiK2dwOZ+M="
     },
     {
       "name": "Matthew Baker",
       "email": "matthew.baker@email.com",
       "motivation_text": "Photography enthusiast who can help document the collection.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "Jessica Rodriguez",
       "email": "jessica.rodriguez@applicant.com",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$bkRaSEyWztHsYeVK0gckAs$Gfbd9e5lCOmHl7uMw6zN7ZZOxW9GIBh3mR52DUdHWHg="
     },
     {
       "name": "Barbara Taylor",
       "email": "barbara.taylor@applicant.com",
       "motivation_text": "History teacher who uses video games to engage students with technology history.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$WiKcRMQ9LMkD916DrKtjsh$3R6weoqMw+zzcSUl0biCRXKLWsm4noQdsicDcWMq8wc="
     },
     {
       "name": "Rebecca Green",
       "email": "rebecca.green@applicant.com",
       "motivation_text": "Film student interested in the intersection of gaming and visual storytelling.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$hUXKk5KwI9afIlGzpTisL6$/qYtTDkRtNbJ8ncHqnSkpQlcAj0l9MNqZ2Dhn0tgL0A="
     },
     {
       "name": "Ryan Nelson",
       "email": "ryan.nelson@applicant.com",
       "phone_number": "905-555-0112",
       "motivation_text": "I've been collecting retro games for over 10 years and would love to help catalog and preserve gaming history.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$cD2uXwcm1Q5hWdQMjDuRFb$22SN+TjsykTg78HgpVPwOPJ9TFZHDCR/b02nEWxxkKc="
     },
     {
       "name": "Melissa Perez",
       "email": "melissa.perez@applicant.com",
       "motivation_text": "Data entry specialist with attention to detail and love for video games.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$AAAvVug4le3GCmHyw26oKP$iBlH83bJTsf4o8Nx9waqerjsCBOJjN1SJ1S9V4fABF4="
     },
     {
       "name": "Lisa Lee",
       "email": "lisa.lee@applicant.com",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
-      "status": "REJECTED"
+      "status": "REJECTED",
+      "password_hash": "pbkdf2_sha256$1000000$wsZfRH2ZaGXzguazO0jx6d$IAFQMv4hGGua/870rOsmolBCVkH8U9o8pK3evev5G9I="
     },
     {
       "name": "Lisa King",
       "email": "lisa.king@applicant.com",
       "motivation_text": "Marketing professional who can help with social media and outreach.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$KYhFuiK5288RDMRHOAf0l4$aYTnnuEpeVkQ7M537yepAK+vLWR76jxBEt95y7yV3kM="
     },
     {
       "name": "Stephanie Mitchell",
       "email": "stephanie.mitchell@applicant.com",
       "motivation_text": "History teacher who uses video games to engage students with technology history.",
-      "status": "REJECTED"
+      "status": "REJECTED",
+      "password_hash": "pbkdf2_sha256$1000000$54pRJNiMvjvplQp9dysC1P$ztfb+qGQGj11Ht+FTDM1QdxxfxxqQFgPmEdF+6p5JPg="
     },
     {
       "name": "Nancy Lopez",
       "email": "nancy.lopez@email.com",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
-      "status": "APPROVED"
+      "status": "APPROVED",
+      "password_hash": "pbkdf2_sha256$1000000$SrSdUG8iua3XubRjwEAut2$9efwmdoTQGTfBgGjatVCuTNVOPQPCfyC0j8MsPH7Qj8="
     },
     {
       "name": "Sharon Allen",
       "email": "sharon.allen@applicant.com",
       "motivation_text": "Marketing professional who can help with social media and outreach.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$bXgyfNexPctxnrAa7PRLN9$W/5FuRwfrzfJfdCHQHWQFTa/5GOl01u0P0jOvkwfzgM="
     },
     {
       "name": "Donna Nguyen",
       "email": "donna.nguyen@applicant.com",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$dnDqPkbelOLWSpJNR24T0O$h++JTKEI9hIIiEg9XzNd0ULrQfe814xGd97SKuJbbP8="
     },
     {
       "name": "Matthew Green",
       "email": "matthew.green@applicant.com",
       "motivation_text": "Game designer who wants to study classic game design and help preserve important titles.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$o02L2r2GshrW6gAlL2dRQT$QyYxdpreuBpRW87/iltiricv+lEFBxnX0YwLAA5rUMM="
     },
     {
       "name": "Joshua White",
       "email": "joshua.white@applicant.com",
       "motivation_text": "Retired IT professional with a passion for vintage computing and gaming.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$jMDPRWyWDqpfybhcZnbGf7$MeRdyqzh0Fc+MAmVf3RFfsUCql4MkUXbuDRw5IH0xw0="
     },
     {
       "name": "Ryan Flores",
       "email": "ryan.flores@applicant.com",
       "motivation_text": "Retired IT professional with a passion for vintage computing and gaming.",
-      "status": "PENDING"
+      "status": "PENDING",
+      "password_hash": "pbkdf2_sha256$1000000$f2s69TPsehSDyBcP6rmOXu$V050G0WT/xsCOi9tVKpETiggbm6ENxjZllf+Q8jtl4I="
     },
     {
       "name": "Michelle White",
       "email": "michelle.white@applicant.com",
       "motivation_text": "Arcade restoration hobbyist with knowledge of hardware repair.",
-      "status": "REJECTED"
+      "status": "REJECTED",
+      "password_hash": "pbkdf2_sha256$1000000$kOn1TjZMb7G23r8nQLfPOm$4kSFEqTAgpetLL5h48gQrfdozZeAOG3RgSHmMk7pihg="
     }
   ],
   "movement_requests": [

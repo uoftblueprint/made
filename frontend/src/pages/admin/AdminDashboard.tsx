@@ -28,12 +28,12 @@ const AdminDashboard: React.FC = () => {
   const { isAdmin, isSeniorVolunteer } = useAuth();
   const canApprove = isAdmin || isSeniorVolunteer;
   // "Your Activity" — always filtered to current user
-  const { requests: myItemReqs, loading: myItemLoading, completeArrival: myArriveItem, verify: myVerifyItem } = useRequests(undefined, true);
-  const { requests: myBoxReqs, loading: myBoxLoading, completeArrival: myArriveBox, verify: myVerifyBox } = useBoxRequests(undefined, true);
+  const { requests: myItemReqs, loading: myItemLoading, completeArrival: myArriveItem, verify: myVerifyItem, startTransit: myStartTransitItem } = useRequests(undefined, true);
+  const { requests: myBoxReqs, loading: myBoxLoading, completeArrival: myArriveBox, verify: myVerifyBox, startTransit: myStartTransitBox } = useBoxRequests(undefined, true);
 
   // "All Activity" — only for admins/seniors (shows everything with actions)
-  const { requests: allItemReqs, loading: allItemLoading, approve: approveItem, reject: rejectItem, verify: verifyItem, completeArrival: arriveItem } = useRequests();
-  const { requests: allBoxReqs, loading: allBoxLoading, approve: approveBox, reject: rejectBox, verify: verifyBox, completeArrival: arriveBox } = useBoxRequests();
+  const { requests: allItemReqs, loading: allItemLoading, approve: approveItem, reject: rejectItem, verify: verifyItem, completeArrival: arriveItem, startTransit: allStartTransitItem } = useRequests();
+  const { requests: allBoxReqs, loading: allBoxLoading, approve: approveBox, reject: rejectBox, verify: verifyBox, completeArrival: arriveBox, startTransit: allStartTransitBox } = useBoxRequests();
 
   const { stats, loading: statsLoading } = useDashboardStats();
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -44,8 +44,8 @@ const AdminDashboard: React.FC = () => {
     setActionMessage({ text: msg, section });
     setTimeout(() => setActionMessage(null), 4000);
   };
-  type RequestTab = 'pending' | 'in_transit' | 'arrived' | 'rejected';
-  const [myTabParam, setMyTab] = useQueryState('myTab', 'in_transit');
+  type RequestTab = 'pending' | 'approved' | 'in_transit' | 'arrived' | 'rejected';
+  const [myTabParam, setMyTab] = useQueryState('myTab', canApprove ? 'in_transit' : 'pending');
   const myTab = myTabParam as RequestTab;
   const [allTabParam, setAllTab] = useQueryState('allTab', 'pending');
   const allTab = allTabParam as RequestTab;
@@ -113,8 +113,9 @@ const AdminDashboard: React.FC = () => {
 
   const filterByTab = (reqs: UnifiedRequest[], tab: RequestTab) => {
     if (tab === 'pending') return reqs.filter(r => r.status === 'WAITING_APPROVAL');
+    if (tab === 'approved') return reqs.filter(r => isActiveRequest(r) && r.item_status !== 'IN_TRANSIT' && r.item_status !== 'AVAILABLE');
     if (tab === 'in_transit') return reqs.filter(r => isActiveRequest(r) && r.item_status === 'IN_TRANSIT');
-    if (tab === 'arrived') return reqs.filter(r => isActiveRequest(r) && r.item_status !== 'IN_TRANSIT' && !r.item_is_verified);
+    if (tab === 'arrived') return reqs.filter(r => isActiveRequest(r) && r.item_status === 'AVAILABLE' && !r.item_is_verified);
     return reqs.filter(r => r.status === 'REJECTED');
   };
 
@@ -165,6 +166,24 @@ const AdminDashboard: React.FC = () => {
       showActionMessage(`"${request.title}" marked as arrived — awaiting verification`, isMine ? 'my' : 'all');
     } catch (error) {
       console.error('Failed to mark as arrived:', error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleStartTransit = async (request: UnifiedRequest, isMine = false) => {
+    setProcessingId(request.key);
+    try {
+      if (isMine) {
+        if (request.type === 'item') await myStartTransitItem(request.id);
+        else await myStartTransitBox(request.id);
+      } else {
+        if (request.type === 'item') await allStartTransitItem(request.id);
+        else await allStartTransitBox(request.id);
+      }
+      showActionMessage(`"${request.title}" is now in transit`, isMine ? 'my' : 'all');
+    } catch (error) {
+      console.error('Failed to start transit:', error);
     } finally {
       setProcessingId(null);
     }
@@ -230,10 +249,15 @@ const AdminDashboard: React.FC = () => {
         )}
         <div className="admin-request-tabs">
           {([
+            // Juniors: Pending → Approved → In Transit → Rejected
+            // Seniors/Admins: In Transit → Arrived
+            ...(!canApprove ? [
+              { key: 'pending' as const, label: 'Pending', count: filterByTab(myRequests, 'pending').length },
+              { key: 'approved' as const, label: 'Approved', count: filterByTab(myRequests, 'approved').length },
+            ] : []),
             { key: 'in_transit' as const, label: 'In Transit', count: filterByTab(myRequests, 'in_transit').length },
             ...(canApprove ? [{ key: 'arrived' as const, label: 'Arrived', count: filterByTab(myRequests, 'arrived').length }] : []),
             ...(!canApprove ? [
-              { key: 'pending' as const, label: 'Pending', count: filterByTab(myRequests, 'pending').length },
               { key: 'rejected' as const, label: 'Rejected', count: filterByTab(myRequests, 'rejected').length },
             ] : []),
           ]).map(tab => (
@@ -264,6 +288,12 @@ const AdminDashboard: React.FC = () => {
                 <div className="admin-review-item-actions">
                   <span className="admin-review-time">{formatTimeAgo(request.created_at)}</span>
                   {myTab === 'pending' && <span className="admin-request-status pending"><AlertCircle size={14} /> Awaiting Approval</span>}
+                  {myTab === 'approved' && (
+                    <>
+                      <span className="admin-request-status approved"><Check size={14} /> Approved</span>
+                      <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleStartTransit(request, true)} disabled={processingId === request.key} title="Start Transit"><Truck size={16} /></button>
+                    </>
+                  )}
                   {myTab === 'in_transit' && (
                     <>
                       <span className="admin-request-status in-transit"><Truck size={14} /> In Transit</span>
@@ -301,6 +331,7 @@ const AdminDashboard: React.FC = () => {
           <div className="admin-request-tabs">
             {([
               { key: 'pending' as const, label: 'Pending', count: filterByTab(allRequests, 'pending').length },
+              { key: 'approved' as const, label: 'Approved', count: filterByTab(allRequests, 'approved').length },
               { key: 'in_transit' as const, label: 'In Transit', count: filterByTab(allRequests, 'in_transit').length },
               { key: 'arrived' as const, label: 'Arrived', count: filterByTab(allRequests, 'arrived').length },
               { key: 'rejected' as const, label: 'Rejected', count: filterByTab(allRequests, 'rejected').length },
@@ -340,6 +371,12 @@ const AdminDashboard: React.FC = () => {
                         ) : null}
                         <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleApprove(request)} disabled={processingId === request.key} title="Approve"><Check size={16} /></button>
                         <button className="admin-review-btn-icon admin-review-btn-reject" onClick={() => handleReject(request)} disabled={processingId === request.key} title="Reject"><X size={16} /></button>
+                      </>
+                    )}
+                    {allTab === 'approved' && (
+                      <>
+                        <span className="admin-request-status approved"><Check size={14} /> Approved</span>
+                        <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleStartTransit(request, false)} disabled={processingId === request.key} title="Start Transit"><Truck size={16} /></button>
                       </>
                     )}
                     {allTab === 'in_transit' && (

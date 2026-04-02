@@ -66,13 +66,8 @@ export interface PublicCollectionItem extends BaseCollectionItem {
 export interface AdminCollectionItem extends BaseCollectionItem {
   is_public_visible: boolean;
   box: number | null;
-}
-
-// TODO: place holder
-export interface ItemOnFloor {
-  id: number;
-  item: BaseCollectionItem;
-  location: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ExpiringVolunteer {
