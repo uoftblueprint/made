@@ -294,7 +294,7 @@ const ItemDetailsPage: React.FC = () => {
           )}
 
           {/* Required Information */}
-          <div className="item-details-card hidden md:flex">
+          <div className="item-details-card hidden md:block">
             <h3>Required Information</h3>
             <div className="item-details-grid">
               <div className="item-field">
