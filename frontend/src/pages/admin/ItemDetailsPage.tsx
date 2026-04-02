@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X, Clock, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
-import type { AdminCollectionItem } from '../../lib/types';
 import { useItemRequests } from '../../actions/useRequests';
 import type { MovementRequest } from '../../lib/types';
 import './ItemDetailsPage.css';
@@ -43,7 +42,7 @@ const ItemDetailsPage: React.FC = () => {
   const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
   const [arrivalError, setArrivalError] = useState<string | null>(null);
 
-  const { requests: movementRequests, loading: requestsLoading, approve, reject, completeArrival } = useItemRequests(id ? parseInt(id) : undefined);
+  const { requests: movementRequests, approve, reject, completeArrival } = useItemRequests(id ? parseInt(id) : undefined);
   const pendingRequests = movementRequests.filter(r => r.status === 'WAITING_APPROVAL');
   const approvedRequests = movementRequests.filter(r => r.status === 'APPROVED');
   const activeTransitRequest = approvedRequests[0] ?? null;
