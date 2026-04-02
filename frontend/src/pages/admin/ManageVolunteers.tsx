@@ -1,5 +1,6 @@
 import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval, useUpdateVolunteer } from '../../actions/useVolunteers';
 import { useState, useMemo, useCallback } from 'react'
+import { useQueryState } from '../../hooks/useQueryState';
 import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, Edit2 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import SortableHeader from '../../components/common/SortableHeader';
@@ -21,8 +22,9 @@ const dateToEndOfDayIso = (dateStr: string): string =>
 
 const ManageVolunteers = () => {
     const [showAddModal, setShowAddModal] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'APPROVED' | 'PENDING' | 'REJECTED'>('APPROVED');
+    const [searchQuery, setSearchQuery] = useQueryState('q');
+    const [activeTabParam, setActiveTab] = useQueryState('tab', 'APPROVED');
+    const activeTab = activeTabParam as 'APPROVED' | 'PENDING' | 'REJECTED';
 
     type ExpiryModal =
         | { mode: 'approve'; applicationId: number }
@@ -419,7 +421,6 @@ const ManageVolunteers = () => {
                         size="md"
                         onClick={submitExpiryModal}
                         disabled={isPending || (expiryModal?.mode === 'extend' && !expiryModal.volunteer.user_id)}
-                        className="!text-black"
                     >
                         {isPending
                             ? expiryModal?.mode === 'approve' ? 'Approving…' : 'Extending…'

@@ -4,6 +4,7 @@ import type { BoxMovementRequest, MovementRequest, MovementRequestStatus } from 
 
 export interface MovementRequestFilter {
   status?: MovementRequestStatus;
+  mine?: boolean;
 }
 
 export interface CreateMovementRequestInput {
@@ -32,6 +33,7 @@ export const requestsApi = {
   getAll: async (params?: MovementRequestFilter): Promise<MovementRequest[]> => {
     const queryParams: Record<string, string> = {};
     if (params?.status) queryParams.status = params.status;
+    if (params?.mine) queryParams.mine = 'true';
 
     const response = await apiClient.get('/movements/movement-requests/', { params: queryParams });
     return response.data.results ?? response.data;
@@ -86,8 +88,16 @@ export const boxRequestsApi = {
   getAll: async (params?: MovementRequestFilter): Promise<BoxMovementRequest[]> => {
     const queryParams: Record<string, string> = {};
     if (params?.status) queryParams.status = params.status;
+    if (params?.mine) queryParams.mine = 'true';
 
     const response = await apiClient.get('/movements/box-movement-requests/', { params: queryParams });
+    return response.data.results ?? response.data;
+  },
+
+  getByBoxId: async (boxId: number): Promise<BoxMovementRequest[]> => {
+    const response = await apiClient.get('/movements/box-movement-requests/', {
+      params: { box: boxId }
+    });
     return response.data.results ?? response.data;
   },
 

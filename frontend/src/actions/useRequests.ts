@@ -16,7 +16,7 @@ interface UseRequestsResult {
   verify: (id: number, data?: ReviewRequestInput) => Promise<void>;
 }
 
-export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
+export function useRequests(status?: MovementRequestStatus, mine?: boolean): UseRequestsResult {
   const [requests, setRequests] = useState<MovementRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,16 +25,17 @@ export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
     try {
       setLoading(true);
       setError(null);
-      const data = status
-        ? await requestsApi.getAll({ status })
-        : await requestsApi.getAll();
+      const params: import('../api/requests.api').MovementRequestFilter = {};
+      if (status) params.status = status;
+      if (mine) params.mine = true;
+      const data = await requestsApi.getAll(params);
       setRequests(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch requests');
     } finally {
       setLoading(false);
     }
-  }, [status]);
+  }, [status, mine]);
 
   useEffect(() => {
     fetchRequests();
@@ -160,7 +161,7 @@ interface UseBoxRequestsResult {
   completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
 }
 
-export function useBoxRequests(status?: MovementRequestStatus): UseBoxRequestsResult {
+export function useBoxRequests(status?: MovementRequestStatus, mine?: boolean): UseBoxRequestsResult {
   const [requests, setRequests] = useState<BoxMovementRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -169,16 +170,17 @@ export function useBoxRequests(status?: MovementRequestStatus): UseBoxRequestsRe
     try {
       setLoading(true);
       setError(null);
-      const data = status
-        ? await boxRequestsApi.getAll({ status })
-        : await boxRequestsApi.getAll();
+      const params: import('../api/requests.api').MovementRequestFilter = {};
+      if (status) params.status = status;
+      if (mine) params.mine = true;
+      const data = await boxRequestsApi.getAll(params);
       setRequests(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch box requests');
     } finally {
       setLoading(false);
     }
-  }, [status]);
+  }, [status, mine]);
 
   useEffect(() => {
     fetchRequests();
@@ -214,4 +216,43 @@ export function useBoxRequests(status?: MovementRequestStatus): UseBoxRequestsRe
     verify,
     completeArrival,
   };
+}
+
+export function useBoxDetailRequests(boxId: number | null) {
+  const [requests, setRequests] = useState<BoxMovementRequest[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRequests = useCallback(async () => {
+    if (boxId === null) { setRequests([]); return; }
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await boxRequestsApi.getByBoxId(boxId);
+      setRequests(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch box requests');
+    } finally {
+      setLoading(false);
+    }
+  }, [boxId]);
+
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
+
+  const approve = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await boxRequestsApi.approve(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  const reject = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await boxRequestsApi.reject(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  const verify = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await boxRequestsApi.verify(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
+  return { requests, loading, error, refetch: fetchRequests, approve, reject, verify };
 }

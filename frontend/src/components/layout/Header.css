@@ -7,15 +7,22 @@
 }
 
 .header-logo {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 28px;
-    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
     text-decoration: none;
     margin-right: var(--spacing-lg);
 }
 
-.header-logo:hover {
+.header-logo-img {
+    height: 32px;
+    width: auto;
+}
+
+.header-logo-text {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
     color: var(--color-primary);
 }
 

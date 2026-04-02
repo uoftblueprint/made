@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
@@ -30,17 +30,46 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
 const BoxManagementPage: React.FC = () => {
   const { isJuniorVolunteer } = useAuth();
   const navigate = useNavigate();
-  const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
-  const [selectedBoxId, setSelectedBoxId] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'list' | 'containers'>('list');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedLocationId = searchParams.get('loc') ? Number(searchParams.get('loc')) : null;
+  const selectedBoxId = searchParams.get('box') ? Number(searchParams.get('box')) : null;
+  const activeTab = (searchParams.get('tab') || 'list') as 'list' | 'containers';
+  const expandedBoxIdFromUrl = searchParams.get('expanded') ? Number(searchParams.get('expanded')) : null;
+
+  const updateParams = useCallback((updates: Record<string, string | null>) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      for (const [k, v] of Object.entries(updates)) {
+        if (v === null || v === '') next.delete(k);
+        else next.set(k, v);
+      }
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setSelectedLocationId = useCallback((id: number | null) => {
+    updateParams({ loc: id !== null ? String(id) : null, box: null });
+  }, [updateParams]);
+  const setSelectedBoxId = useCallback((id: number | null) => {
+    updateParams({ box: id !== null ? String(id) : null });
+  }, [updateParams]);
+  const setActiveTab = useCallback((tab: string) => {
+    updateParams({ tab: tab === 'list' ? null : tab });
+  }, [updateParams]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationType, setNewLocationType] = useState<CreateLocationData['location_type']>('STORAGE');
   const [newLocationDescription, setNewLocationDescription] = useState('');
 
   // All Containers tab state
-  const [containerSearch, setContainerSearch] = useState('');
-  const [expandedBoxId, setExpandedBoxId] = useState<number | null>(null);
+  const containerSearch = searchParams.get('q') || '';
+  const setContainerSearch = useCallback((v: string) => {
+    updateParams({ q: v || null });
+  }, [updateParams]);
+  const expandedBoxId = expandedBoxIdFromUrl;
+  const setExpandedBoxId = useCallback((id: number | null) => {
+    updateParams({ expanded: id !== null ? String(id) : null });
+  }, [updateParams]);
   const [expandedBoxDetail, setExpandedBoxDetail] = useState<BoxDetail | null>(null);
   const [expandedBoxLoading, setExpandedBoxLoading] = useState(false);
 
@@ -189,9 +218,19 @@ const BoxManagementPage: React.FC = () => {
     }
   };
 
+  // Auto-load expanded box detail when restored from URL
+  useEffect(() => {
+    if (expandedBoxId && !expandedBoxDetail && !expandedBoxLoading) {
+      setExpandedBoxLoading(true);
+      boxesApi.getById(expandedBoxId)
+        .then(setExpandedBoxDetail)
+        .catch(() => {})
+        .finally(() => setExpandedBoxLoading(false));
+    }
+  }, [expandedBoxId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleLocationClick = (locationId: number) => {
     setSelectedLocationId(locationId);
-    setSelectedBoxId(null);
   };
 
   const handleBoxClick = (boxId: number) => {
@@ -356,8 +395,8 @@ const BoxManagementPage: React.FC = () => {
                               <p className="all-containers-detail-loading">Loading items...</p>
                             ) : expandedBoxDetail ? (
                               <>
-                              <div className="box-management-detail-header" style={{ marginBottom: '8px' }}>
-                                <span className="add-item-section-title" style={{ margin: 0 }}>Items ({expandedBoxDetail.items?.length || 0})</span>
+                              <div className="box-management-detail-header">
+                                <span className="add-item-section-title">Items ({expandedBoxDetail.items?.length || 0})</span>
                                 <Button variant="outline-black" size="xs" icon="plus" onClick={() => { setAddItemBoxId(expandedBoxId!); setShowAddItemModal(true); }}>
                                   Add Item
                                 </Button>

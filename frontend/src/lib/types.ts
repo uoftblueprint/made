@@ -134,6 +134,7 @@ export interface MovementRequest {
   admin: number | null;
   admin_username: string | null;
   item_is_verified?: boolean;
+  item_status?: string;
   admin_comment: string;
   created_at: string;
   updated_at: string;
@@ -154,6 +155,8 @@ export interface BoxMovementRequest {
   admin: number | null;
   admin_username: string | null;
   admin_comment: string;
+  items_status?: string;
+  items_verified?: boolean;
   created_at: string;
   updated_at: string;
 }

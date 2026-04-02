@@ -21,6 +21,21 @@ class IsVolunteer(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated and request.user.role in ["VOLUNTEER", "ADMIN"])
 
 
+class IsSeniorOrAdmin(permissions.BasePermission):
+    """
+    Allows access to admins and senior volunteers (those who don't require move approval).
+    """
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+        if request.user.role == "ADMIN":
+            return True
+        if request.user.role == "VOLUNTEER" and not request.user.requires_move_approval:
+            return True
+        return False
+
+
 class IsActiveAndNotExpired(permissions.BasePermission):
     """
     Global check: Is the user active? Has their access expired?

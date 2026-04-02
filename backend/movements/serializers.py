@@ -34,6 +34,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
     item_title = serializers.CharField(source="item.title", read_only=True)
     item_platform = serializers.CharField(source="item.platform", read_only=True)
     item_is_verified = serializers.BooleanField(source="item.is_verified", read_only=True)
+    item_status = serializers.CharField(source="item.status", read_only=True)
     from_location_name = serializers.CharField(source="from_location.name", read_only=True)
     to_location_name = serializers.CharField(source="to_location.name", read_only=True)
     from_box_code = serializers.CharField(source="from_box.box_code", read_only=True, default=None)
@@ -48,6 +49,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "item_title",
             "item_platform",
             "item_is_verified",
+            "item_status",
             "requested_by",
             "requested_by_username",
             "from_location",
@@ -87,6 +89,8 @@ class BoxMovementRequestSerializer(serializers.ModelSerializer):
     box_label = serializers.CharField(source="box.label", read_only=True)
     from_location_name = serializers.CharField(source="from_location.name", read_only=True)
     to_location_name = serializers.CharField(source="to_location.name", read_only=True)
+    items_status = serializers.SerializerMethodField()
+    items_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = BoxMovementRequest
@@ -105,9 +109,21 @@ class BoxMovementRequestSerializer(serializers.ModelSerializer):
             "admin",
             "admin_username",
             "admin_comment",
+            "items_status",
+            "items_verified",
             "created_at",
             "updated_at",
         ]
+
+    def get_items_status(self, obj):
+        """Return IN_TRANSIT if any item in the box is in transit, else AVAILABLE."""
+        if obj.box.items.filter(status="IN_TRANSIT").exists():
+            return "IN_TRANSIT"
+        return "AVAILABLE"
+
+    def get_items_verified(self, obj):
+        """Return True only if all items in the box are verified."""
+        return not obj.box.items.filter(is_verified=False).exists()
         read_only_fields = [
             "id",
             "requested_by",

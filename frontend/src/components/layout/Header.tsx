@@ -11,7 +11,10 @@ const Header = () => {
 
   return (
     <nav className="header-nav">
-      <Link to="/" className="header-logo">MADE</Link>
+      <Link to="/" className="header-logo">
+        <img src="/logo.png" alt="MADE" className="header-logo-img" />
+        <span className="header-logo-text">The MADE</span>
+      </Link>
       
       <div className="header-links">
         {/* All authenticated volunteers and admins */}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Package, ArrowRightLeft } from 'lucide-react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, MapPin, Package, ArrowRightLeft, Check, X, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useBoxDetail } from '../../actions/useBoxes';
+import { useBoxDetailRequests } from '../../actions/useRequests';
 import { useLocations } from '../../actions/useLocations';
 import { boxRequestsApi } from '../../api/requests.api';
 import { useAuth } from '../../contexts';
@@ -12,17 +13,26 @@ import './BoxDetailsPage.css';
 const BoxDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isJuniorVolunteer } = useAuth();
+  const [searchParams] = useSearchParams();
+  const isRequestView = searchParams.get('from') === 'request';
+  const { isAdmin, isSeniorVolunteer, isJuniorVolunteer } = useAuth();
+  const canApprove = isAdmin || isSeniorVolunteer;
   const boxId = id ? parseInt(id) : null;
   const { box, loading, error, refetch } = useBoxDetail(boxId);
   const { locations } = useLocations();
+  const { requests: boxRequests, approve, reject, verify } = useBoxDetailRequests(boxId);
 
-  // Move Box modal state
+  const pendingRequests = boxRequests.filter(r => r.status === 'WAITING_APPROVAL');
+  const inTransitRequests = boxRequests.filter(r => r.status === 'APPROVED' || r.status === 'COMPLETED_UNVERIFIED');
+  const hasActiveRequest = pendingRequests.length > 0 || inTransitRequests.length > 0;
+
   const [showMoveModal, setShowMoveModal] = useState(false);
   const [moveDestinationId, setMoveDestinationId] = useState<number | ''>('');
   const [moveError, setMoveError] = useState<string | null>(null);
   const [movingBox, setMovingBox] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const locationName = locations.find(l => l.id === box?.location)?.name ?? '--';
 
@@ -39,10 +49,8 @@ const BoxDetailsPage: React.FC = () => {
 
   const handleSubmitMove = async () => {
     if (!box || moveDestinationId === '') return;
-
     setMovingBox(true);
     setMoveError(null);
-
     try {
       const response = await boxRequestsApi.create({
         box: box.id,
@@ -51,7 +59,7 @@ const BoxDetailsPage: React.FC = () => {
       });
       handleCloseMoveModal();
       if (response.status === 'COMPLETED_UNVERIFIED') {
-        setSuccessMessage('Box moved successfully.');
+        setSuccessMessage('Box moved successfully. Awaiting verification.');
       } else {
         setSuccessMessage('Movement request submitted for approval.');
       }
@@ -65,13 +73,42 @@ const BoxDetailsPage: React.FC = () => {
     }
   };
 
+  const handleApprove = async (requestId: number) => {
+    setProcessingRequestId(requestId);
+    setActionError(null);
+    try {
+      await approve(requestId);
+      await refetch();
+    } catch { setActionError('Failed to approve request.'); }
+    finally { setProcessingRequestId(null); }
+  };
+
+  const handleReject = async (requestId: number) => {
+    setProcessingRequestId(requestId);
+    setActionError(null);
+    try {
+      await reject(requestId);
+      await refetch();
+    } catch { setActionError('Failed to reject request.'); }
+    finally { setProcessingRequestId(null); }
+  };
+
+  const handleVerify = async (requestId: number) => {
+    setProcessingRequestId(requestId);
+    setActionError(null);
+    try {
+      await verify(requestId);
+      await refetch();
+    } catch { setActionError('Failed to verify request.'); }
+    finally { setProcessingRequestId(null); }
+  };
+
   if (loading) {
     return (
       <div className="box-details-layout">
-        <Link to="/admin/boxes" className="box-details-back">
-          <ArrowLeft size={16} />
-          Back to Box Management
-        </Link>
+        <button onClick={() => navigate(-1)} className="box-details-back">
+          <ArrowLeft size={16} /> Back
+        </button>
         <div className="box-details-loading">Loading box details...</div>
       </div>
     );
@@ -80,10 +117,9 @@ const BoxDetailsPage: React.FC = () => {
   if (error || !box) {
     return (
       <div className="box-details-layout">
-        <Link to="/admin/boxes" className="box-details-back">
-          <ArrowLeft size={16} />
-          Back to Box Management
-        </Link>
+        <button onClick={() => navigate(-1)} className="box-details-back">
+          <ArrowLeft size={16} /> Back
+        </button>
         <div className="box-details-error">{error || 'Box not found.'}</div>
       </div>
     );
@@ -91,13 +127,16 @@ const BoxDetailsPage: React.FC = () => {
 
   return (
     <div className="box-details-layout">
-      <Link to="/admin/boxes" className="box-details-back">
+      <button onClick={() => navigate(-1)} className="box-details-back">
         <ArrowLeft size={16} />
-        Back to Box Management
-      </Link>
+        {isRequestView ? 'Back to Dashboard' : 'Back to Box Management'}
+      </button>
 
       {successMessage && (
         <div className="box-details-success-banner">{successMessage}</div>
+      )}
+      {actionError && (
+        <div className="box-details-error-banner">{actionError}</div>
       )}
 
       <div className="box-details-header">
@@ -109,7 +148,13 @@ const BoxDetailsPage: React.FC = () => {
         </div>
 
         <div className="box-details-badges">
-          <span className="item-badge type">
+          {pendingRequests.length > 0 && (
+            <span className="box-details-badge move-requested">Move Requested</span>
+          )}
+          {inTransitRequests.length > 0 && (
+            <span className="box-details-badge in-transit">In Transit</span>
+          )}
+          <span className="box-details-badge">
             <MapPin size={12} /> {locationName}
           </span>
         </div>
@@ -117,91 +162,188 @@ const BoxDetailsPage: React.FC = () => {
 
       <div className="box-details-content">
         <div className="box-details-main">
-          {/* Box Information */}
-          <div className="box-details-card">
-            <h3>Box Information</h3>
-            <div className="item-details-grid">
-              <div className="item-field">
-                <span className="item-field-label">Box Code</span>
-                <span className="item-field-value">{box.box_code}</span>
+          {/* Movement Activity Section */}
+          <div className="box-details-section">
+            <h2 className="box-details-section-title">
+              <ArrowRightLeft size={18} /> Movement Activity
+            </h2>
+
+            {pendingRequests.length > 0 && (
+              <div className="box-details-card box-details-request-card">
+                <h3>
+                  Move Request
+                  <span className="box-details-request-status pending">Pending</span>
+                </h3>
+                <div className="item-details-grid">
+                  <div className="item-field">
+                    <span className="item-field-label">From</span>
+                    <span className="item-field-value">{pendingRequests[0].from_location_name}</span>
+                  </div>
+                  <div className="item-field">
+                    <span className="item-field-label">To</span>
+                    <span className="item-field-value">{pendingRequests[0].to_location_name}</span>
+                  </div>
+                  <div className="item-field">
+                    <span className="item-field-label">Requested By</span>
+                    <span className="item-field-value">{pendingRequests[0].requested_by_username}</span>
+                  </div>
+                </div>
+                {canApprove && (
+                  <div className="box-details-request-actions">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleApprove(pendingRequests[0].id)}
+                      disabled={processingRequestId !== null}
+                    >
+                      <Check size={14} /> Approve
+                    </Button>
+                    <Button
+                      variant="outline-gray"
+                      size="sm"
+                      onClick={() => handleReject(pendingRequests[0].id)}
+                      disabled={processingRequestId !== null}
+                    >
+                      <X size={14} /> Reject
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="item-field">
-                <span className="item-field-label">Label</span>
-                <span className="item-field-value">{box.label || '--'}</span>
+            )}
+
+            {inTransitRequests.length > 0 && pendingRequests.length === 0 && (
+              <div className="box-details-card box-details-request-card">
+                <h3>
+                  Move Request
+                  <span className="box-details-request-status in-transit">In Transit</span>
+                </h3>
+                <div className="item-details-grid">
+                  <div className="item-field">
+                    <span className="item-field-label">From</span>
+                    <span className="item-field-value">{inTransitRequests[0].from_location_name}</span>
+                  </div>
+                  <div className="item-field">
+                    <span className="item-field-label">To</span>
+                    <span className="item-field-value">{inTransitRequests[0].to_location_name}</span>
+                  </div>
+                </div>
+                {canApprove && (
+                  <div className="box-details-request-actions">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleVerify(inTransitRequests[0].id)}
+                      disabled={processingRequestId !== null}
+                    >
+                      <ShieldCheck size={14} />
+                      {processingRequestId === inTransitRequests[0].id ? 'Verifying...' : 'Verify Location'}
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="item-field">
-                <span className="item-field-label">Location</span>
-                <span className="item-field-value">
-                  <MapPin size={14} /> {locationName}
-                </span>
-              </div>
-              <div className="item-field">
-                <span className="item-field-label">Items Count</span>
-                <span className="item-field-value">{box.items?.length ?? 0}</span>
-              </div>
-            </div>
-            {box.description && (
-              <div className="item-field" style={{ marginTop: 'var(--spacing-md)' }}>
-                <span className="item-field-label">Description</span>
-                <span className="item-field-value">{box.description}</span>
+            )}
+
+            {!hasActiveRequest && (
+              <div className="box-details-card">
+                <div className="box-details-no-activity">
+                  <div className="box-details-no-activity-info">
+                    <p className="box-details-no-activity-text">No active movement requests</p>
+                    <p className="box-details-no-activity-sub">Current location: {locationName}</p>
+                  </div>
+                  <Button
+                    variant="outline-black"
+                    size="sm"
+                    onClick={handleOpenMoveModal}
+                  >
+                    <ArrowRightLeft size={14} />
+                    {isJuniorVolunteer ? 'Request Move' : 'Move Box'}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Items Table */}
-          <div className="box-details-card">
-            <h3>Items ({box.items?.length ?? 0})</h3>
-            {!box.items || box.items.length === 0 ? (
-              <div className="box-details-empty-items">
-                <Package size={32} />
-                <p>No items in this box</p>
+          {/* Collection Section */}
+          <div className="box-details-section">
+            <h2 className="box-details-section-title">
+              <Package size={18} /> Collection
+            </h2>
+
+            <div className="box-details-card">
+              <h3>Box Information</h3>
+              <div className="item-details-grid">
+                <div className="item-field">
+                  <span className="item-field-label">Box Code</span>
+                  <span className="item-field-value">{box.box_code}</span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">Label</span>
+                  <span className="item-field-value">{box.label || '--'}</span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">Location</span>
+                  <span className="item-field-value">
+                    <MapPin size={14} /> {locationName}
+                  </span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">Items Count</span>
+                  <span className="item-field-value">{box.items?.length ?? 0}</span>
+                </div>
               </div>
-            ) : (
-              <table className="box-details-items-table">
-                <thead>
-                  <tr>
-                    <th>Item Code</th>
-                    <th>Title</th>
-                    <th>Platform</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {box.items.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="box-details-item-row"
-                      onClick={() => navigate(`/admin/catalogue/${item.id}`)}
-                    >
-                      <td><strong>{item.item_code}</strong></td>
-                      <td>{item.title}</td>
-                      <td>{item.platform || '--'}</td>
-                      <td>{item.item_type}</td>
-                      <td>
-                        <span className={`item-status ${item.working_condition ? 'working' : 'not-working'}`}>
-                          {item.working_condition ? 'Working' : 'Not Working'}
-                        </span>
-                      </td>
+              {box.description && (
+                <div className="item-field box-details-description">
+                  <span className="item-field-label">Description</span>
+                  <span className="item-field-value">{box.description}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="box-details-card">
+              <h3>Items ({box.items?.length ?? 0})</h3>
+              {!box.items || box.items.length === 0 ? (
+                <div className="box-details-empty-items">
+                  <Package size={32} />
+                  <p>No items in this box</p>
+                </div>
+              ) : (
+                <table className="box-details-items-table">
+                  <thead>
+                    <tr>
+                      <th>Item Code</th>
+                      <th>Title</th>
+                      <th>Platform</th>
+                      <th>Type</th>
+                      <th>Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody>
+                    {box.items.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="box-details-item-row"
+                        onClick={() => navigate(`/admin/catalogue/${item.id}`)}
+                      >
+                        <td><strong>{item.item_code}</strong></td>
+                        <td>{item.title}</td>
+                        <td>{item.platform || '--'}</td>
+                        <td>{item.item_type}</td>
+                        <td>
+                          <span className={`item-status ${item.working_condition ? 'working' : 'not-working'}`}>
+                            {item.working_condition ? 'Working' : 'Not Working'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="box-details-sidebar">
-          <button
-            className="item-action-btn secondary"
-            onClick={handleOpenMoveModal}
-          >
-            <ArrowRightLeft size={16} />
-            {isJuniorVolunteer ? 'Request Move' : 'Move Box'}
-          </button>
-
-          {/* Metadata */}
           <div className="item-sidebar-meta">
             <div className="item-meta-field">
               <span className="item-meta-label">Box Code</span>
@@ -230,9 +372,8 @@ const BoxDetailsPage: React.FC = () => {
             <input type="text" value={locationName} disabled />
           </div>
           <div className="modal-field">
-            <label htmlFor="move-box-destination">Destination Location <span className="required">*</span></label>
+            <label>Destination Location <span className="required">*</span></label>
             <select
-              id="move-box-destination"
               value={moveDestinationId}
               onChange={(e) => setMoveDestinationId(e.target.value ? Number(e.target.value) : '')}
               disabled={movingBox}
@@ -249,12 +390,7 @@ const BoxDetailsPage: React.FC = () => {
           </div>
         </div>
         <div className="modal-actions">
-          <Button
-            variant="outline-gray"
-            size="md"
-            onClick={handleCloseMoveModal}
-            disabled={movingBox}
-          >
+          <Button variant="outline-gray" size="md" onClick={handleCloseMoveModal} disabled={movingBox}>
             Cancel
           </Button>
           <Button
@@ -263,7 +399,7 @@ const BoxDetailsPage: React.FC = () => {
             onClick={handleSubmitMove}
             disabled={movingBox || moveDestinationId === ''}
           >
-            {movingBox ? (isJuniorVolunteer ? 'Submitting...' : 'Moving...') : (isJuniorVolunteer ? 'Submit Move Request' : 'Move Box')}
+            {movingBox ? 'Submitting...' : (isJuniorVolunteer ? 'Submit Move Request' : 'Move Box')}
           </Button>
         </div>
       </Modal>

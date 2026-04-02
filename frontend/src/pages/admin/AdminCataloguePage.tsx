@@ -3,6 +3,7 @@ import { AddItemModal, EditItemModal, DeleteItemDialog, ExportModal } from '../.
 import { itemsApi } from '../../api/items.api';
 import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types';
 import { Link } from 'react-router-dom';
+import { useQueryState } from '../../hooks/useQueryState';
 import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check, AlertTriangle } from 'lucide-react';
 import Button from '../../components/common/Button';
 import SortableHeader from '../../components/common/SortableHeader';
@@ -144,8 +145,8 @@ const MobileFilterGroup: React.FC<MobileFilterGroupProps> = ({
 const AdminCataloguePage: React.FC = () => {
   const { isAdmin, isSeniorVolunteer } = useAuth();
   const canEdit = isAdmin || isSeniorVolunteer;
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useQueryState('q');
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [items, setItems] = useState<AdminCollectionItem[]>([]);
   const inventoryItems = items.map((item) => ({
     raw: item,
@@ -162,12 +163,12 @@ const AdminCataloguePage: React.FC = () => {
 
   const [showFilters, setShowFilters] = useState(false);
 
-  const [typeFilter, setTypeFilter] = useState<string>('');
-  const [locationFilter, setLocationFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [workingConditionFilter, setWorkingConditionFilter] = useState<string>('');
-  const [boxCodeFilter, setBoxCodeFilter] = useState<string>('');
-  const [debouncedBoxCode, setDebouncedBoxCode] = useState<string>('');
+  const [typeFilter, setTypeFilter] = useQueryState('type');
+  const [locationFilter, setLocationFilter] = useQueryState('location');
+  const [statusFilter, setStatusFilter] = useQueryState('status');
+  const [workingConditionFilter, setWorkingConditionFilter] = useQueryState('working');
+  const [boxCodeFilter, setBoxCodeFilter] = useQueryState('box');
+  const [debouncedBoxCode, setDebouncedBoxCode] = useState(boxCodeFilter);
 
   // Debounce search query
   useEffect(() => {

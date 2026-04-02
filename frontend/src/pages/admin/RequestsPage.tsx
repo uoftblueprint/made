@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, X, Clock, CheckCircle, XCircle, Filter, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useRequests, useBoxRequests } from '../../actions/useRequests';
 import type { MovementRequest, MovementRequestStatus, BoxMovementRequest } from '../../lib/types';
@@ -38,6 +38,7 @@ function getStatusBadge(status: MovementRequestStatus) {
 }
 
 const RequestsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'items' | 'boxes'>('items');
   const [statusFilter, setStatusFilter] = useState<MovementRequestStatus | undefined>(undefined);
   const { requests, loading, error, approve, reject, verify } = useRequests(statusFilter);
@@ -120,10 +121,10 @@ const RequestsPage: React.FC = () => {
   return (
     <div className="requests-layout">
       {/* Back Link */}
-      <Link to="/admin" className="requests-back">
+      <button onClick={() => navigate(-1)} className="requests-back">
         <ArrowLeft size={16} />
-        Back to Dashboard
-      </Link>
+        Back
+      </button>
 
       {/* Header */}
       <div className="requests-header">

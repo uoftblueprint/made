@@ -221,7 +221,8 @@ const ItemDetailsPage: React.FC = () => {
     return (
       <div className="item-details-layout">
         <button onClick={() => navigate(-1)} className="item-details-back">
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} />
+          Back
         </button>
         <div className="item-details-loading">Loading item details...</div>
       </div>
@@ -232,7 +233,8 @@ const ItemDetailsPage: React.FC = () => {
     return (
       <div className="item-details-layout">
         <button onClick={() => navigate(-1)} className="item-details-back">
-          <ArrowLeft size={20} />
+          <ArrowLeft size={16} />
+          Back
         </button>
         <div className="item-details-error">{error || 'Item not found.'}</div>
       </div>
@@ -250,10 +252,10 @@ const ItemDetailsPage: React.FC = () => {
 
   return (
     <div className="item-details-layout">
-      <Link to={backLink} className="item-details-back">
+      <button onClick={() => navigate(-1)} className="item-details-back">
         <ArrowLeft size={16} />
-        {backText}
-      </Link>
+        Back
+      </button>
 
       {moveSuccessMessage && (
         <div className="item-details-success-banner">{moveSuccessMessage}</div>

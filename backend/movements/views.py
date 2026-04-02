@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from users.permissions import IsVolunteer
+from users.permissions import IsVolunteer, IsSeniorOrAdmin
 from .models import BoxMovementRequest, ItemMovementRequest
 from .serializers import BoxMovementRequestSerializer, ItemMovementRequestSerializer
 
@@ -64,19 +64,23 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # Volunteers see only their own requests
         user = self.request.user
-        if user.is_staff:
-            queryset = ItemMovementRequest.objects.all()  # Admins see all
+        mine_only = self.request.query_params.get("mine")
+
+        if mine_only == "true":
+            queryset = ItemMovementRequest.objects.filter(requested_by=user)
+        elif user.is_staff or user.role == "ADMIN":
+            queryset = ItemMovementRequest.objects.all()
+        elif not getattr(user, "requires_move_approval", True):
+            # Senior volunteers see all
+            queryset = ItemMovementRequest.objects.all()
         else:
             queryset = ItemMovementRequest.objects.filter(requested_by=user)
 
-        # Filter by status if provided
         status_filter = self.request.query_params.get("status")
         if status_filter:
             queryset = queryset.filter(status=status_filter)
 
-        # Filter by item if provided
         item_filter = self.request.query_params.get("item")
         if item_filter:
             queryset = queryset.filter(item_id=item_filter)
@@ -93,7 +97,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
                 comment="Auto-completed: volunteer does not require move approval",
             )
 
-    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
+    @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def approve(self, request, pk=None):
         move_request = self.get_object()
 
@@ -108,7 +112,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
+    @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def reject(self, request, pk=None):
         move_request = self.get_object()
 
@@ -123,16 +127,16 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
+    @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def verify(self, request, pk=None):
-        """Verify an unverified movement request and mark the item as verified."""
+        """Verify a movement request after item has arrived."""
         from inventory.models import ItemHistory
 
         move_request = self.get_object()
 
-        if move_request.status != "COMPLETED_UNVERIFIED":
+        if move_request.status not in ("COMPLETED_UNVERIFIED", "APPROVED"):
             return Response(
-                {"detail": "Only completed unverified requests can be verified."},
+                {"detail": "Only active requests can be verified."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -166,13 +170,12 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         """Mark item as arrived at destination after approved movement."""
         move_request = self.get_object()
 
-        if move_request.status != "APPROVED":
+        if move_request.status not in ("APPROVED", "COMPLETED_UNVERIFIED"):
             return Response(
-                {"detail": "Only approved requests can be marked as arrived."},
+                {"detail": "Only in-transit requests can be marked as arrived."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Check if item is actually in transit
         if move_request.item.status != "IN_TRANSIT":
             return Response(
                 {"detail": "Item is not currently in transit."},
@@ -197,7 +200,13 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff:
+        mine_only = self.request.query_params.get("mine")
+
+        if mine_only == "true":
+            queryset = BoxMovementRequest.objects.filter(requested_by=user)
+        elif user.is_staff or user.role == "ADMIN":
+            queryset = BoxMovementRequest.objects.all()
+        elif not getattr(user, "requires_move_approval", True):
             queryset = BoxMovementRequest.objects.all()
         else:
             queryset = BoxMovementRequest.objects.filter(requested_by=user)
@@ -205,6 +214,10 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
         status_filter = self.request.query_params.get("status")
         if status_filter:
             queryset = queryset.filter(status=status_filter)
+
+        box_filter = self.request.query_params.get("box")
+        if box_filter:
+            queryset = queryset.filter(box_id=box_filter)
 
         return queryset
 
@@ -218,7 +231,7 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
                 comment="Auto-completed: volunteer does not require move approval",
             )
 
-    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
+    @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def approve(self, request, pk=None):
         move_request = self.get_object()
 
@@ -233,7 +246,7 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
+    @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def reject(self, request, pk=None):
         move_request = self.get_object()
 
@@ -248,14 +261,14 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
+    @action(detail=True, methods=["post"], permission_classes=[IsSeniorOrAdmin])
     def verify(self, request, pk=None):
         """Verify an unverified box movement request and mark all items as verified."""
         move_request = self.get_object()
 
-        if move_request.status != "COMPLETED_UNVERIFIED":
+        if move_request.status not in ("COMPLETED_UNVERIFIED", "APPROVED"):
             return Response(
-                {"detail": "Only completed unverified requests can be verified."},
+                {"detail": "Only in-transit requests can be verified."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -266,12 +279,12 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="complete-arrival")
     def complete_arrival(self, request, pk=None):
-        """Mark box as arrived at destination after approved movement."""
+        """Mark box as arrived at destination."""
         move_request = self.get_object()
 
-        if move_request.status != "APPROVED":
+        if move_request.status not in ("APPROVED", "COMPLETED_UNVERIFIED"):
             return Response(
-                {"detail": "Only approved requests can be marked as arrived."},
+                {"detail": "Only in-transit requests can be marked as arrived."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

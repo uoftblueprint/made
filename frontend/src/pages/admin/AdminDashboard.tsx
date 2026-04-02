@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Layers, Archive, MapPin, Check, X, XCircle, Truck, PackageCheck, ShieldCheck } from 'lucide-react';
+import { useQueryState } from '../../hooks/useQueryState';
+import { AlertCircle, Layers, Archive, Check, X, XCircle, Truck, ShieldCheck, Eye } from 'lucide-react';
 import { useRequests, useBoxRequests } from '../../actions/useRequests';
 import { useDashboardStats } from '../../actions/useStats';
 import type { MovementRequest, BoxMovementRequest } from '../../lib/types';
@@ -26,30 +27,42 @@ function formatTimeAgo(dateString: string): string {
 const AdminDashboard: React.FC = () => {
   const { isAdmin, isSeniorVolunteer } = useAuth();
   const canApprove = isAdmin || isSeniorVolunteer;
-  const { requests: itemRequests, loading: itemLoading, approve: approveItem, reject: rejectItem, verify: verifyItem } = useRequests();
-  const { requests: boxReqs, loading: boxLoading, approve: approveBox, reject: rejectBox, verify: verifyBox } = useBoxRequests();
+  // "Your Activity" — always filtered to current user
+  const { requests: myItemReqs, loading: myItemLoading, completeArrival: myArriveItem, verify: myVerifyItem } = useRequests(undefined, true);
+  const { requests: myBoxReqs, loading: myBoxLoading, completeArrival: myArriveBox, verify: myVerifyBox } = useBoxRequests(undefined, true);
+
+  // "All Activity" — only for admins/seniors (shows everything with actions)
+  const { requests: allItemReqs, loading: allItemLoading, approve: approveItem, reject: rejectItem, verify: verifyItem, completeArrival: arriveItem } = useRequests();
+  const { requests: allBoxReqs, loading: allBoxLoading, approve: approveBox, reject: rejectBox, verify: verifyBox, completeArrival: arriveBox } = useBoxRequests();
+
   const { stats, loading: statsLoading } = useDashboardStats();
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  type RequestTab = 'pending' | 'in_transit' | 'rejected';
-  const [requestTab, setRequestTab] = useState<RequestTab>('pending');
+  type RequestTab = 'pending' | 'in_transit' | 'arrived' | 'rejected';
+  const [myTabParam, setMyTab] = useQueryState('myTab', 'in_transit');
+  const myTab = myTabParam as RequestTab;
+  const [allTabParam, setAllTab] = useQueryState('allTab', 'pending');
+  const allTab = allTabParam as RequestTab;
 
-  const loading = itemLoading || boxLoading;
+  const myLoading = myItemLoading || myBoxLoading;
+  const allLoading = allItemLoading || allBoxLoading;
 
   // Unified request type for display
   type UnifiedRequest = {
     id: number;
-    key: string; // unique key: 'item-1' or 'box-1'
+    key: string;
     type: 'item' | 'box';
     title: string;
     subtitle: string;
     from_location_name: string;
     to_location_name: string;
     status: string;
+    item_status?: string;
+    item_is_verified?: boolean;
     created_at: string;
     updated_at: string;
-    item_id?: number; // for linking to item detail
-    box_id?: number; // for linking to box detail
+    item_id?: number;
+    box_id?: number;
   };
 
   const unifyItemReqs = (reqs: MovementRequest[]): UnifiedRequest[] =>
@@ -62,6 +75,8 @@ const AdminDashboard: React.FC = () => {
       from_location_name: r.from_location_name || '',
       to_location_name: r.to_location_name || '',
       status: r.status,
+      item_status: r.item_status,
+      item_is_verified: r.item_is_verified,
       created_at: r.created_at,
       updated_at: r.updated_at,
       item_id: r.item,
@@ -77,26 +92,33 @@ const AdminDashboard: React.FC = () => {
       from_location_name: r.from_location_name || '',
       to_location_name: r.to_location_name || '',
       status: r.status,
+      item_status: r.items_status,
+      item_is_verified: r.items_verified,
       created_at: r.created_at,
       updated_at: r.updated_at,
       box_id: r.box,
     }));
 
-  const allRequests = [
-    ...unifyItemReqs(itemRequests),
-    ...unifyBoxReqs(boxReqs),
-  ];
+  // Build unified lists
+  const myRequests = [...unifyItemReqs(myItemReqs), ...unifyBoxReqs(myBoxReqs)];
+  const allRequests = [...unifyItemReqs(allItemReqs), ...unifyBoxReqs(allBoxReqs)];
 
-  const pendingRequests = allRequests.filter(r => r.status === 'WAITING_APPROVAL');
-  const inTransitRequests = allRequests.filter(r => r.status === 'APPROVED' || r.status === 'COMPLETED_UNVERIFIED');
-  const rejectedRequests = allRequests.filter(r => r.status === 'REJECTED');
+  const isActiveRequest = (r: UnifiedRequest) => r.status === 'APPROVED' || r.status === 'COMPLETED_UNVERIFIED';
 
-  const tabRequestsMap: Record<RequestTab, UnifiedRequest[]> = {
-    pending: pendingRequests,
-    in_transit: inTransitRequests,
-    rejected: rejectedRequests,
+  const filterByTab = (reqs: UnifiedRequest[], tab: RequestTab) => {
+    if (tab === 'pending') return reqs.filter(r => r.status === 'WAITING_APPROVAL');
+    if (tab === 'in_transit') return reqs.filter(r => isActiveRequest(r) && r.item_status === 'IN_TRANSIT');
+    if (tab === 'arrived') return reqs.filter(r => isActiveRequest(r) && r.item_status !== 'IN_TRANSIT' && !r.item_is_verified);
+    return reqs.filter(r => r.status === 'REJECTED');
   };
-  const tabRequests = tabRequestsMap[requestTab];
+
+  const myTabRequests = filterByTab(myRequests, myTab);
+  const allTabRequests = filterByTab(allRequests, allTab);
+
+  // Stats from all requests
+  const allPending = filterByTab(allRequests, 'pending');
+  const allInTransit = filterByTab(allRequests, 'in_transit');
+  const allArrived = filterByTab(allRequests, 'arrived');
 
   const handleApprove = async (request: UnifiedRequest) => {
     setProcessingId(request.key);
@@ -122,11 +144,33 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleVerify = async (request: UnifiedRequest) => {
+  const handleMarkArrived = async (request: UnifiedRequest, isMine: boolean) => {
     setProcessingId(request.key);
     try {
-      if (request.type === 'item') await verifyItem(request.id);
-      else await verifyBox(request.id);
+      if (isMine) {
+        if (request.type === 'item') await myArriveItem(request.id);
+        else await myArriveBox(request.id);
+      } else {
+        if (request.type === 'item') await arriveItem(request.id);
+        else await arriveBox(request.id);
+      }
+    } catch (error) {
+      console.error('Failed to mark as arrived:', error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleVerify = async (request: UnifiedRequest, isMine = false) => {
+    setProcessingId(request.key);
+    try {
+      if (isMine) {
+        if (request.type === 'item') await myVerifyItem(request.id);
+        else await myVerifyBox(request.id);
+      } else {
+        if (request.type === 'item') await verifyItem(request.id);
+        else await verifyBox(request.id);
+      }
     } catch (error) {
       console.error('Failed to verify request:', error);
     } finally {
@@ -146,8 +190,13 @@ const AdminDashboard: React.FC = () => {
       <div className="admin-stats-grid">
         <div className="admin-stat-card">
           <AlertCircle className="admin-stat-icon" size={24} />
-          <p className="admin-stat-value">{loading ? '...' : pendingRequests.length}</p>
-          <p className="admin-stat-label">Needs Review</p>
+          <p className="admin-stat-value">{allLoading ? '...' : allPending.length}</p>
+          <p className="admin-stat-label">Pending Requests</p>
+        </div>
+        <div className="admin-stat-card">
+          <Truck className="admin-stat-icon" size={24} />
+          <p className="admin-stat-value">{allLoading ? '...' : allInTransit.length + allArrived.length}</p>
+          <p className="admin-stat-label">In Transit / Arrived</p>
         </div>
         <div className="admin-stat-card">
           <Layers className="admin-stat-icon" size={24} />
@@ -159,144 +208,156 @@ const AdminDashboard: React.FC = () => {
           <p className="admin-stat-value">{statsLoading ? '...' : stats?.total_boxes?.toLocaleString() ?? '--'}</p>
           <p className="admin-stat-label">Containers</p>
         </div>
-        <div className="admin-stat-card">
-          <MapPin className="admin-stat-icon" size={24} />
-          <p className="admin-stat-value">{statsLoading ? '...' : stats?.total_locations?.toLocaleString() ?? '--'}</p>
-          <p className="admin-stat-label">Locations</p>
-        </div>
       </div>
 
-      {/* Movement Requests */}
+      {/* Your Activity */}
       <div className="admin-review-section">
         <div className="admin-review-header">
-          <h3>Movement Requests</h3>
+          <h3>Your Activity</h3>
         </div>
-
-        {/* Tabs */}
         <div className="admin-request-tabs">
           {([
-            { key: 'pending' as const, label: 'Pending', count: pendingRequests.length },
-            { key: 'in_transit' as const, label: 'In Transit', count: inTransitRequests.length },
-            { key: 'rejected' as const, label: 'Rejected', count: rejectedRequests.length },
+            { key: 'in_transit' as const, label: 'In Transit', count: filterByTab(myRequests, 'in_transit').length },
+            ...(canApprove ? [{ key: 'arrived' as const, label: 'Arrived', count: filterByTab(myRequests, 'arrived').length }] : []),
+            ...(!canApprove ? [
+              { key: 'pending' as const, label: 'Pending', count: filterByTab(myRequests, 'pending').length },
+              { key: 'rejected' as const, label: 'Rejected', count: filterByTab(myRequests, 'rejected').length },
+            ] : []),
           ]).map(tab => (
             <button
               key={tab.key}
-              className={`admin-request-tab ${requestTab === tab.key ? 'active' : ''}`}
-              onClick={() => setRequestTab(tab.key)}
+              className={`admin-request-tab ${myTab === tab.key ? 'active' : ''}`}
+              onClick={() => setMyTab(tab.key)}
             >
-              {tab.label} ({loading ? '...' : tab.count})
+              {tab.label} ({myLoading ? '...' : tab.count})
             </button>
           ))}
         </div>
-
         <div className="admin-review-list">
-          {loading ? (
-            <div className="admin-review-item">
-              <p>Loading requests...</p>
-            </div>
-          ) : tabRequests.length === 0 ? (
-            <div className="admin-review-item">
-              <p>No {requestTab === 'pending' ? 'pending' : requestTab === 'in_transit' ? 'in transit' : 'rejected'} requests</p>
-            </div>
+          {myLoading ? (
+            <div className="admin-review-item"><p>Loading...</p></div>
+          ) : myTabRequests.length === 0 ? (
+            <div className="admin-review-item"><p>No activity</p></div>
           ) : (
-            tabRequests.slice(0, 10).map((request) => (
+            myTabRequests.slice(0, 10).map((request) => (
               <div key={request.key} className="admin-review-item">
                 <div className="admin-review-item-info">
-                  {request.type === 'item' ? (
-                    <Layers size={16} className="admin-review-dot" />
-                  ) : (
-                    <Archive size={16} className="admin-review-dot" />
-                  )}
+                  {request.type === 'item' ? <Layers size={16} className="admin-review-dot" /> : <Archive size={16} className="admin-review-dot" />}
                   <div className="admin-review-item-details">
                     <h4>{request.title}</h4>
-                    <p>
-                      {request.subtitle} · {request.from_location_name} → {request.to_location_name}
-                    </p>
+                    <p>{request.subtitle} · {request.from_location_name} → {request.to_location_name}</p>
                   </div>
                 </div>
                 <div className="admin-review-item-actions">
                   <span className="admin-review-time">{formatTimeAgo(request.created_at)}</span>
-                  {requestTab === 'pending' && (
+                  {myTab === 'pending' && <span className="admin-request-status pending"><AlertCircle size={14} /> Awaiting Approval</span>}
+                  {myTab === 'in_transit' && (
                     <>
-                      {request.type === 'item' && request.item_id ? (
-                        <Link
-                          to={`/admin/catalogue/${request.item_id}?from=request`}
-                          className="admin-review-btn admin-review-btn-review"
-                        >
-                          Review
-                        </Link>
-                      ) : request.type === 'box' && request.box_id ? (
-                        <Link
-                          to={`/admin/boxes/${request.box_id}`}
-                          className="admin-review-btn admin-review-btn-review"
-                        >
-                          Review
-                        </Link>
-                      ) : null}
-                      {canApprove && (
-                        <>
-                          <button
-                            className="admin-review-btn-icon admin-review-btn-approve"
-                            onClick={() => handleApprove(request)}
-                            disabled={processingId === request.key}
-                            title="Approve"
-                          >
-                            <Check size={16} />
-                          </button>
-                          <button
-                            className="admin-review-btn-icon admin-review-btn-reject"
-                            onClick={() => handleReject(request)}
-                            disabled={processingId === request.key}
-                            title="Reject"
-                          >
-                            <X size={16} />
-                          </button>
-                        </>
-                      )}
+                      <span className="admin-request-status in-transit"><Truck size={14} /> In Transit</span>
+                      <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleMarkArrived(request, true)} disabled={processingId === request.key} title="Mark Arrived"><Check size={16} /></button>
                     </>
                   )}
-                  {requestTab === 'in_transit' && (
+                  {myTab === 'arrived' && (
                     <>
-                      {request.status === 'COMPLETED_UNVERIFIED' ? (
-                        <span className="admin-request-status arrived">
-                          <PackageCheck size={14} /> Arrived
-                        </span>
-                      ) : (
-                        <span className="admin-request-status in-transit">
-                          <Truck size={14} /> In Transit
-                        </span>
-                      )}
-                      {request.status === 'COMPLETED_UNVERIFIED' && canApprove && (
-                        <button
-                          className="admin-review-btn-icon admin-review-btn-approve"
-                          onClick={() => handleVerify(request)}
-                          disabled={processingId === request.key}
-                          title="Verify arrival"
-                        >
-                          <ShieldCheck size={16} />
-                        </button>
-                      )}
-                      {request.type === 'item' && request.item_id && (
-                        <Link
-                          to={`/admin/catalogue/${request.item_id}`}
-                          className="admin-review-btn admin-review-btn-review"
-                        >
-                          Review
-                        </Link>
-                      )}
+                      <span className="admin-request-status arrived"><ShieldCheck size={14} /> Arrived</span>
+                      <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleVerify(request, true)} disabled={processingId === request.key} title="Verify"><ShieldCheck size={16} /></button>
                     </>
                   )}
-                  {requestTab === 'rejected' && (
-                    <span className="admin-request-status rejected">
-                      <XCircle size={14} /> Rejected
-                    </span>
-                  )}
+                  {myTab === 'rejected' && <span className="admin-request-status rejected"><XCircle size={14} /> Rejected</span>}
+                  {request.type === 'item' && request.item_id ? (
+                    <Link to={`/admin/catalogue/${request.item_id}`} className="admin-review-btn-icon" title="View"><Eye size={16} /></Link>
+                  ) : request.type === 'box' && request.box_id ? (
+                    <Link to={`/admin/boxes/${request.box_id}`} className="admin-review-btn-icon" title="View"><Eye size={16} /></Link>
+                  ) : null}
                 </div>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* All Activity — admins and seniors */}
+      {canApprove && (
+        <div className="admin-review-section">
+          <div className="admin-review-header">
+            <h3>All Activity</h3>
+          </div>
+          <div className="admin-request-tabs">
+            {([
+              { key: 'pending' as const, label: 'Pending', count: filterByTab(allRequests, 'pending').length },
+              { key: 'in_transit' as const, label: 'In Transit', count: filterByTab(allRequests, 'in_transit').length },
+              { key: 'arrived' as const, label: 'Arrived', count: filterByTab(allRequests, 'arrived').length },
+              { key: 'rejected' as const, label: 'Rejected', count: filterByTab(allRequests, 'rejected').length },
+            ]).map(tab => (
+              <button
+                key={tab.key}
+                className={`admin-request-tab ${allTab === tab.key ? 'active' : ''}`}
+                onClick={() => setAllTab(tab.key)}
+              >
+                {tab.label} ({allLoading ? '...' : tab.count})
+              </button>
+            ))}
+          </div>
+          <div className="admin-review-list">
+            {allLoading ? (
+              <div className="admin-review-item"><p>Loading...</p></div>
+            ) : allTabRequests.length === 0 ? (
+              <div className="admin-review-item"><p>No requests</p></div>
+            ) : (
+              allTabRequests.slice(0, 10).map((request) => (
+                <div key={request.key} className="admin-review-item">
+                  <div className="admin-review-item-info">
+                    {request.type === 'item' ? <Layers size={16} className="admin-review-dot" /> : <Archive size={16} className="admin-review-dot" />}
+                    <div className="admin-review-item-details">
+                      <h4>{request.title}</h4>
+                      <p>{request.subtitle} · {request.from_location_name} → {request.to_location_name}</p>
+                    </div>
+                  </div>
+                  <div className="admin-review-item-actions">
+                    <span className="admin-review-time">{formatTimeAgo(request.created_at)}</span>
+                    {allTab === 'pending' && (
+                      <>
+                        {request.type === 'item' && request.item_id ? (
+                          <Link to={`/admin/catalogue/${request.item_id}?from=request`} className="admin-review-btn admin-review-btn-review">Review</Link>
+                        ) : request.type === 'box' && request.box_id ? (
+                          <Link to={`/admin/boxes/${request.box_id}?from=request`} className="admin-review-btn admin-review-btn-review">Review</Link>
+                        ) : null}
+                        <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleApprove(request)} disabled={processingId === request.key} title="Approve"><Check size={16} /></button>
+                        <button className="admin-review-btn-icon admin-review-btn-reject" onClick={() => handleReject(request)} disabled={processingId === request.key} title="Reject"><X size={16} /></button>
+                      </>
+                    )}
+                    {allTab === 'in_transit' && (
+                      <>
+                        <span className="admin-request-status in-transit"><Truck size={14} /> In Transit</span>
+                        <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleMarkArrived(request, false)} disabled={processingId === request.key} title="Mark Arrived"><Check size={16} /></button>
+                        {request.type === 'item' && request.item_id ? (
+                          <Link to={`/admin/catalogue/${request.item_id}`} className="admin-review-btn-icon" title="View"><Eye size={16} /></Link>
+                        ) : request.type === 'box' && request.box_id ? (
+                          <Link to={`/admin/boxes/${request.box_id}`} className="admin-review-btn-icon" title="View"><Eye size={16} /></Link>
+                        ) : null}
+                      </>
+                    )}
+                    {allTab === 'arrived' && (
+                      <>
+                        <span className="admin-request-status arrived"><ShieldCheck size={14} /> Awaiting Verification</span>
+                        <button className="admin-review-btn-icon admin-review-btn-approve" onClick={() => handleVerify(request)} disabled={processingId === request.key} title="Verify"><ShieldCheck size={16} /></button>
+                        {request.type === 'item' && request.item_id ? (
+                          <Link to={`/admin/catalogue/${request.item_id}`} className="admin-review-btn-icon" title="View"><Eye size={16} /></Link>
+                        ) : request.type === 'box' && request.box_id ? (
+                          <Link to={`/admin/boxes/${request.box_id}`} className="admin-review-btn-icon" title="View"><Eye size={16} /></Link>
+                        ) : null}
+                      </>
+                    )}
+                    {allTab === 'rejected' && (
+                      <span className="admin-request-status rejected"><XCircle size={14} /> Rejected</span>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="admin-quick-actions">

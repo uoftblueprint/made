@@ -61,7 +61,7 @@ class ItemMovementRequest(models.Model):
         return f"Request #{self.id}: {self.item.item_code} from {self.from_location.name} to {self.to_location.name}"
 
     def approve(self, admin_user, comment=""):
-        """Approve the movement request, set item to IN_TRANSIT, and create history event."""
+        """Approve the movement request. Item goes to IN_TRANSIT — location updates on arrival."""
         from inventory.models import ItemHistory
 
         self.status = "APPROVED"
@@ -69,18 +69,10 @@ class ItemMovementRequest(models.Model):
         self.admin_comment = comment
         self.save()
 
-        # Update item status to IN_TRANSIT
+        # Set item to IN_TRANSIT but don't update location/box yet
         self.item.status = "IN_TRANSIT"
-        update_fields = ["status", "updated_at"]
-        # If moving to a box, update box assignment on approval
-        if self.to_box:
-            self.item.box = self.to_box
-            update_fields.append("box")
-        elif self.from_box and not self.to_box:
-            # Moving out of a box to a location (no target box)
-            self.item.box = None
-            update_fields.append("box")
-        self.item.save(update_fields=update_fields)
+        self.item.is_verified = False
+        self.item.save(update_fields=["status", "is_verified", "updated_at"])
 
         # Create history event for approval
         ItemHistory.objects.create(
@@ -125,14 +117,15 @@ class ItemMovementRequest(models.Model):
         )
 
     def complete_arrival(self, user, comment=""):
-        """Mark item as arrived at destination, update location, and set status back to AVAILABLE."""
+        """Mark item as arrived at destination. Item becomes AVAILABLE but stays unverified."""
         from inventory.models import ItemHistory
 
-        # Update item location and status
+        # Update item location and status — arrived but not yet verified
         self.item.current_location = self.to_location
         self.item.is_on_floor = self.to_location.location_type == "FLOOR"
         self.item.status = "AVAILABLE"
-        update_fields = ["current_location", "is_on_floor", "status", "updated_at"]
+        self.item.is_verified = False
+        update_fields = ["current_location", "is_on_floor", "status", "is_verified", "updated_at"]
         if self.to_box:
             self.item.box = self.to_box
             update_fields.append("box")
@@ -153,35 +146,26 @@ class ItemMovementRequest(models.Model):
         )
 
     def complete_unverified(self, user, comment=""):
-        """Complete the movement immediately without admin approval. Item stays IN_TRANSIT until verified."""
+        """Auto-approve movement for senior/admin. Item goes to IN_TRANSIT — location updates on arrival."""
         from inventory.models import ItemHistory
 
         self.status = "COMPLETED_UNVERIFIED"
         self.save()
 
-        # Update item location but keep IN_TRANSIT until verified
-        self.item.current_location = self.to_location
-        self.item.is_on_floor = self.to_location.location_type == "FLOOR"
+        # Set item to IN_TRANSIT but don't update location yet
         self.item.status = "IN_TRANSIT"
         self.item.is_verified = False
-        update_fields = ["current_location", "is_on_floor", "status", "is_verified", "updated_at"]
-        if self.to_box:
-            self.item.box = self.to_box
-            update_fields.append("box")
-        elif self.from_box and not self.to_box:
-            self.item.box = None
-            update_fields.append("box")
-        self.item.save(update_fields=update_fields)
+        self.item.save(update_fields=["status", "is_verified", "updated_at"])
 
-        # Create ARRIVED history event
+        # Create IN_TRANSIT history event
         ItemHistory.objects.create(
             item=self.item,
-            event_type="ARRIVED",
+            event_type="IN_TRANSIT",
             from_location=self.from_location,
             to_location=self.to_location,
             movement_request=self,
             acted_by=user,
-            notes=comment or f"Item moved to {self.to_location.name} (unverified)",
+            notes=comment or f"Item in transit to {self.to_location.name}",
         )
 
 
@@ -243,27 +227,20 @@ class BoxMovementRequest(models.Model):
         self.admin_comment = comment
         self.save()
 
-        # Set all items in the box to IN_TRANSIT
+        # Set all items to IN_TRANSIT but don't move location yet
         items = list(self.box.items.all())
         for item in items:
             item.status = "IN_TRANSIT"
-            item.save(update_fields=["status", "updated_at"])
+            item.is_verified = False
+            item.save(update_fields=["status", "is_verified", "updated_at"])
 
-            ItemHistory.objects.create(
-                item=item,
-                event_type="MOVE_APPROVED",
-                from_location=self.from_location,
-                to_location=self.to_location,
-                acted_by=admin_user,
-                notes=comment or f"Box {self.box.box_code} move approved",
-            )
             ItemHistory.objects.create(
                 item=item,
                 event_type="IN_TRANSIT",
                 from_location=self.from_location,
                 to_location=self.to_location,
                 acted_by=admin_user,
-                notes=f"Item in transit with box {self.box.box_code} to {self.to_location.name}",
+                notes=comment or f"Box {self.box.box_code} in transit to {self.to_location.name}",
             )
 
     def reject(self, admin_user, comment=""):
@@ -287,36 +264,30 @@ class BoxMovementRequest(models.Model):
             )
 
     def complete_unverified(self, user, comment=""):
-        """Complete the box movement immediately without admin approval. Items stay IN_TRANSIT until verified."""
+        """Auto-approve box movement for senior/admin. Items go to IN_TRANSIT — location updates on arrival."""
         from inventory.models import ItemHistory
 
         self.status = "COMPLETED_UNVERIFIED"
         self.save()
 
-        # Move the box
-        self.box.location = self.to_location
-        self.box.save(update_fields=["location", "updated_at"])
-
-        destination_is_floor = self.to_location.location_type == "FLOOR"
+        # Don't move box location yet — that happens on arrival
         items = list(self.box.items.all())
         for item in items:
-            item.current_location = self.to_location
-            item.is_on_floor = destination_is_floor
             item.status = "IN_TRANSIT"
             item.is_verified = False
-            item.save(update_fields=["current_location", "is_on_floor", "status", "is_verified", "updated_at"])
+            item.save(update_fields=["status", "is_verified", "updated_at"])
 
             ItemHistory.objects.create(
                 item=item,
-                event_type="ARRIVED",
+                event_type="IN_TRANSIT",
                 from_location=self.from_location,
                 to_location=self.to_location,
                 acted_by=user,
-                notes=comment or f"Box {self.box.box_code} moved to {self.to_location.name} (unverified)",
+                notes=comment or f"Box {self.box.box_code} in transit to {self.to_location.name}",
             )
 
     def complete_arrival(self, user, comment=""):
-        """Mark box as arrived at destination after approved movement."""
+        """Mark box as arrived at destination. Items become AVAILABLE but stay unverified."""
         from inventory.models import ItemHistory
 
         # Move the box
@@ -329,7 +300,8 @@ class BoxMovementRequest(models.Model):
             item.current_location = self.to_location
             item.is_on_floor = destination_is_floor
             item.status = "AVAILABLE"
-            item.save(update_fields=["current_location", "is_on_floor", "status", "updated_at"])
+            item.is_verified = False
+            item.save(update_fields=["current_location", "is_on_floor", "status", "is_verified", "updated_at"])
 
             ItemHistory.objects.create(
                 item=item,

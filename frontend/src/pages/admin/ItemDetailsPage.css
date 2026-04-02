@@ -8,25 +8,25 @@
     flex-direction: column;
 }
 
-/* Back Button */
+/* Back Link */
 .item-details-back {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-background);
+    gap: var(--spacing-xs);
+    font-size: 13px;
+    font-weight: 500;
     color: var(--color-secondary);
+    text-decoration: none;
+    border: none;
+    background: none;
     cursor: pointer;
-    transition: all 0.2s;
+    padding: 0;
+    margin-bottom: var(--spacing-md);
+    transition: color 0.2s;
 }
 
 .item-details-back:hover {
     color: var(--color-primary);
-    border-color: var(--color-primary);
-    background: var(--color-background-gray);
 }
 
 /* Header */

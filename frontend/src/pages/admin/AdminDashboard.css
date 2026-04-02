@@ -398,13 +398,21 @@
     width: 32px;
     height: 32px;
     padding: 0;
-    border: none;
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-sm);
+    background: var(--color-background);
+    color: var(--color-secondary);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    text-decoration: none;
     transition: all 0.2s;
+}
+
+.admin-review-btn-icon:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 .admin-review-btn-icon:disabled {
@@ -499,6 +507,10 @@
 
 .admin-request-status.arrived {
     color: var(--color-available);
+}
+
+.admin-request-status.pending {
+    color: var(--color-warning);
 }
 
 .admin-request-status.rejected {
