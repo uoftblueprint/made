@@ -280,7 +280,7 @@ const AdminDashboard: React.FC = () => {
           ) : myTabRequests.length === 0 ? (
             <div className="admin-review-item"><p>No activity</p></div>
           ) : (
-            myTabRequests.slice(0, 10).map((request) => (
+            myTabRequests.map((request) => (
               <div key={request.key} className="admin-review-item">
                 <div className="admin-review-item-info">
                   {request.type === 'item' ? <Layers size={16} className="admin-review-dot" /> : <Archive size={16} className="admin-review-dot" />}
@@ -355,7 +355,7 @@ const AdminDashboard: React.FC = () => {
             ) : allTabRequests.length === 0 ? (
               <div className="admin-review-item"><p>No requests</p></div>
             ) : (
-              allTabRequests.slice(0, 10).map((request) => (
+              allTabRequests.map((request) => (
                 <div key={request.key} className="admin-review-item">
                   <div className="admin-review-item-info">
                     {request.type === 'item' ? <Layers size={16} className="admin-review-dot" /> : <Archive size={16} className="admin-review-dot" />}
