@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X } from 'lucide-react';
+import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
 import { useItemRequests } from '../../actions/useRequests';
@@ -42,11 +42,13 @@ const ItemDetailsPage: React.FC = () => {
   const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
   const [arrivalError, setArrivalError] = useState<string | null>(null);
 
-  const { requests: movementRequests, approve, reject, completeArrival } = useItemRequests(id ? parseInt(id) : undefined);
+  const { requests: movementRequests, approve, reject, completeArrival, verify } = useItemRequests(id ? parseInt(id) : undefined);
   const pendingRequests = movementRequests.filter(r => r.status === 'WAITING_APPROVAL');
   const approvedRequests = movementRequests.filter(r => r.status === 'APPROVED');
+  const unverifiedRequests = movementRequests.filter(r => r.status === 'COMPLETED_UNVERIFIED');
   const activeTransitRequest = approvedRequests[0] ?? null;
   const isInTransit = item?.status === 'IN_TRANSIT';
+  const isUnverified = item?.is_verified === false;
 
   const backLink = isRequestView ? '/admin' : '/admin/catalogue';
   const backText = isRequestView ? 'Back to Dashboard' : 'Back to Catalogue';
@@ -100,6 +102,21 @@ const ItemDetailsPage: React.FC = () => {
       await fetchItem();
     } catch (err) {
       console.error('Failed to reject request:', err);
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleVerify = async () => {
+    const unverifiedRequest = unverifiedRequests[0];
+    if (!unverifiedRequest) return;
+    setProcessingRequestId(unverifiedRequest.id);
+    setArrivalError(null);
+    try {
+      await verify(unverifiedRequest.id, { comment: 'Location verified from item details.' });
+      await fetchItem();
+    } catch (err) {
+      setArrivalError(getApiErrorMessage(err, 'Failed to verify location.'));
     } finally {
       setProcessingRequestId(null);
     }
@@ -177,6 +194,11 @@ const ItemDetailsPage: React.FC = () => {
           )}
           {isInTransit && (
             <span className="item-badge in-transit">In Transit</span>
+          )}
+          {isUnverified && (
+            <span className="item-badge in-transit" style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #f59e0b' }}>
+              <AlertTriangle size={12} /> Unverified Location
+            </span>
           )}
           <span className="item-badge type hidden md:block">
             {item.platform || 'Software'}
@@ -340,6 +362,17 @@ const ItemDetailsPage: React.FC = () => {
             >
               <Check size={16} />
               {processingRequestId === activeTransitRequest.id ? 'Marking...' : 'Mark as Arrived'}
+            </button>
+          )}
+          {isUnverified && unverifiedRequests.length > 0 && (
+            <button
+              className="item-action-btn primary"
+              onClick={handleVerify}
+              disabled={processingRequestId === unverifiedRequests[0]?.id}
+              style={{ background: '#f59e0b', borderColor: '#d97706' }}
+            >
+              <ShieldCheck size={16} />
+              {processingRequestId === unverifiedRequests[0]?.id ? 'Verifying...' : 'Verify Location'}
             </button>
           )}
           <button className="item-action-btn secondary desktop-only-btn">

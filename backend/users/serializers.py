@@ -48,6 +48,7 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "is_active",
             "access_expires_at",
+            "requires_move_approval",
         ]
         read_only_fields = [
             "id",
@@ -55,6 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "is_active",
             "access_expires_at",
+            "requires_move_approval",
         ]
 
 
@@ -82,10 +84,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     """
-    Serializer for updating user is_active and access_expires_at.
+    Serializer for updating user is_active, access_expires_at, and requires_move_approval.
     Only these fields can be updated by admins.
     """
 
     class Meta:
         model = User
-        fields = ["is_active", "access_expires_at"]
+        fields = ["is_active", "access_expires_at", "requires_move_approval"]

@@ -191,6 +191,7 @@ class CollectionItem(models.Model):
 
     is_public_visible = models.BooleanField(default=True, help_text="For public catalogue")
     is_on_floor = models.BooleanField(default=False, help_text="Redundant but fast for queries")
+    is_verified = models.BooleanField(default=True, help_text="Whether the item's current location has been verified by an admin")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

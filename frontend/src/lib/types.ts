@@ -19,6 +19,7 @@ export interface Volunteer {
   user_id?: number;
   expires_at?: string | null;
   days_remaining?: number | null;
+  requires_move_approval?: boolean;
 }
 
 export interface VolunteerApplicationInput {
@@ -50,6 +51,7 @@ export interface BaseCollectionItem {
   status: ItemStatus;
   current_location: LocationInfo | null;
   is_on_floor: boolean;
+  is_verified?: boolean;
 }
 
 export interface PublicCollectionItem extends BaseCollectionItem {
@@ -107,7 +109,7 @@ export interface VolunteerOptions {
   status_options?: StatusOption[];
 }
 
-export type MovementRequestStatus = 'WAITING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+export type MovementRequestStatus = 'WAITING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'COMPLETED_UNVERIFIED';
 
 export interface MovementRequest {
   id: number;
@@ -124,6 +126,7 @@ export interface MovementRequest {
   status: MovementRequestStatus;
   admin: number | null;
   admin_username: string | null;
+  item_is_verified?: boolean;
   admin_comment: string;
   created_at: string;
   updated_at: string;

@@ -13,6 +13,7 @@ interface UseRequestsResult {
   approve: (id: number, data?: ReviewRequestInput) => Promise<void>;
   reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
   completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
+  verify: (id: number, data?: ReviewRequestInput) => Promise<void>;
 }
 
 export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
@@ -54,6 +55,11 @@ export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
     await fetchRequests();
   }, [fetchRequests]);
 
+  const verify = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await requestsApi.verify(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
   const pendingRequests = requests.filter(r => r.status === 'WAITING_APPROVAL');
 
   return {
@@ -65,6 +71,7 @@ export function useRequests(status?: MovementRequestStatus): UseRequestsResult {
     approve,
     reject,
     completeArrival,
+    verify,
   };
 }
 
@@ -80,6 +87,7 @@ interface UseItemRequestsResult {
   approve: (id: number, data?: ReviewRequestInput) => Promise<void>;
   reject: (id: number, data?: ReviewRequestInput) => Promise<void>;
   completeArrival: (id: number, data?: CompleteArrivalInput) => Promise<void>;
+  verify: (id: number, data?: ReviewRequestInput) => Promise<void>;
 }
 
 export function useItemRequests(itemId: number | undefined): UseItemRequestsResult {
@@ -124,6 +132,11 @@ export function useItemRequests(itemId: number | undefined): UseItemRequestsResu
     await fetchRequests();
   }, [fetchRequests]);
 
+  const verify = useCallback(async (id: number, data?: ReviewRequestInput) => {
+    await requestsApi.verify(id, data);
+    await fetchRequests();
+  }, [fetchRequests]);
+
   return {
     requests,
     loading,
@@ -132,5 +145,6 @@ export function useItemRequests(itemId: number | undefined): UseItemRequestsResu
     approve,
     reject,
     completeArrival,
+    verify,
   };
 }

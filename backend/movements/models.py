@@ -14,6 +14,7 @@ class ItemMovementRequest(models.Model):
         ("APPROVED", "Approved"),
         ("REJECTED", "Rejected"),
         ("CANCELLED", "Cancelled"),
+        ("COMPLETED_UNVERIFIED", "Completed Unverified"),
     ]
 
     item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE, related_name="movement_requests")
@@ -126,4 +127,29 @@ class ItemMovementRequest(models.Model):
             movement_request=self,
             acted_by=user,
             notes=comment or f"Item arrived at {self.to_location.name}",
+        )
+
+    def complete_unverified(self, user, comment=""):
+        """Complete the movement immediately without admin approval. Sets item as unverified."""
+        from inventory.models import ItemHistory
+
+        self.status = "COMPLETED_UNVERIFIED"
+        self.save()
+
+        # Update item location, status, and mark as unverified
+        self.item.current_location = self.to_location
+        self.item.is_on_floor = self.to_location.location_type == "FLOOR"
+        self.item.status = "AVAILABLE"
+        self.item.is_verified = False
+        self.item.save(update_fields=["current_location", "is_on_floor", "status", "is_verified", "updated_at"])
+
+        # Create ARRIVED history event
+        ItemHistory.objects.create(
+            item=self.item,
+            event_type="ARRIVED",
+            from_location=self.from_location,
+            to_location=self.to_location,
+            movement_request=self,
+            acted_by=user,
+            notes=comment or f"Item moved to {self.to_location.name} (unverified)",
         )

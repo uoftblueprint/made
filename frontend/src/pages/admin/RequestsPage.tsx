@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Check, X, Clock, CheckCircle, XCircle, Filter } from 'lucide-react';
+import { ArrowLeft, Check, X, Clock, CheckCircle, XCircle, Filter, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { useRequests } from '../../actions/useRequests';
 import type { MovementRequest, MovementRequestStatus } from '../../lib/types';
 import Button from '../../components/common/Button';
@@ -28,6 +28,8 @@ function getStatusBadge(status: MovementRequestStatus) {
       return <span className="request-status-badge approved"><CheckCircle size={12} /> Approved</span>;
     case 'REJECTED':
       return <span className="request-status-badge rejected"><XCircle size={12} /> Rejected</span>;
+    case 'COMPLETED_UNVERIFIED':
+      return <span className="request-status-badge pending" style={{ background: '#fef3c7', color: '#92400e' }}><AlertTriangle size={12} /> Unverified</span>;
     case 'CANCELLED':
       return <span className="request-status-badge cancelled">Cancelled</span>;
     default:
@@ -37,7 +39,7 @@ function getStatusBadge(status: MovementRequestStatus) {
 
 const RequestsPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<MovementRequestStatus | undefined>(undefined);
-  const { requests, loading, error, approve, reject } = useRequests(statusFilter);
+  const { requests, loading, error, approve, reject, verify } = useRequests(statusFilter);
   const [processingId, setProcessingId] = useState<number | null>(null);
 
   const handleApprove = async (request: MovementRequest) => {
@@ -57,6 +59,17 @@ const RequestsPage: React.FC = () => {
       await reject(request.id);
     } catch (err) {
       console.error('Failed to reject request:', err);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleVerify = async (request: MovementRequest) => {
+    setProcessingId(request.id);
+    try {
+      await verify(request.id);
+    } catch (err) {
+      console.error('Failed to verify request:', err);
     } finally {
       setProcessingId(null);
     }
@@ -86,6 +99,7 @@ const RequestsPage: React.FC = () => {
             <option value="WAITING_APPROVAL">Pending</option>
             <option value="APPROVED">Approved</option>
             <option value="REJECTED">Rejected</option>
+            <option value="COMPLETED_UNVERIFIED">Unverified</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
@@ -146,6 +160,18 @@ const RequestsPage: React.FC = () => {
                           title="Reject"
                         >
                           <X size={16} />
+                        </Button>
+                      </div>
+                    ) : request.status === 'COMPLETED_UNVERIFIED' ? (
+                      <div className="request-actions">
+                        <Button
+                          variant="primary"
+                          size="xs"
+                          onClick={() => handleVerify(request)}
+                          disabled={processingId === request.id}
+                          title="Verify Location"
+                        >
+                          <ShieldCheck size={16} />
                         </Button>
                       </div>
                     ) : (

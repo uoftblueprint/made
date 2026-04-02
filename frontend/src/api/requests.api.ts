@@ -67,4 +67,9 @@ export const requestsApi = {
     const response = await apiClient.post(`/movements/movement-requests/${id}/complete-arrival/`, data ?? {});
     return response.data;
   },
+
+  verify: async (id: number, data?: ReviewRequestInput): Promise<MovementRequest> => {
+    const response = await apiClient.post(`/movements/movement-requests/${id}/verify/`, data ?? {});
+    return response.data;
+  },
 };
