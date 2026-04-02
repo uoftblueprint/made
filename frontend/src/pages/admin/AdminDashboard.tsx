@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Package, Archive, MapPin, Check, X } from 'lucide-react';
-import { usePendingRequests } from '../../actions/useRequests';
+import { AlertCircle, Layers, Archive, MapPin, Check, X, CheckCircle, XCircle, Truck, PackageCheck } from 'lucide-react';
+import { useRequests } from '../../actions/useRequests';
 import { useDashboardStats } from '../../actions/useStats';
 import type { MovementRequest } from '../../lib/types';
 import Button from '../../components/common/Button';
@@ -23,10 +23,29 @@ function formatTimeAgo(dateString: string): string {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { requests: pendingRequests, loading, approve, reject } = usePendingRequests();
+  const { requests: allRequests, loading, approve, reject } = useRequests();
   const { stats, loading: statsLoading } = useDashboardStats();
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  type RequestTab = 'pending' | 'in_transit' | 'arrived' | 'rejected';
+  const [requestTab, setRequestTab] = useState<RequestTab>('pending');
+
+  const pendingRequests = allRequests.filter(r => r.status === 'WAITING_APPROVAL');
+  const inTransitRequests = allRequests.filter(r => r.status === 'APPROVED');
+  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const arrivedRequests = allRequests.filter(r =>
+    (r.status === 'COMPLETED_UNVERIFIED' || r.status === 'CANCELLED') &&
+    new Date(r.updated_at) >= oneWeekAgo
+  );
+  const rejectedRequests = allRequests.filter(r => r.status === 'REJECTED');
+
+  const tabRequestsMap: Record<RequestTab, MovementRequest[]> = {
+    pending: pendingRequests,
+    in_transit: inTransitRequests,
+    arrived: arrivedRequests,
+    rejected: rejectedRequests,
+  };
+  const tabRequests = tabRequestsMap[requestTab];
 
   const handleApprove = async (request: MovementRequest) => {
     setProcessingId(request.id);
@@ -66,7 +85,7 @@ const AdminDashboard: React.FC = () => {
           <p className="admin-stat-label">Needs Review</p>
         </div>
         <div className="admin-stat-card">
-          <Package className="admin-stat-icon" size={24} />
+          <Layers className="admin-stat-icon" size={24} />
           <p className="admin-stat-value">{statsLoading ? '...' : stats?.total_items?.toLocaleString() ?? '--'}</p>
           <p className="admin-stat-label">Total Items</p>
         </div>
@@ -82,26 +101,44 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Records Needing Review */}
+      {/* Movement Requests */}
       <div className="admin-review-section">
         <div className="admin-review-header">
-          <h3>Movement Requests ({loading ? '...' : pendingRequests.length})</h3>
-          <Link to="/admin/requests" className="admin-see-all">See all</Link>
+          <h3>Movement Requests</h3>
         </div>
+
+        {/* Tabs */}
+        <div className="admin-request-tabs">
+          {([
+            { key: 'pending' as const, label: 'Pending', count: pendingRequests.length },
+            { key: 'in_transit' as const, label: 'In Transit', count: inTransitRequests.length },
+            { key: 'arrived' as const, label: 'Arrived', count: arrivedRequests.length },
+            { key: 'rejected' as const, label: 'Rejected', count: rejectedRequests.length },
+          ]).map(tab => (
+            <button
+              key={tab.key}
+              className={`admin-request-tab ${requestTab === tab.key ? 'active' : ''}`}
+              onClick={() => setRequestTab(tab.key)}
+            >
+              {tab.label} ({loading ? '...' : tab.count})
+            </button>
+          ))}
+        </div>
+
         <div className="admin-review-list">
           {loading ? (
             <div className="admin-review-item">
               <p>Loading requests...</p>
             </div>
-          ) : pendingRequests.length === 0 ? (
+          ) : tabRequests.length === 0 ? (
             <div className="admin-review-item">
-              <p>No pending requests</p>
+              <p>No {requestTab === 'pending' ? 'pending' : requestTab === 'in_transit' ? 'in transit' : requestTab === 'arrived' ? 'arrived' : 'rejected'} requests</p>
             </div>
           ) : (
-            pendingRequests.slice(0, 5).map((request) => (
+            tabRequests.slice(0, 10).map((request) => (
               <div key={request.id} className="admin-review-item">
                 <div className="admin-review-item-info">
-                  <span className="admin-review-dot"></span>
+                  <Layers size={16} className="admin-review-dot" />
                   <div className="admin-review-item-details">
                     <h4>{request.item_title || `Item #${request.item}`}</h4>
                     <p>
@@ -111,28 +148,47 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="admin-review-item-actions">
                   <span className="admin-review-time">{formatTimeAgo(request.created_at)}</span>
-                  <Link
-                    to={`/admin/catalogue/${request.item}?from=request`}
-                    className="admin-review-btn admin-review-btn-review"
-                  >
-                    Review
-                  </Link>
-                  <button
-                    className="admin-review-btn-icon admin-review-btn-approve"
-                    onClick={() => handleApprove(request)}
-                    disabled={processingId === request.id}
-                    title="Approve"
-                  >
-                    <Check size={16} />
-                  </button>
-                  <button
-                    className="admin-review-btn-icon admin-review-btn-reject"
-                    onClick={() => handleReject(request)}
-                    disabled={processingId === request.id}
-                    title="Reject"
-                  >
-                    <X size={16} />
-                  </button>
+                  {requestTab === 'pending' && (
+                    <>
+                      <Link
+                        to={`/admin/catalogue/${request.item}?from=request`}
+                        className="admin-review-btn admin-review-btn-review"
+                      >
+                        Review
+                      </Link>
+                      <button
+                        className="admin-review-btn-icon admin-review-btn-approve"
+                        onClick={() => handleApprove(request)}
+                        disabled={processingId === request.id}
+                        title="Approve"
+                      >
+                        <Check size={16} />
+                      </button>
+                      <button
+                        className="admin-review-btn-icon admin-review-btn-reject"
+                        onClick={() => handleReject(request)}
+                        disabled={processingId === request.id}
+                        title="Reject"
+                      >
+                        <X size={16} />
+                      </button>
+                    </>
+                  )}
+                  {requestTab === 'in_transit' && (
+                    <span className="admin-request-status in-transit">
+                      <Truck size={14} /> In Transit
+                    </span>
+                  )}
+                  {requestTab === 'arrived' && (
+                    <span className="admin-request-status arrived">
+                      <PackageCheck size={14} /> Arrived
+                    </span>
+                  )}
+                  {requestTab === 'rejected' && (
+                    <span className="admin-request-status rejected">
+                      <XCircle size={14} /> Rejected
+                    </span>
+                  )}
                 </div>
               </div>
             ))

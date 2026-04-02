@@ -393,6 +393,14 @@
     color: #ef4444;
 }
 
+.status-badge.unverified {
+    color: var(--color-warning);
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: 4px;
+}
+
 /* Working Condition */
 .condition-yes {
     color: #10b981;

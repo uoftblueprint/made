@@ -541,7 +541,7 @@ const AdminCataloguePage: React.FC = () => {
                     {getTypeLabel(display.item_type)}
                   </span>
                   {!display.is_verified && (
-                    <span className="status-badge unverified" style={{ fontSize: '0.7rem', padding: '2px 6px' }}>
+                    <span className="status-badge unverified">
                       <AlertTriangle size={10} /> Unverified
                     </span>
                   )}

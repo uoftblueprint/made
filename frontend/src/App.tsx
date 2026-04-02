@@ -14,7 +14,8 @@ import AdminCataloguePage from './pages/admin/AdminCataloguePage';
 import ManageVolunteers from './pages/admin/ManageVolunteers';
 import BoxManagementPage from './pages/admin/BoxManagementPage';
 import ItemDetailsPage from './pages/admin/ItemDetailsPage';
-import RequestsPage from './pages/admin/RequestsPage';
+// RequestsPage kept for future volunteer-facing use
+// import RequestsPage from './pages/admin/RequestsPage';
 import CataloguePage from './pages/public/CataloguePage';
 
 const queryClient = new QueryClient();
@@ -76,14 +77,7 @@ const App: React.FC = () => {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/admin/requests"
-                  element={
-                    <ProtectedRoute requiredRole="ADMIN">
-                      <RequestsPage />
-                    </ProtectedRoute>
-                  }
-                />
+                {/* Requests page reserved for volunteer-facing use */}
 
                 {/* --- Catch-all 404 Route --- */}
                 {/* <Route path="*" element={<NotFoundPage />} /> */}

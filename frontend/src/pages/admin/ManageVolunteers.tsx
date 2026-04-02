@@ -1,14 +1,11 @@
 import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval, useUpdateVolunteer } from '../../actions/useVolunteers';
 import { useState, useMemo } from 'react'
-import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown, Edit2 } from 'lucide-react';
+import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, Edit2 } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import type { Volunteer } from '../../lib/types';
 import './ManageVolunteers.css';
 
-const DEFAULT_STATUS_OPTIONS = [
-    { value: '', label: 'All Status' },
-];
 
 const plusDays = (days: number, from?: string | null) => {
     const base = from ? new Date(from) : new Date();
@@ -23,7 +20,7 @@ const dateToEndOfDayIso = (dateStr: string): string =>
 const ManageVolunteers = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [activeTab, setActiveTab] = useState<'APPROVED' | 'PENDING' | 'REJECTED'>('APPROVED');
 
     type ExpiryModal =
         | { mode: 'approve'; applicationId: number }
@@ -120,23 +117,27 @@ const ManageVolunteers = () => {
 
     const roles = options?.roles ?? [];
     const eventTypes = options?.event_types ?? [];
-    const statusOptions = options?.status_options?.length 
-        ? [{ value: '', label: 'All Status' }, ...options.status_options]
-        : DEFAULT_STATUS_OPTIONS;
-
     const filteredVolunteers = useMemo(() => {
         return data.filter(volunteer => {
-            const matchesSearch = !searchQuery || 
+            const matchesSearch = !searchQuery ||
                 volunteer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 volunteer.email.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesStatus = !statusFilter || volunteer.status === statusFilter;
-            return matchesSearch && matchesStatus;
+            const matchesTab = volunteer.status === activeTab;
+            return matchesSearch && matchesTab;
         });
-    }, [data, searchQuery, statusFilter]);
+    }, [data, searchQuery, activeTab]);
+
+    const pendingCount = useMemo(() => data.filter(v => v.status === 'PENDING').length, [data]);
+    const approvedCount = useMemo(() => data.filter(v => v.status === 'APPROVED').length, [data]);
+    const rejectedCount = useMemo(() => data.filter(v => v.status === 'REJECTED').length, [data]);
 
     const getStatusLabel = (status: string) => {
-        const option = statusOptions.find(opt => opt.value === status);
-        return option?.label || status;
+        switch (status) {
+            case 'APPROVED': return 'Active';
+            case 'REJECTED': return 'Rejected';
+            case 'PENDING': return 'Pending';
+            default: return status;
+        }
     };
 
     const getStatusClass = (status: string) => {
@@ -200,7 +201,24 @@ const ManageVolunteers = () => {
                 </div>
             </div>
 
-            {/* Search and Filters */}
+            {/* Tabs */}
+            <div className="volunteers-tabs">
+                {([
+                    { key: 'APPROVED' as const, label: 'Current Volunteers', count: approvedCount },
+                    { key: 'PENDING' as const, label: 'Pending', count: pendingCount },
+                    { key: 'REJECTED' as const, label: 'Rejected', count: rejectedCount },
+                ]).map(tab => (
+                    <button
+                        key={tab.key}
+                        className={`volunteers-tab ${activeTab === tab.key ? 'active' : ''}`}
+                        onClick={() => setActiveTab(tab.key)}
+                    >
+                        {tab.label} ({tab.count})
+                    </button>
+                ))}
+            </div>
+
+            {/* Search */}
             <div className="volunteers-filters">
                 <div className="volunteers-search-wrapper">
                     <input
@@ -210,18 +228,6 @@ const ManageVolunteers = () => {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                </div>
-                <div className="volunteers-filter-dropdown">
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="volunteers-filter-select"
-                    >
-                        {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                    </select>
-                    <ChevronDown size={14} className="dropdown-icon" />
                 </div>
             </div>
 
@@ -264,7 +270,7 @@ const ManageVolunteers = () => {
                             <th>Granted Date</th>
                             <th>Expires</th>
                             <th>Status</th>
-                            <th>Move Approval</th>
+                            <th>Approval Required</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -306,26 +312,22 @@ const ManageVolunteers = () => {
                                 </td>
                                 <td>
                                     {volunteer.status === 'APPROVED' && volunteer.user_id ? (
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={volunteer.requires_move_approval ?? false}
-                                                onChange={(e) => {
-                                                    if (volunteer.user_id) {
-                                                        toggleMoveApprovalMutation.mutate({
-                                                            userId: volunteer.user_id,
-                                                            requires_move_approval: e.target.checked,
-                                                        });
-                                                    }
-                                                }}
-                                                disabled={toggleMoveApprovalMutation.isPending}
-                                            />
-                                            <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                                                {volunteer.requires_move_approval ? 'Required' : 'Not required'}
-                                            </span>
-                                        </label>
+                                        <input
+                                            type="checkbox"
+                                            checked={volunteer.requires_move_approval ?? false}
+                                            onChange={(e) => {
+                                                if (volunteer.user_id) {
+                                                    toggleMoveApprovalMutation.mutate({
+                                                        userId: volunteer.user_id,
+                                                        requires_move_approval: e.target.checked,
+                                                    });
+                                                }
+                                            }}
+                                            disabled={toggleMoveApprovalMutation.isPending}
+                                            style={{ cursor: 'pointer' }}
+                                        />
                                     ) : (
-                                        <span style={{ fontSize: '0.85rem', color: '#9ca3af' }}>--</span>
+                                        <span className="text-sm text-muted">--</span>
                                     )}
                                 </td>
                                 <td>
@@ -335,9 +337,7 @@ const ManageVolunteers = () => {
                                         </button>
                                         {volunteer.status === 'PENDING' && (
                                             <>
-                                                <Button variant="success" size="xs" className="!text-black !border !border-border" onClick={() => openExpiryModal({ mode: 'approve', applicationId: volunteer.id })}>
-                                                    Approve
-                                                </Button>
+                                                <button className="volunteers-action-btn extend" onClick={() => openExpiryModal({ mode: 'approve', applicationId: volunteer.id })}>Approve</button>
                                                 <Button variant="danger" size="xs" onClick={() => onReject(volunteer.id)}>
                                                     <Trash2 size={14} />
                                                 </Button>
@@ -345,9 +345,6 @@ const ManageVolunteers = () => {
                                         )}
                                         {volunteer.status === 'APPROVED' && (
                                             <>
-                                                <button className="volunteers-action-btn icon-btn">
-                                                    <ExternalLink size={14} />
-                                                </button>
                                                 <button className="volunteers-action-btn extend" onClick={() => openExpiryModal({ mode: 'extend', volunteer })}>Extend</button>
                                                 <button className="volunteers-action-btn delete">
                                                     <Trash2 size={14} />
@@ -356,9 +353,6 @@ const ManageVolunteers = () => {
                                         )}
                                         {volunteer.status === 'REJECTED' && (
                                             <>
-                                                <button className="volunteers-action-btn icon-btn">
-                                                    <ExternalLink size={14} />
-                                                </button>
                                                 <button className="volunteers-action-btn renew" onClick={() => openExpiryModal({ mode: 'approve', applicationId: volunteer.id })}>
                                                     Renew
                                                 </button>
@@ -463,7 +457,6 @@ const ManageVolunteers = () => {
 
             {/* Edit Volunteer Modal */}
             <Modal open={editModal !== null} onClose={closeEditModal} title="Edit Volunteer">
-                <h2 className="text-xl font-semibold text-primary mb-2">Edit Volunteer</h2>
                 <p className="modal-subtitle">Update volunteer details.</p>
                 <div className="modal-form">
                     <div className="modal-row">
