@@ -1,5 +1,5 @@
 .login-container {
-    min-height: 100vh;
+    flex: 1;
     background-color: var(--color-background);
     padding: var(--spacing-lg) var(--spacing-xl);
     display: flex;
@@ -93,4 +93,25 @@
     line-height: 20px;
     text-align: center;
     margin-bottom: var(--spacing-md);
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+}
+
+.login-link-text {
+    margin-top: var(--spacing-lg);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--color-secondary);
+    text-align: center;
+}
+
+.login-link-text a {
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.login-link-text a:hover {
+    text-decoration: underline;
 }

@@ -8139,7 +8139,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 365
+      "access_expires_days": 365,
+      "requires_move_approval": true
     },
     {
       "email": "timothy.johnson@email.com",
@@ -8147,7 +8148,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 15
+      "access_expires_days": 15,
+      "requires_move_approval": true
     },
     {
       "email": "patricia.thompson@email.com",
@@ -8155,7 +8157,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 23
+      "access_expires_days": 23,
+      "requires_move_approval": true
     },
     {
       "email": "patricia.williams@email.com",
@@ -8171,7 +8174,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 136
+      "access_expires_days": 136,
+      "requires_move_approval": true
     },
     {
       "email": "matthew.baker@email.com",
@@ -8195,7 +8199,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 68
+      "access_expires_days": 68,
+      "requires_move_approval": true
     },
     {
       "email": "melissa.lopez@email.com",
@@ -8538,42 +8543,49 @@
     {
       "name": "Laura Hall",
       "email": "laura.hall@applicant.com",
+      "phone_number": "416-555-0123",
       "motivation_text": "Arcade restoration hobbyist with knowledge of hardware repair.",
       "status": "PENDING"
     },
     {
       "name": "Amanda Allen",
       "email": "amanda.allen@applicant.com",
+      "phone_number": "647-555-0456",
       "motivation_text": "Photography enthusiast who can help document the collection.",
       "status": "APPROVED"
     },
     {
       "name": "Patricia Allen",
       "email": "patricia.allen@applicant.com",
+      "phone_number": "905-555-0789",
       "motivation_text": "Data entry specialist with attention to detail and love for video games.",
       "status": "PENDING"
     },
     {
       "name": "George Nelson",
       "email": "george.nelson@applicant.com",
+      "phone_number": "647-555-0567",
       "motivation_text": "History teacher who uses video games to engage students with technology history.",
       "status": "APPROVED"
     },
     {
       "name": "Paul Clark",
       "email": "paul.clark@applicant.com",
+      "phone_number": "416-555-0234",
       "motivation_text": "Computer science student researching the history of game development.",
       "status": "PENDING"
     },
     {
       "name": "Daniel Brown",
       "email": "daniel.brown@applicant.com",
+      "phone_number": "905-555-0345",
       "motivation_text": "Computer science student researching the history of game development.",
       "status": "PENDING"
     },
     {
       "name": "Jeffrey Jackson",
       "email": "jeffrey.jackson@applicant.com",
+      "phone_number": "416-555-0678",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
       "status": "APPROVED"
     },
@@ -8586,6 +8598,7 @@
     {
       "name": "Michael Wright",
       "email": "michael.wright@applicant.com",
+      "phone_number": "647-555-0890",
       "motivation_text": "Software developer who wants to contribute to the museum's mission on weekends.",
       "status": "PENDING"
     },
@@ -8646,6 +8659,7 @@
     {
       "name": "Ryan Nelson",
       "email": "ryan.nelson@applicant.com",
+      "phone_number": "905-555-0112",
       "motivation_text": "I've been collecting retro games for over 10 years and would love to help catalog and preserve gaming history.",
       "status": "PENDING"
     },

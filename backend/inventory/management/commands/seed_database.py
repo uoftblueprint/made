@@ -103,10 +103,17 @@ class Command(BaseCommand):
                     "year_manufactured": item_data.get("year_manufactured", ""),
                     "serial_number": item_data.get("serial_number", ""),
                     "hardware_type": item_data.get("hardware_type", ""),
+                    "item_subtype": item_data.get("item_subtype", ""),
+                    "date_published": item_data.get("date_published", ""),
+                    "publisher": item_data.get("publisher", ""),
+                    "volume_number": item_data.get("volume_number", ""),
+                    "isbn_catalogue_number": item_data.get("isbn_catalogue_number", ""),
                     "box": box,
                     "current_location": location,
                     "is_on_floor": is_on_floor,
                     "is_public_visible": item_data.get("is_public_visible", True),
+                    "is_verified": item_data.get("is_verified", True),
+                    "date_of_entry": item_data.get("date_of_entry"),
                 },
             )
 
@@ -135,6 +142,7 @@ class Command(BaseCommand):
                     "is_staff": user_data.get("is_staff", False),
                     "is_superuser": user_data.get("is_superuser", False),
                     "access_expires_at": access_expires_at,
+                    "requires_move_approval": user_data.get("requires_move_approval", False),
                 },
             )
             if created:
@@ -153,6 +161,7 @@ class Command(BaseCommand):
                 email=app_data["email"],
                 defaults={
                     "name": app_data["name"],
+                    "phone_number": app_data.get("phone_number", ""),
                     "motivation_text": app_data.get("motivation_text", ""),
                     "status": app_data.get("status", "PENDING"),
                 },

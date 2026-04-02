@@ -1,7 +1,7 @@
 // Boxes hooks
 import { useState, useEffect, useCallback } from 'react';
 import { boxesApi } from '../api/boxes.api';
-import type { Box, BoxDetail } from '../api/boxes.api';
+import type { Box, BoxDetail, CreateBoxInput } from '../api/boxes.api';
 
 interface UseBoxesResult {
   boxes: Box[];
@@ -38,6 +38,34 @@ export function useBoxes(): UseBoxesResult {
     error,
     refetch: fetchBoxes,
   };
+}
+
+interface UseCreateBoxResult {
+  createBox: (data: CreateBoxInput) => Promise<Box>;
+  creating: boolean;
+  error: string | null;
+}
+
+export function useCreateBox(): UseCreateBoxResult {
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const createBox = useCallback(async (data: CreateBoxInput): Promise<Box> => {
+    setCreating(true);
+    setError(null);
+    try {
+      const result = await boxesApi.create(data);
+      return result;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to create box';
+      setError(msg);
+      throw err;
+    } finally {
+      setCreating(false);
+    }
+  }, []);
+
+  return { createBox, creating, error };
 }
 
 interface UseBoxDetailResult {

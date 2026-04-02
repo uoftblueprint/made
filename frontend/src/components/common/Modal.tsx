@@ -6,18 +6,19 @@ type ModalProps = {
   onClose: () => void
   title: string
   children: React.ReactNode
+  wide?: boolean
 }
 
-function Modal({ open, onClose,children }: ModalProps) {
+function Modal({ open, onClose, children, wide }: ModalProps) {
   return (
     <Dialog open={open} onClose={onClose} className="relative z-50">
       {/* Backdrop */}
       <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
-      
+
       {/* Centered panel */}
       <div className="fixed inset-0 flex items-center justify-center p-4">
-      <DialogPanel className="relative w-full max-w-225 rounded-xl bg-white shadow-lg overflow-hidden">
-            <button type="button" onClick={onClose} 
+      <DialogPanel className={`relative w-full ${wide ? 'max-w-[640px]' : 'max-w-225'} rounded-xl bg-white shadow-lg overflow-hidden`}>
+            <button type="button" onClick={onClose}
             className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition-colors" aria-label="Close modal"
             >
                 ✕

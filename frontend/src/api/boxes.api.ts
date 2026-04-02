@@ -33,6 +33,13 @@ export interface MarkBoxArrivedResponse {
   moved_items: number;
 }
 
+export interface CreateBoxInput {
+  box_code: string;
+  label?: string;
+  description?: string;
+  location: number;
+}
+
 export const boxesApi = {
   getAll: async (): Promise<Box[]> => {
     const response = await apiClient.get('/boxes/');
@@ -45,6 +52,11 @@ export const boxesApi = {
 
   getById: async (id: number): Promise<BoxDetail> => {
     const response = await apiClient.get(`/boxes/${id}/`);
+    return response.data;
+  },
+
+  create: async (data: CreateBoxInput): Promise<Box> => {
+    const response = await apiClient.post('/boxes/', data);
     return response.data;
   },
 

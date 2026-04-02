@@ -25,9 +25,9 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <div className="min-h-screen flex flex-col">
+          <div className="h-screen flex flex-col overflow-hidden">
             <Header />
-            <main className='w-full flex-1'>
+            <main className='w-full flex-1 flex flex-col min-h-0 overflow-auto'>
               <Routes >
                 {/* --- Public Routes --- */}
                 <Route path="/" element={<Navigate to="/login" replace />} />
@@ -83,8 +83,8 @@ const App: React.FC = () => {
                 {/* <Route path="*" element={<NotFoundPage />} /> */}
               </Routes>
             </main>
+            <Footer />
           </div>
-          <Footer />
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

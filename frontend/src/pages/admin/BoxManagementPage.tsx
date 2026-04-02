@@ -2,13 +2,14 @@ import React, { useState, useMemo } from 'react';
 import axios from 'axios';
 import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
-import { useBoxes, useBoxDetail } from '../../actions/useBoxes';
+import { useBoxes, useBoxDetail, useCreateBox } from '../../actions/useBoxes';
 import type { CreateLocationData } from '../../api/locations.api';
 import type { BoxDetail } from '../../api/boxes.api';
 import { boxesApi } from '../../api/boxes.api';
 import { boxRequestsApi } from '../../api/requests.api';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import { AddItemModal } from '../../components/items';
 import './BoxManagementPage.css';
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
@@ -30,16 +31,16 @@ const BoxManagementPage: React.FC = () => {
   const [newLocationName, setNewLocationName] = useState('');
   const [newLocationType, setNewLocationType] = useState<CreateLocationData['location_type']>('STORAGE');
   const [newLocationDescription, setNewLocationDescription] = useState('');
-  const [arrivalDestinationId, setArrivalDestinationId] = useState<number | ''>('');
-  const [arrivalComment, setArrivalComment] = useState('');
-  const [markArrivedError, setMarkArrivedError] = useState<string | null>(null);
-  const [markingArrived, setMarkingArrived] = useState(false);
 
   // All Containers tab state
   const [containerSearch, setContainerSearch] = useState('');
   const [expandedBoxId, setExpandedBoxId] = useState<number | null>(null);
   const [expandedBoxDetail, setExpandedBoxDetail] = useState<BoxDetail | null>(null);
   const [expandedBoxLoading, setExpandedBoxLoading] = useState(false);
+
+  // Add Item modal state
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [addItemBoxId, setAddItemBoxId] = useState<number | undefined>(undefined);
 
   // Move Box modal state
   const [moveBoxSuccessMessage, setMoveBoxSuccessMessage] = useState<string | null>(null);
@@ -57,6 +58,43 @@ const BoxManagementPage: React.FC = () => {
   const { box: selectedBox, loading: boxLoading, refetch: refetchSelectedBox } = useBoxDetail(selectedBoxId);
   const { boxes: allBoxes, loading: boxesLoading, refetch: refetchAllBoxes } = useBoxes();
   const { createLocation, creating: creatingLocation, error: createError } = useCreateLocation();
+  const { createBox, creating: creatingBox, error: createBoxError } = useCreateBox();
+
+  // Add Box modal state
+  const [showAddBoxModal, setShowAddBoxModal] = useState(false);
+  const [newBoxCode, setNewBoxCode] = useState('');
+  const [newBoxLabel, setNewBoxLabel] = useState('');
+  const [newBoxDescription, setNewBoxDescription] = useState('');
+  const [newBoxLocationId, setNewBoxLocationId] = useState<number | ''>('');
+
+  const handleAddBox = async () => {
+    if (!newBoxCode.trim() || newBoxLocationId === '') return;
+    try {
+      await createBox({
+        box_code: newBoxCode.trim(),
+        label: newBoxLabel.trim() || undefined,
+        description: newBoxDescription.trim() || undefined,
+        location: newBoxLocationId as number,
+      });
+      setShowAddBoxModal(false);
+      setNewBoxCode('');
+      setNewBoxLabel('');
+      setNewBoxDescription('');
+      setNewBoxLocationId('');
+      await Promise.all([refetchLocations(), refetchAllBoxes()]);
+      if (selectedLocationId) refetchSelectedLocation();
+    } catch {
+      // Error handled by hook
+    }
+  };
+
+  const openAddBoxModal = (preselectedLocationId?: number) => {
+    setNewBoxCode('');
+    setNewBoxLabel('');
+    setNewBoxDescription('');
+    setNewBoxLocationId(preselectedLocationId ?? '');
+    setShowAddBoxModal(true);
+  };
 
   const handleAddLocation = async () => {
     if (!newLocationName.trim()) return;
@@ -136,42 +174,10 @@ const BoxManagementPage: React.FC = () => {
   const handleLocationClick = (locationId: number) => {
     setSelectedLocationId(locationId);
     setSelectedBoxId(null);
-    setArrivalDestinationId('');
-    setArrivalComment('');
-    setMarkArrivedError(null);
   };
 
   const handleBoxClick = (boxId: number) => {
     setSelectedBoxId(boxId);
-    setArrivalDestinationId('');
-    setArrivalComment('');
-    setMarkArrivedError(null);
-  };
-
-  const handleMarkBoxArrived = async () => {
-    if (!selectedBox || arrivalDestinationId === '') {
-      return;
-    }
-
-    setMarkingArrived(true);
-    setMarkArrivedError(null);
-
-    try {
-      await boxesApi.markArrived(selectedBox.id, {
-        location: arrivalDestinationId,
-        comment: arrivalComment.trim() || undefined,
-      });
-
-      await Promise.all([refetchLocations(), refetchSelectedLocation(), refetchSelectedBox()]);
-      setSelectedLocationId(arrivalDestinationId);
-      setSelectedBoxId(null);
-      setArrivalDestinationId('');
-      setArrivalComment('');
-    } catch (err) {
-      setMarkArrivedError(getApiErrorMessage(err, 'Failed to mark box as arrived.'));
-    } finally {
-      setMarkingArrived(false);
-    }
   };
 
   const handleOpenMoveBoxModal = (boxId: number, boxCode: string, fromLocationId: number) => {
@@ -228,9 +234,14 @@ const BoxManagementPage: React.FC = () => {
           <h1>Box Management</h1>
           <p className="box-management-header-subtitle">Track items, boxes, and shelf locations across the museum</p>
         </div>
-        <Button variant="primary" size="md" icon="plus" onClick={() => setShowAddModal(true)}>
-          Add New Location
-        </Button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button variant="outline-black" size="md" icon="plus" onClick={() => openAddBoxModal()}>
+            Add Box
+          </Button>
+          <Button variant="primary" size="md" icon="plus" onClick={() => setShowAddModal(true)}>
+            Add Location
+          </Button>
+        </div>
       </div>
 
       {/* View Toggle */}
@@ -326,7 +337,14 @@ const BoxManagementPage: React.FC = () => {
                             {expandedBoxLoading ? (
                               <p className="all-containers-detail-loading">Loading items...</p>
                             ) : expandedBoxDetail ? (
-                              expandedBoxDetail.items?.length === 0 ? (
+                              <>
+                              <div className="box-management-detail-header" style={{ marginBottom: '8px' }}>
+                                <span className="add-item-section-title" style={{ margin: 0 }}>Items ({expandedBoxDetail.items?.length || 0})</span>
+                                <Button variant="outline-black" size="xs" icon="plus" onClick={() => { setAddItemBoxId(expandedBoxId!); setShowAddItemModal(true); }}>
+                                  Add Item
+                                </Button>
+                              </div>
+                              {expandedBoxDetail.items?.length === 0 ? (
                                 <p className="all-containers-detail-empty">No items in this box</p>
                               ) : (
                                 <table className="box-management-items-table">
@@ -355,7 +373,8 @@ const BoxManagementPage: React.FC = () => {
                                     ))}
                                   </tbody>
                                 </table>
-                              )
+                              )}
+                              </>
                             ) : (
                               <p className="all-containers-detail-empty">Failed to load items.</p>
                             )}
@@ -441,9 +460,14 @@ const BoxManagementPage: React.FC = () => {
                   <p className="box-management-detail-description">{selectedLocation.description}</p>
                 )}
 
-                <h3 className="box-management-section-title">
-                  Boxes ({selectedLocation.boxes?.length || 0})
-                </h3>
+                <div className="box-management-detail-header">
+                  <h3 className="box-management-section-title" style={{ margin: 0 }}>
+                    Boxes ({selectedLocation.boxes?.length || 0})
+                  </h3>
+                  <Button variant="outline-black" size="xs" icon="plus" onClick={() => openAddBoxModal(selectedLocation.id)}>
+                    Add Box
+                  </Button>
+                </div>
 
                 {selectedLocation.boxes?.length === 0 ? (
                   <div className="box-management-empty-boxes">
@@ -488,43 +512,14 @@ const BoxManagementPage: React.FC = () => {
                       <div className="box-management-loading">Loading box details...</div>
                     ) : selectedBox ? (
                       <>
-                        <div className="box-arrival-panel">
-                          {markArrivedError && <p className="box-arrival-error">{markArrivedError}</p>}
-                          <div className="box-arrival-controls">
-                            <select
-                              value={arrivalDestinationId}
-                              onChange={(e) => setArrivalDestinationId(e.target.value ? Number(e.target.value) : '')}
-                              disabled={markingArrived}
-                            >
-                              <option value="">Select destination location</option>
-                              {locations
-                                .filter((location) => location.id !== selectedLocationId)
-                                .map((location) => (
-                                  <option key={location.id} value={location.id}>
-                                    {location.name} ({location.location_type_display})
-                                  </option>
-                                ))}
-                            </select>
-                            <input
-                              type="text"
-                              value={arrivalComment}
-                              onChange={(e) => setArrivalComment(e.target.value)}
-                              placeholder="Optional note"
-                              disabled={markingArrived}
-                            />
-                            <Button
-                              variant="primary"
-                              size="md"
-                              onClick={handleMarkBoxArrived}
-                              disabled={markingArrived || arrivalDestinationId === ''}
-                            >
-                              {markingArrived ? 'Updating...' : 'Mark as Arrived'}
-                            </Button>
-                          </div>
+                        <div className="box-management-detail-header">
+                          <h3 className="box-management-section-title" style={{ margin: 0 }}>
+                            Items in {selectedBox.box_code} ({selectedBox.items?.length || 0})
+                          </h3>
+                          <Button variant="outline-black" size="xs" icon="plus" onClick={() => { setAddItemBoxId(selectedBox.id); setShowAddItemModal(true); }}>
+                            Add Item
+                          </Button>
                         </div>
-                        <h3 className="box-management-section-title">
-                          Items in {selectedBox.box_code} ({selectedBox.items?.length || 0})
-                        </h3>
                         {selectedBox.items?.length === 0 ? (
                           <p className="box-management-empty-items">No items in this box</p>
                         ) : (
@@ -680,6 +675,97 @@ const BoxManagementPage: React.FC = () => {
           </Button>
         </div>
       </Modal>
+
+      {/* Add Box Modal */}
+      <Modal open={showAddBoxModal} onClose={() => setShowAddBoxModal(false)} title="Add New Box">
+        <div className="box-management-modal-body">
+          {createBoxError && (
+            <div className="box-management-modal-error">{createBoxError}</div>
+          )}
+          <div className="box-management-form-group">
+            <label htmlFor="box-code">Box Code <span className="required">*</span></label>
+            <input
+              id="box-code"
+              type="text"
+              value={newBoxCode}
+              onChange={(e) => setNewBoxCode(e.target.value)}
+              placeholder="e.g., BOX-001"
+              disabled={creatingBox}
+            />
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="box-label">Label</label>
+            <input
+              id="box-label"
+              type="text"
+              value={newBoxLabel}
+              onChange={(e) => setNewBoxLabel(e.target.value)}
+              placeholder="Optional label"
+              disabled={creatingBox}
+            />
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="box-location">Location <span className="required">*</span></label>
+            <select
+              id="box-location"
+              value={newBoxLocationId}
+              onChange={(e) => setNewBoxLocationId(e.target.value ? Number(e.target.value) : '')}
+              disabled={creatingBox}
+            >
+              <option value="">Select location...</option>
+              {locations.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.name} ({location.location_type_display})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="box-management-form-group">
+            <label htmlFor="box-description">Description</label>
+            <textarea
+              id="box-description"
+              value={newBoxDescription}
+              onChange={(e) => setNewBoxDescription(e.target.value)}
+              placeholder="Optional description"
+              rows={3}
+              disabled={creatingBox}
+            />
+          </div>
+        </div>
+        <div className="box-management-modal-footer">
+          <Button
+            variant="outline-gray"
+            size="md"
+            onClick={() => setShowAddBoxModal(false)}
+            disabled={creatingBox}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleAddBox}
+            disabled={creatingBox || !newBoxCode.trim() || newBoxLocationId === ''}
+          >
+            {creatingBox ? 'Creating...' : 'Create Box'}
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Add Item Modal */}
+      <AddItemModal
+        isOpen={showAddItemModal}
+        onClose={() => { setShowAddItemModal(false); setAddItemBoxId(undefined); }}
+        onSuccess={async () => {
+          await Promise.all([refetchAllBoxes(), refetchLocations()]);
+          if (selectedBoxId) refetchSelectedBox();
+          if (expandedBoxId) {
+            const detail = await boxesApi.getById(expandedBoxId);
+            setExpandedBoxDetail(detail);
+          }
+        }}
+        preselectedBox={addItemBoxId}
+      />
     </div>
   );
 };

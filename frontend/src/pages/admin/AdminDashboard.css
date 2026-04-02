@@ -54,6 +54,12 @@
     text-decoration: none;
 }
 
+.admin-tab:focus,
+.admin-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
+}
+
 .admin-tab:hover {
     color: var(--color-primary);
     background: var(--color-background-light);
@@ -448,7 +454,7 @@
 
 .admin-request-tab {
     padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     line-height: 20px;
     color: var(--color-secondary);
@@ -458,8 +464,14 @@
     border-radius: 0;
     margin-bottom: -1px;
     cursor: pointer;
-    outline: none;
+    outline: 0;
     transition: color 0.2s, border-color 0.2s;
+}
+
+.admin-request-tab:focus,
+.admin-request-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .admin-request-tab:hover {

@@ -45,30 +45,40 @@
 /* Tabs */
 .box-management-tabs {
     display: flex;
-    gap: var(--spacing-xs);
+    border-bottom: 1px solid var(--color-border);
     margin-bottom: var(--spacing-lg);
 }
 
 .box-management-tab {
     padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-background);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 500;
+    line-height: 20px;
     color: var(--color-secondary);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    margin-bottom: -1px;
     cursor: pointer;
+    outline: 0;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.box-management-tab:focus,
+.box-management-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .box-management-tab:hover {
-    border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
 .box-management-tab.active {
-    background: var(--color-primary);
-    color: var(--color-background);
-    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 600;
+    border-bottom-color: var(--color-primary);
 }
 
 /* Content Layout */
@@ -80,10 +90,11 @@
 
 /* Sidebar */
 .box-management-sidebar {
-    background: var(--color-primary);
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     padding: var(--spacing-md);
-    color: var(--color-background);
+    color: var(--color-primary);
 }
 
 .box-management-sidebar-header {
@@ -94,27 +105,27 @@
     font-weight: 600;
     margin-bottom: var(--spacing-md);
     padding-bottom: var(--spacing-md);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid var(--color-border);
 }
 
 .box-management-empty-state {
     padding: var(--spacing-lg);
     text-align: center;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-muted);
     font-size: 13px;
 }
 
 .box-management-summary {
     margin-top: var(--spacing-lg);
     padding-top: var(--spacing-md);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid var(--color-border);
 }
 
 .box-management-summary h4 {
     font-size: 13px;
     font-weight: 600;
     margin: 0 0 var(--spacing-sm);
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-secondary);
 }
 
 .box-management-summary-item {
@@ -122,6 +133,7 @@
     justify-content: space-between;
     font-size: 13px;
     padding: var(--spacing-xs) 0;
+    color: var(--color-secondary);
 }
 
 /* Main Content */
@@ -157,7 +169,7 @@
 .box-management-loading {
     padding: var(--spacing-lg);
     text-align: center;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-muted);
     font-size: 13px;
 }
 
@@ -181,11 +193,11 @@
 }
 
 .box-management-location-item:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-background-gray);
 }
 
 .box-management-location-item.active {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--color-background-light);
 }
 
 .location-item-info {
@@ -205,7 +217,7 @@
 .location-item-type {
     display: block;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-muted);
 }
 
 .location-item-counts {
@@ -213,11 +225,11 @@
     flex-direction: column;
     align-items: flex-end;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-muted);
 }
 
 .location-item-arrow {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-border);
 }
 
 /* Detail View */

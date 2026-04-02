@@ -458,9 +458,13 @@
 }
 
 .modal-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: var(--spacing-md);
+}
+
+.modal-row > * {
+    flex: 1;
+    min-width: 0;
 }
 
 .modal-field {
@@ -480,17 +484,33 @@
 }
 
 .modal-field input,
-.modal-field select {
+.modal-field select,
+.modal-field textarea {
     padding: 10px 14px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     font-size: 14px;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.modal-field textarea {
+    resize: vertical;
+    min-height: 60px;
 }
 
 .modal-field input:focus,
-.modal-field select:focus {
+.modal-field select:focus,
+.modal-field textarea:focus {
     outline: none;
     border-color: var(--color-primary);
+}
+
+.modal-field input:disabled,
+.modal-field select:disabled {
+    background: var(--color-background-light);
+    color: var(--color-muted);
 }
 
 .modal-actions {
@@ -542,7 +562,7 @@
     }
     
     .modal-row {
-        grid-template-columns: 1fr;
+        flex-direction: column;
     }
 }
 
@@ -597,8 +617,14 @@
     border-radius: 0;
     margin-bottom: -1px;
     cursor: pointer;
-    outline: none;
+    outline: 0;
     transition: color 0.2s, border-color 0.2s;
+}
+
+.volunteers-tab:focus,
+.volunteers-tab:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .volunteers-tab:hover {

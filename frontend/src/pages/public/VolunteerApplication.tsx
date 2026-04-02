@@ -122,11 +122,9 @@ const VolunteerApplication = () => {
             </button>
         </form>
 
-        <p className="mt-4 text-sm text-gray-600 text-center">
+        <p className={styles.linkText}>
             Already have an account?{' '}
-            <Link to="/login" className="text-blue-600 hover:underline">
-                Log in
-            </Link>
+            <Link to="/login">Log in</Link>
         </p>
     </div>
     );

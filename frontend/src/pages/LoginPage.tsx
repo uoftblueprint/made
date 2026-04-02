@@ -99,11 +99,9 @@ const LoginPage = () => {
         </button>
       </form>
 
-      <p className="mt-4 text-sm text-gray-600">
+      <p className="login-link-text">
         Want to volunteer?{' '}
-        <Link to="/volunteer_management" className="text-blue-600 hover:underline">
-          Apply here
-        </Link>
+        <Link to="/volunteer_management">Apply here</Link>
       </p>
     </div>
   );

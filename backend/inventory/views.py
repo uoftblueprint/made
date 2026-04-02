@@ -103,10 +103,11 @@ class CollectionItemViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class BoxViewSet(viewsets.ReadOnlyModelViewSet):
+class BoxViewSet(viewsets.ModelViewSet):
     """
     ViewSet for boxes.
     - GET /api/boxes/ - List all boxes
+    - POST /api/boxes/ - Create a new box
     - GET /api/boxes/{id}/ - Retrieve box with items
     - POST /api/boxes/{id}/mark-arrived/ - Mark box as arrived at destination
     """

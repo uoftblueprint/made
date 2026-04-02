@@ -1,22 +1,24 @@
 .container {
-    min-height: 100vh;
+    flex: 1;
     background-color: var(--color-background);
     padding: var(--spacing-lg) var(--spacing-xl);
-    max-width: 600px;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Header - matching admin style */
+/* Header */
 .header {
+    text-align: center;
     margin-bottom: var(--spacing-lg);
 }
 
 .header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 30px;
     font-weight: 700;
-    line-height: 32px;
+    line-height: 36px;
     color: var(--color-primary);
 }
 
@@ -27,19 +29,10 @@
     color: var(--color-secondary);
 }
 
-/* Card */
-.card {
-    width: 100%;
-    max-width: 640px;
-    background: var(--color-background);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
 /* Form */
 .form {
+    width: 100%;
+    max-width: 400px;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
@@ -79,6 +72,7 @@
     line-height: 20px;
     color: var(--color-primary);
     background-color: var(--color-background);
+    box-sizing: border-box;
 }
 
 .inputBox:focus {
@@ -96,8 +90,9 @@
     color: var(--color-primary);
     background-color: var(--color-background);
     resize: vertical;
-    min-height: 100px;
+    min-height: 80px;
     font-family: inherit;
+    box-sizing: border-box;
 }
 
 .textArea:focus {
@@ -111,9 +106,14 @@
 }
 
 .errorMessage {
-    font-size: 14px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius-md);
     color: var(--color-error);
-    margin: 0;
+    font-size: 13px;
+    line-height: 20px;
+    text-align: center;
 }
 
 .hint {
@@ -123,35 +123,58 @@
     margin: 0;
 }
 
-/* Submit Button - matching admin style */
+/* Submit Button - matching login button */
 .submitBtn {
-    padding: 10px 20px;
-    background: var(--color-primary);
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background-color: var(--color-primary);
     color: var(--color-background);
     border: none;
     border-radius: var(--radius-md);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 24px;
     cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .submitBtn:hover:not(:disabled) {
-    background: var(--color-accent-hover);
+    background-color: var(--color-accent-hover);
 }
 
 .submitBtn:disabled {
-    opacity: 0.7;
+    background-color: var(--color-muted);
     cursor: not-allowed;
 }
 
 /* Success Message */
 .successMessage {
-    padding: var(--spacing-lg);
+    width: 100%;
+    max-width: 400px;
     text-align: center;
 }
 
 .successMessage p {
     font-size: 14px;
     color: var(--color-secondary);
-    margin: 0 0 var(--spacing-md);
+    margin: 0 0 var(--spacing-lg);
+}
+
+/* Link text */
+.linkText {
+    margin-top: var(--spacing-lg);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--color-secondary);
+    text-align: center;
+}
+
+.linkText a {
+    color: var(--color-primary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.linkText a:hover {
+    text-decoration: underline;
 }
