@@ -5,6 +5,8 @@ import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types'
 import { Link } from 'react-router-dom';
 import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check, AlertTriangle } from 'lucide-react';
 import Button from '../../components/common/Button';
+import SortableHeader from '../../components/common/SortableHeader';
+import { useSort } from '../../hooks/useSort';
 import { useAuth } from '../../contexts';
 import './AdminCataloguePage.css';
 
@@ -140,8 +142,8 @@ const MobileFilterGroup: React.FC<MobileFilterGroupProps> = ({
 };
 
 const AdminCataloguePage: React.FC = () => {
-  const { isAdmin, isTrustedVolunteer } = useAuth();
-  const canEdit = isAdmin || isTrustedVolunteer;
+  const { isAdmin, isSeniorVolunteer } = useAuth();
+  const canEdit = isAdmin || isSeniorVolunteer;
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [items, setItems] = useState<AdminCollectionItem[]>([]);
@@ -243,6 +245,23 @@ const AdminCataloguePage: React.FC = () => {
 
   // Filtering is now handled server-side via API query params
   const filteredItems = inventoryItems;
+
+  type CatalogueSortKey = 'title' | 'item_code' | 'platform' | 'item_type' | 'box_code' | 'location' | 'working_condition' | 'status';
+
+  const getCatalogueValue = useCallback((item: typeof filteredItems[number], key: CatalogueSortKey) => {
+    switch (key) {
+      case 'title': return item.display.title;
+      case 'item_code': return item.display.item_code;
+      case 'platform': return item.display.platform;
+      case 'item_type': return item.display.item_type;
+      case 'box_code': return item.display.box_code;
+      case 'location': return item.display.location_name;
+      case 'working_condition': return item.display.working_condition;
+      case 'status': return item.display.status;
+    }
+  }, []);
+
+  const { sortedItems: sortedFilteredItems, sortConfig: catalogueSortConfig, requestSort: requestCatalogueSort } = useSort(filteredItems, getCatalogueValue);
 
   return (
     <div className="catalogue-layout">
@@ -461,19 +480,19 @@ const AdminCataloguePage: React.FC = () => {
           <table className="catalogue-table">
             <thead>
               <tr>
-                <th>Game Title</th>
-                <th>MADE ID</th>
-                <th>System</th>
-                <th>Type</th>
-                <th>Box ID</th>
-                <th>Location</th>
-                <th>Working Condition</th>
-                <th>Status</th>
+                <SortableHeader label="Game Title" sortKey="title" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="MADE ID" sortKey="item_code" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="System" sortKey="platform" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="Type" sortKey="item_type" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="Box ID" sortKey="box_code" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="Location" sortKey="location" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="Working Condition" sortKey="working_condition" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
+                <SortableHeader label="Status" sortKey="status" sortConfig={catalogueSortConfig} onSort={requestCatalogueSort} />
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map(({ raw, display }) => (
+              {sortedFilteredItems.map(({ raw, display }) => (
                 <tr key={raw.id}>
                   <td>
                     <strong>{display.title}</strong>

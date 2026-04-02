@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Layers, Archive, MapPin, Check, X, CheckCircle, XCircle, Truck, PackageCheck } from 'lucide-react';
-import { useRequests } from '../../actions/useRequests';
+import { AlertCircle, Layers, Archive, MapPin, Check, X, XCircle, Truck, PackageCheck, ShieldCheck } from 'lucide-react';
+import { useRequests, useBoxRequests } from '../../actions/useRequests';
 import { useDashboardStats } from '../../actions/useStats';
-import type { MovementRequest } from '../../lib/types';
+import type { MovementRequest, BoxMovementRequest } from '../../lib/types';
 import Button from '../../components/common/Button';
 import { ExportModal } from '../../components/items';
 import { useAuth } from '../../contexts';
@@ -24,35 +24,85 @@ function formatTimeAgo(dateString: string): string {
 }
 
 const AdminDashboard: React.FC = () => {
-  const { isAdmin } = useAuth();
-  const { requests: allRequests, loading, approve, reject } = useRequests();
+  const { isAdmin, isSeniorVolunteer } = useAuth();
+  const canApprove = isAdmin || isSeniorVolunteer;
+  const { requests: itemRequests, loading: itemLoading, approve: approveItem, reject: rejectItem, verify: verifyItem } = useRequests();
+  const { requests: boxReqs, loading: boxLoading, approve: approveBox, reject: rejectBox, verify: verifyBox } = useBoxRequests();
   const { stats, loading: statsLoading } = useDashboardStats();
-  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  type RequestTab = 'pending' | 'in_transit' | 'arrived' | 'rejected';
+  type RequestTab = 'pending' | 'in_transit' | 'rejected';
   const [requestTab, setRequestTab] = useState<RequestTab>('pending');
 
+  const loading = itemLoading || boxLoading;
+
+  // Unified request type for display
+  type UnifiedRequest = {
+    id: number;
+    key: string; // unique key: 'item-1' or 'box-1'
+    type: 'item' | 'box';
+    title: string;
+    subtitle: string;
+    from_location_name: string;
+    to_location_name: string;
+    status: string;
+    created_at: string;
+    updated_at: string;
+    item_id?: number; // for linking to item detail
+    box_id?: number; // for linking to box detail
+  };
+
+  const unifyItemReqs = (reqs: MovementRequest[]): UnifiedRequest[] =>
+    reqs.map(r => ({
+      id: r.id,
+      key: `item-${r.id}`,
+      type: 'item' as const,
+      title: r.item_title || `Item #${r.item}`,
+      subtitle: r.item_platform || 'Unknown',
+      from_location_name: r.from_location_name || '',
+      to_location_name: r.to_location_name || '',
+      status: r.status,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      item_id: r.item,
+    }));
+
+  const unifyBoxReqs = (reqs: BoxMovementRequest[]): UnifiedRequest[] =>
+    reqs.map(r => ({
+      id: r.id,
+      key: `box-${r.id}`,
+      type: 'box' as const,
+      title: `Box ${r.box_code}`,
+      subtitle: r.box_label || 'Container',
+      from_location_name: r.from_location_name || '',
+      to_location_name: r.to_location_name || '',
+      status: r.status,
+      created_at: r.created_at,
+      updated_at: r.updated_at,
+      box_id: r.box,
+    }));
+
+  const allRequests = [
+    ...unifyItemReqs(itemRequests),
+    ...unifyBoxReqs(boxReqs),
+  ];
+
   const pendingRequests = allRequests.filter(r => r.status === 'WAITING_APPROVAL');
-  const inTransitRequests = allRequests.filter(r => r.status === 'APPROVED');
-  const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const arrivedRequests = allRequests.filter(r =>
-    (r.status === 'COMPLETED_UNVERIFIED' || r.status === 'CANCELLED') &&
-    new Date(r.updated_at) >= oneWeekAgo
-  );
+  const inTransitRequests = allRequests.filter(r => r.status === 'APPROVED' || r.status === 'COMPLETED_UNVERIFIED');
   const rejectedRequests = allRequests.filter(r => r.status === 'REJECTED');
 
-  const tabRequestsMap: Record<RequestTab, MovementRequest[]> = {
+  const tabRequestsMap: Record<RequestTab, UnifiedRequest[]> = {
     pending: pendingRequests,
     in_transit: inTransitRequests,
-    arrived: arrivedRequests,
     rejected: rejectedRequests,
   };
   const tabRequests = tabRequestsMap[requestTab];
 
-  const handleApprove = async (request: MovementRequest) => {
-    setProcessingId(request.id);
+  const handleApprove = async (request: UnifiedRequest) => {
+    setProcessingId(request.key);
     try {
-      await approve(request.id);
+      if (request.type === 'item') await approveItem(request.id);
+      else await approveBox(request.id);
     } catch (error) {
       console.error('Failed to approve request:', error);
     } finally {
@@ -60,12 +110,25 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleReject = async (request: MovementRequest) => {
-    setProcessingId(request.id);
+  const handleReject = async (request: UnifiedRequest) => {
+    setProcessingId(request.key);
     try {
-      await reject(request.id);
+      if (request.type === 'item') await rejectItem(request.id);
+      else await rejectBox(request.id);
     } catch (error) {
       console.error('Failed to reject request:', error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleVerify = async (request: UnifiedRequest) => {
+    setProcessingId(request.key);
+    try {
+      if (request.type === 'item') await verifyItem(request.id);
+      else await verifyBox(request.id);
+    } catch (error) {
+      console.error('Failed to verify request:', error);
     } finally {
       setProcessingId(null);
     }
@@ -114,7 +177,6 @@ const AdminDashboard: React.FC = () => {
           {([
             { key: 'pending' as const, label: 'Pending', count: pendingRequests.length },
             { key: 'in_transit' as const, label: 'In Transit', count: inTransitRequests.length },
-            { key: 'arrived' as const, label: 'Arrived', count: arrivedRequests.length },
             { key: 'rejected' as const, label: 'Rejected', count: rejectedRequests.length },
           ]).map(tab => (
             <button
@@ -134,17 +196,21 @@ const AdminDashboard: React.FC = () => {
             </div>
           ) : tabRequests.length === 0 ? (
             <div className="admin-review-item">
-              <p>No {requestTab === 'pending' ? 'pending' : requestTab === 'in_transit' ? 'in transit' : requestTab === 'arrived' ? 'arrived' : 'rejected'} requests</p>
+              <p>No {requestTab === 'pending' ? 'pending' : requestTab === 'in_transit' ? 'in transit' : 'rejected'} requests</p>
             </div>
           ) : (
             tabRequests.slice(0, 10).map((request) => (
-              <div key={request.id} className="admin-review-item">
+              <div key={request.key} className="admin-review-item">
                 <div className="admin-review-item-info">
-                  <Layers size={16} className="admin-review-dot" />
+                  {request.type === 'item' ? (
+                    <Layers size={16} className="admin-review-dot" />
+                  ) : (
+                    <Archive size={16} className="admin-review-dot" />
+                  )}
                   <div className="admin-review-item-details">
-                    <h4>{request.item_title || `Item #${request.item}`}</h4>
+                    <h4>{request.title}</h4>
                     <p>
-                      {request.item_platform || 'Unknown'} · {request.from_location_name} → {request.to_location_name}
+                      {request.subtitle} · {request.from_location_name} → {request.to_location_name}
                     </p>
                   </div>
                 </div>
@@ -152,18 +218,27 @@ const AdminDashboard: React.FC = () => {
                   <span className="admin-review-time">{formatTimeAgo(request.created_at)}</span>
                   {requestTab === 'pending' && (
                     <>
-                      <Link
-                        to={`/admin/catalogue/${request.item}?from=request`}
-                        className="admin-review-btn admin-review-btn-review"
-                      >
-                        Review
-                      </Link>
-                      {isAdmin && (
+                      {request.type === 'item' && request.item_id ? (
+                        <Link
+                          to={`/admin/catalogue/${request.item_id}?from=request`}
+                          className="admin-review-btn admin-review-btn-review"
+                        >
+                          Review
+                        </Link>
+                      ) : request.type === 'box' && request.box_id ? (
+                        <Link
+                          to={`/admin/boxes/${request.box_id}`}
+                          className="admin-review-btn admin-review-btn-review"
+                        >
+                          Review
+                        </Link>
+                      ) : null}
+                      {canApprove && (
                         <>
                           <button
                             className="admin-review-btn-icon admin-review-btn-approve"
                             onClick={() => handleApprove(request)}
-                            disabled={processingId === request.id}
+                            disabled={processingId === request.key}
                             title="Approve"
                           >
                             <Check size={16} />
@@ -171,7 +246,7 @@ const AdminDashboard: React.FC = () => {
                           <button
                             className="admin-review-btn-icon admin-review-btn-reject"
                             onClick={() => handleReject(request)}
-                            disabled={processingId === request.id}
+                            disabled={processingId === request.key}
                             title="Reject"
                           >
                             <X size={16} />
@@ -181,14 +256,35 @@ const AdminDashboard: React.FC = () => {
                     </>
                   )}
                   {requestTab === 'in_transit' && (
-                    <span className="admin-request-status in-transit">
-                      <Truck size={14} /> In Transit
-                    </span>
-                  )}
-                  {requestTab === 'arrived' && (
-                    <span className="admin-request-status arrived">
-                      <PackageCheck size={14} /> Arrived
-                    </span>
+                    <>
+                      {request.status === 'COMPLETED_UNVERIFIED' ? (
+                        <span className="admin-request-status arrived">
+                          <PackageCheck size={14} /> Arrived
+                        </span>
+                      ) : (
+                        <span className="admin-request-status in-transit">
+                          <Truck size={14} /> In Transit
+                        </span>
+                      )}
+                      {request.status === 'COMPLETED_UNVERIFIED' && canApprove && (
+                        <button
+                          className="admin-review-btn-icon admin-review-btn-approve"
+                          onClick={() => handleVerify(request)}
+                          disabled={processingId === request.key}
+                          title="Verify arrival"
+                        >
+                          <ShieldCheck size={16} />
+                        </button>
+                      )}
+                      {request.type === 'item' && request.item_id && (
+                        <Link
+                          to={`/admin/catalogue/${request.item_id}`}
+                          className="admin-review-btn admin-review-btn-review"
+                        >
+                          Review
+                        </Link>
+                      )}
+                    </>
                   )}
                   {requestTab === 'rejected' && (
                     <span className="admin-request-status rejected">

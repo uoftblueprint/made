@@ -229,7 +229,29 @@
     color: var(--color-primary);
 }
 
+/* Info note */
+.volunteers-info-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--color-light-blue-bg);
+    border: 1px solid var(--color-light-blue-border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    line-height: 20px;
+    color: var(--color-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.volunteers-info-note svg {
+    color: var(--color-secondary);
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
 /* Role Badge - matching location-badge pattern */
+button.role-badge,
 .role-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -237,6 +259,19 @@
     font-size: 12px;
     font-weight: 500;
     line-height: 16px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.role-badge:hover {
+    filter: brightness(0.9);
+}
+
+.role-badge:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .role-badge.viewer {

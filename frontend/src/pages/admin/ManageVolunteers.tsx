@@ -1,7 +1,9 @@
 import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions, useToggleMoveApproval, useUpdateVolunteer } from '../../actions/useVolunteers';
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, Edit2 } from 'lucide-react';
 import Button from '../../components/common/Button';
+import SortableHeader from '../../components/common/SortableHeader';
+import { useSort } from '../../hooks/useSort';
 import Modal from '../../components/common/Modal';
 import type { Volunteer } from '../../lib/types';
 import './ManageVolunteers.css';
@@ -127,6 +129,21 @@ const ManageVolunteers = () => {
         });
     }, [data, searchQuery, activeTab]);
 
+    type VolunteerSortKey = 'name' | 'email' | 'granted_date' | 'expires' | 'status' | 'level';
+
+    const getVolunteerValue = useCallback((volunteer: Volunteer, key: VolunteerSortKey) => {
+        switch (key) {
+            case 'name': return volunteer.name;
+            case 'email': return volunteer.email;
+            case 'granted_date': return volunteer.created_at || volunteer.submitted_at || '';
+            case 'expires': return volunteer.expires_at || '';
+            case 'status': return volunteer.status;
+            case 'level': return volunteer.requires_move_approval ? 'Junior' : 'Senior';
+        }
+    }, []);
+
+    const { sortedItems: sortedVolunteers, sortConfig: volunteerSortConfig, requestSort: requestVolunteerSort } = useSort(filteredVolunteers, getVolunteerValue);
+
     const pendingCount = useMemo(() => data.filter(v => v.status === 'PENDING').length, [data]);
     const approvedCount = useMemo(() => data.filter(v => v.status === 'APPROVED').length, [data]);
     const rejectedCount = useMemo(() => data.filter(v => v.status === 'REJECTED').length, [data]);
@@ -147,25 +164,6 @@ const ManageVolunteers = () => {
             case 'PENDING': return 'pending';
             default: return '';
         }
-    };
-
-    const getRoleBadgeClass = (status: string) => {
-        switch (status) {
-            case 'APPROVED': return 'editor';
-            case 'REJECTED': return 'viewer';
-            case 'PENDING': return 'pending';
-            default: return '';
-        }
-    };
-
-    const getRoleLabel = (status: string) => {
-        const role = roles.find(r => {
-            if (status === 'APPROVED') return r.value === 'editor';
-            if (status === 'PENDING') return r.value === 'viewer';
-            return r.value === 'viewer';
-        });
-        if (status === 'PENDING') return 'Pending';
-        return role?.label || (status === 'APPROVED' ? 'Editor' : 'Viewer');
     };
 
     return (
@@ -218,6 +216,16 @@ const ManageVolunteers = () => {
                 ))}
             </div>
 
+            {/* Level info note */}
+            <div className="volunteers-info-note">
+                <AlertCircle size={14} />
+                <span>
+                    <strong>Senior</strong> volunteers have full access to the catalogue, box management, and dashboard.
+                    <strong> Junior</strong> volunteers can browse the catalogue and submit movement requests for approval.
+                    Click the level badge to toggle.
+                </span>
+            </div>
+
             {/* Search */}
             <div className="volunteers-filters">
                 <div className="volunteers-search-wrapper">
@@ -264,29 +272,23 @@ const ManageVolunteers = () => {
                 <table className="volunteers-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Granted Date</th>
-                            <th>Expires</th>
-                            <th>Status</th>
-                            <th>Approval Required</th>
+                            <SortableHeader label="Name" sortKey="name" sortConfig={volunteerSortConfig} onSort={requestVolunteerSort} />
+                            <SortableHeader label="Email" sortKey="email" sortConfig={volunteerSortConfig} onSort={requestVolunteerSort} />
+                            <SortableHeader label="Granted Date" sortKey="granted_date" sortConfig={volunteerSortConfig} onSort={requestVolunteerSort} />
+                            <SortableHeader label="Expires" sortKey="expires" sortConfig={volunteerSortConfig} onSort={requestVolunteerSort} />
+                            <SortableHeader label="Status" sortKey="status" sortConfig={volunteerSortConfig} onSort={requestVolunteerSort} />
+                            <SortableHeader label="Level" sortKey="level" sortConfig={volunteerSortConfig} onSort={requestVolunteerSort} />
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredVolunteers.map((volunteer) => (
+                        {sortedVolunteers.map((volunteer) => (
                             <tr key={volunteer.id}>
                                 <td><strong>{volunteer.name}</strong></td>
                                 <td>
                                     <span className="volunteer-email">
                                         <Mail size={14} />
                                         {volunteer.email}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span className={`role-badge ${getRoleBadgeClass(volunteer.status)}`}>
-                                        {getRoleLabel(volunteer.status)}
                                     </span>
                                 </td>
                                 <td>{(volunteer.created_at || volunteer.submitted_at) ? new Date(volunteer.created_at || volunteer.submitted_at).toLocaleDateString('en-CA') : '-'}</td>
@@ -312,20 +314,21 @@ const ManageVolunteers = () => {
                                 </td>
                                 <td>
                                     {volunteer.status === 'APPROVED' && volunteer.user_id ? (
-                                        <input
-                                            type="checkbox"
-                                            checked={volunteer.requires_move_approval ?? false}
-                                            onChange={(e) => {
+                                        <button
+                                            className={`role-badge ${volunteer.requires_move_approval ? 'pending' : 'editor'}`}
+                                            onClick={() => {
                                                 if (volunteer.user_id) {
                                                     toggleMoveApprovalMutation.mutate({
                                                         userId: volunteer.user_id,
-                                                        requires_move_approval: e.target.checked,
+                                                        requires_move_approval: !volunteer.requires_move_approval,
                                                     });
                                                 }
                                             }}
                                             disabled={toggleMoveApprovalMutation.isPending}
-                                            style={{ cursor: 'pointer' }}
-                                        />
+                                            title="Click to toggle level"
+                                        >
+                                            {volunteer.requires_move_approval ? 'Junior' : 'Senior'}
+                                        </button>
                                     ) : (
                                         <span className="text-sm text-muted">--</span>
                                     )}

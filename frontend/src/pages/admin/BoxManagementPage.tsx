@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
@@ -8,8 +9,11 @@ import type { BoxDetail } from '../../api/boxes.api';
 import { boxesApi } from '../../api/boxes.api';
 import { boxRequestsApi } from '../../api/requests.api';
 import Button from '../../components/common/Button';
+import SortableHeader from '../../components/common/SortableHeader';
+import { useSort } from '../../hooks/useSort';
 import Modal from '../../components/common/Modal';
 import { AddItemModal } from '../../components/items';
+import { useAuth } from '../../contexts/AuthContext.shared';
 import './BoxManagementPage.css';
 
 function getApiErrorMessage(error: unknown, fallback: string): string {
@@ -24,6 +28,8 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
 }
 
 const BoxManagementPage: React.FC = () => {
+  const { isJuniorVolunteer } = useAuth();
+  const navigate = useNavigate();
   const [selectedLocationId, setSelectedLocationId] = useState<number | null>(null);
   const [selectedBoxId, setSelectedBoxId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'list' | 'containers'>('list');
@@ -151,6 +157,18 @@ const BoxManagementPage: React.FC = () => {
       return codeMatch || labelMatch || locationMatch;
     });
   }, [allBoxes, containerSearch, locationMap]);
+
+  type BoxSortKey = 'box_code' | 'label' | 'location';
+
+  const getBoxValue = useCallback((box: typeof filteredBoxes[number], key: BoxSortKey) => {
+    switch (key) {
+      case 'box_code': return box.box_code;
+      case 'label': return box.label || '';
+      case 'location': return locationMap.get(box.location) || '';
+    }
+  }, [locationMap]);
+
+  const { sortedItems: sortedBoxes, sortConfig: boxSortConfig, requestSort: requestBoxSort } = useSort(filteredBoxes, getBoxValue);
 
   const handleToggleExpandBox = async (boxId: number) => {
     if (expandedBoxId === boxId) {
@@ -294,14 +312,14 @@ const BoxManagementPage: React.FC = () => {
               <thead>
                 <tr>
                   <th></th>
-                  <th>Box Code</th>
-                  <th>Label</th>
-                  <th>Location</th>
+                  <SortableHeader label="Box Code" sortKey="box_code" sortConfig={boxSortConfig} onSort={requestBoxSort} />
+                  <SortableHeader label="Label" sortKey="label" sortConfig={boxSortConfig} onSort={requestBoxSort} />
+                  <SortableHeader label="Location" sortKey="location" sortConfig={boxSortConfig} onSort={requestBoxSort} />
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredBoxes.map((box) => (
+                {sortedBoxes.map((box) => (
                   <React.Fragment key={box.id}>
                     <tr
                       className={`all-containers-row ${expandedBoxId === box.id ? 'expanded' : ''}`}
@@ -359,7 +377,7 @@ const BoxManagementPage: React.FC = () => {
                                   </thead>
                                   <tbody>
                                     {expandedBoxDetail.items?.map((item) => (
-                                      <tr key={item.id}>
+                                      <tr key={item.id} className="item-row-clickable" onClick={() => navigate(`/admin/catalogue/${item.id}`)}>
                                         <td><strong>{item.item_code}</strong></td>
                                         <td>{item.title}</td>
                                         <td>{item.platform || '--'}</td>
@@ -535,7 +553,7 @@ const BoxManagementPage: React.FC = () => {
                             </thead>
                             <tbody>
                               {selectedBox.items?.map((item) => (
-                                <tr key={item.id}>
+                                <tr key={item.id} className="item-row-clickable" onClick={() => navigate(`/admin/catalogue/${item.id}`)}>
                                   <td><strong>{item.item_code}</strong></td>
                                   <td>{item.title}</td>
                                   <td>{item.platform || '--'}</td>
@@ -608,7 +626,7 @@ const BoxManagementPage: React.FC = () => {
             onClick={handleSubmitMoveBox}
             disabled={movingBox || moveBoxDestinationId === ''}
           >
-            {movingBox ? 'Submitting...' : 'Submit Move Request'}
+            {movingBox ? (isJuniorVolunteer ? 'Submitting...' : 'Moving...') : (isJuniorVolunteer ? 'Submit Move Request' : 'Move Box')}
           </Button>
         </div>
       </Modal>

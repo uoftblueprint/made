@@ -1,7 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts';
 
-type RequiredRole = 'ADMIN' | 'TRUSTED_VOLUNTEER' | 'VOLUNTEER';
+type RequiredRole = 'ADMIN' | 'SENIOR_VOLUNTEER' | 'VOLUNTEER';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, isAdmin, isTrustedVolunteer } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin, isSeniorVolunteer } = useAuth();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/" replace />;
   }
 
-  if (requiredRole === 'TRUSTED_VOLUNTEER' && !isAdmin && !isTrustedVolunteer) {
+  if (requiredRole === 'SENIOR_VOLUNTEER' && !isAdmin && !isSeniorVolunteer) {
     return <Navigate to="/" replace />;
   }
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from inventory.models import Location, Box, CollectionItem, ItemHistory
 from users.models import VolunteerApplication
-from movements.models import ItemMovementRequest
+from movements.models import ItemMovementRequest, BoxMovementRequest
 
 
 class Command(BaseCommand):
@@ -203,13 +203,43 @@ class Command(BaseCommand):
                 continue
         self.stdout.write(f"  Created {movements_created} movement requests")
 
+        # Create box movement requests
+        self.stdout.write("Creating box movement requests...")
+        box_movements_created = 0
+        for req_data in data.get("box_movement_requests", []):
+            try:
+                box = boxes.get(req_data["box_code"])
+                from_location = locations.get(req_data["from_location"])
+                to_location = locations.get(req_data["to_location"])
+
+                if not box or not from_location or not to_location:
+                    continue
+
+                req, created = BoxMovementRequest.objects.get_or_create(
+                    box=box,
+                    from_location=from_location,
+                    to_location=to_location,
+                    status=req_data.get("status", "WAITING_APPROVAL"),
+                    defaults={
+                        "requested_by": volunteer_user,
+                        "admin": admin_user if req_data.get("status") in ["APPROVED", "REJECTED", "COMPLETED_UNVERIFIED"] else None,
+                        "admin_comment": req_data.get("admin_comment", ""),
+                    },
+                )
+                if created:
+                    box_movements_created += 1
+            except Exception:
+                continue
+        self.stdout.write(f"  Created {box_movements_created} box movement requests")
+
         # Summary
         items_count = CollectionItem.objects.count()
         boxes_count = Box.objects.count()
         locations_count = Location.objects.count()
         users_count = User.objects.count()
         applications_count = VolunteerApplication.objects.count()
-        requests_count = ItemMovementRequest.objects.count()
+        item_requests_count = ItemMovementRequest.objects.count()
+        box_requests_count = BoxMovementRequest.objects.count()
 
         self.stdout.write(self.style.SUCCESS(f"\nDatabase seeded successfully!"))
         self.stdout.write(f"  - {locations_count} locations")
@@ -217,6 +247,8 @@ class Command(BaseCommand):
         self.stdout.write(f"  - {items_count} collection items")
         self.stdout.write(f"  - {users_count} users")
         self.stdout.write(f"  - {applications_count} volunteer applications")
-        self.stdout.write(f"  - {requests_count} movement requests")
-        self.stdout.write(f"\nAdmin login: admin@made.org / admin123")
-        self.stdout.write(f"Volunteer login: volunteer@made.org / volunteer123")
+        self.stdout.write(f"  - {item_requests_count} item movement requests")
+        self.stdout.write(f"  - {box_requests_count} box movement requests")
+        self.stdout.write(f"\nAdmin login:            admin@made.org / admin123")
+        self.stdout.write(f"Senior volunteer login:  volunteer@made.org / volunteer123")
+        self.stdout.write(f"Junior volunteer login:  junior@made.org / volunteer123")

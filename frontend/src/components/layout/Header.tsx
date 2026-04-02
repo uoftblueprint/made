@@ -4,7 +4,7 @@ import { User } from 'lucide-react';
 import './Header.css';
 
 const Header = () => {
-  const { isAuthenticated, isAdmin, isVolunteer, isTrustedVolunteer, isRestrictedVolunteer, user } = useAuth();
+  const { isAuthenticated, isAdmin, isVolunteer, user } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -14,44 +14,8 @@ const Header = () => {
       <Link to="/" className="header-logo">MADE</Link>
       
       <div className="header-links">
-        {/* Restricted volunteer navigation - catalogue only */}
-        {isAuthenticated && isRestrictedVolunteer && (
-          <>
-            <Link
-              to="/admin/catalogue"
-              className={`header-link ${isActive('/admin/catalogue') ? 'active' : ''}`}
-            >
-              Item Catalogue
-            </Link>
-          </>
-        )}
-
-        {/* Trusted volunteer navigation - everything except Volunteer Management */}
-        {isAuthenticated && isTrustedVolunteer && (
-          <>
-            <Link
-              to="/admin"
-              className={`header-link ${isActive('/admin') && !isActive('/admin/catalogue') && !isActive('/admin/boxes') ? 'active-dashboard' : ''}`}
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/admin/catalogue"
-              className={`header-link ${isActive('/admin/catalogue') ? 'active' : ''}`}
-            >
-              Item Catalogue
-            </Link>
-            <Link
-              to="/admin/boxes"
-              className={`header-link ${isActive('/admin/boxes') ? 'active' : ''}`}
-            >
-              Box Management
-            </Link>
-          </>
-        )}
-
-        {/* Admin navigation - everything */}
-        {isAuthenticated && isAdmin && (
+        {/* All authenticated volunteers and admins */}
+        {isAuthenticated && (isVolunteer || isAdmin) && (
           <>
             <Link
               to="/admin"
@@ -71,13 +35,17 @@ const Header = () => {
             >
               Box Management
             </Link>
-            <Link
-              to="/admin/volunteers"
-              className={`header-link ${isActive('/admin/volunteers') ? 'active' : ''}`}
-            >
-              Volunteer Management
-            </Link>
           </>
+        )}
+
+        {/* Admin-only: Volunteer Management */}
+        {isAuthenticated && isAdmin && (
+          <Link
+            to="/admin/volunteers"
+            className={`header-link ${isActive('/admin/volunteers') ? 'active' : ''}`}
+          >
+            Volunteer Management
+          </Link>
         )}
       </div>
 

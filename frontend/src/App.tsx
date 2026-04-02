@@ -13,6 +13,7 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCataloguePage from './pages/admin/AdminCataloguePage';
 import ManageVolunteers from './pages/admin/ManageVolunteers';
 import BoxManagementPage from './pages/admin/BoxManagementPage';
+import BoxDetailsPage from './pages/admin/BoxDetailsPage';
 import ItemDetailsPage from './pages/admin/ItemDetailsPage';
 // RequestsPage kept for future volunteer-facing use
 // import RequestsPage from './pages/admin/RequestsPage';
@@ -40,7 +41,7 @@ const App: React.FC = () => {
                 <Route
                   path="/admin"
                   element={
-                    <ProtectedRoute requiredRole="TRUSTED_VOLUNTEER">
+                    <ProtectedRoute requiredRole="VOLUNTEER">
                       <AdminDashboard />
                     </ProtectedRoute>
                   }
@@ -72,8 +73,16 @@ const App: React.FC = () => {
                 <Route
                   path="/admin/boxes"
                   element={
-                    <ProtectedRoute requiredRole="TRUSTED_VOLUNTEER">
+                    <ProtectedRoute requiredRole="VOLUNTEER">
                       <BoxManagementPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/boxes/:id"
+                  element={
+                    <ProtectedRoute requiredRole="VOLUNTEER">
+                      <BoxDetailsPage />
                     </ProtectedRoute>
                   }
                 />

@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from users.permissions import IsVolunteer
 from .models import BoxMovementRequest, ItemMovementRequest
 from .serializers import BoxMovementRequestSerializer, ItemMovementRequestSerializer
 
@@ -92,7 +93,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
                 comment="Auto-completed: volunteer does not require move approval",
             )
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
     def approve(self, request, pk=None):
         move_request = self.get_object()
 
@@ -107,7 +108,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
     def reject(self, request, pk=None):
         move_request = self.get_object()
 
@@ -122,7 +123,7 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
     def verify(self, request, pk=None):
         """Verify an unverified movement request and mark the item as verified."""
         from inventory.models import ItemHistory
@@ -135,9 +136,10 @@ class ItemMovementRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Mark item as verified
+        # Mark item as verified and available
         move_request.item.is_verified = True
-        move_request.item.save(update_fields=["is_verified", "updated_at"])
+        move_request.item.status = "AVAILABLE"
+        move_request.item.save(update_fields=["is_verified", "status", "updated_at"])
 
         # Update movement request status
         move_request.status = "APPROVED"
@@ -216,7 +218,7 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
                 comment="Auto-completed: volunteer does not require move approval",
             )
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
     def approve(self, request, pk=None):
         move_request = self.get_object()
 
@@ -231,7 +233,7 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
     def reject(self, request, pk=None):
         move_request = self.get_object()
 
@@ -246,7 +248,7 @@ class BoxMovementRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(move_request)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=["post"], permission_classes=[IsVolunteer])
     def verify(self, request, pk=None):
         """Verify an unverified box movement request and mark all items as verified."""
         move_request = self.get_object()

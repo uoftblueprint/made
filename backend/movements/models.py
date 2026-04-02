@@ -153,16 +153,16 @@ class ItemMovementRequest(models.Model):
         )
 
     def complete_unverified(self, user, comment=""):
-        """Complete the movement immediately without admin approval. Sets item as unverified."""
+        """Complete the movement immediately without admin approval. Item stays IN_TRANSIT until verified."""
         from inventory.models import ItemHistory
 
         self.status = "COMPLETED_UNVERIFIED"
         self.save()
 
-        # Update item location, status, and mark as unverified
+        # Update item location but keep IN_TRANSIT until verified
         self.item.current_location = self.to_location
         self.item.is_on_floor = self.to_location.location_type == "FLOOR"
-        self.item.status = "AVAILABLE"
+        self.item.status = "IN_TRANSIT"
         self.item.is_verified = False
         update_fields = ["current_location", "is_on_floor", "status", "is_verified", "updated_at"]
         if self.to_box:
@@ -287,9 +287,8 @@ class BoxMovementRequest(models.Model):
             )
 
     def complete_unverified(self, user, comment=""):
-        """Complete the box movement immediately without admin approval."""
-        from inventory.models import CollectionItem, ItemHistory
-        from django.utils import timezone
+        """Complete the box movement immediately without admin approval. Items stay IN_TRANSIT until verified."""
+        from inventory.models import ItemHistory
 
         self.status = "COMPLETED_UNVERIFIED"
         self.save()
@@ -303,7 +302,7 @@ class BoxMovementRequest(models.Model):
         for item in items:
             item.current_location = self.to_location
             item.is_on_floor = destination_is_floor
-            item.status = "AVAILABLE"
+            item.status = "IN_TRANSIT"
             item.is_verified = False
             item.save(update_fields=["current_location", "is_on_floor", "status", "is_verified", "updated_at"])
 
@@ -342,7 +341,7 @@ class BoxMovementRequest(models.Model):
             )
 
     def verify(self, admin_user, comment=""):
-        """Verify an unverified box movement and mark all items as verified."""
+        """Verify an unverified box movement and mark all items as verified and available."""
         from inventory.models import ItemHistory
 
         self.status = "APPROVED"
@@ -353,7 +352,8 @@ class BoxMovementRequest(models.Model):
         items = list(self.box.items.all())
         for item in items:
             item.is_verified = True
-            item.save(update_fields=["is_verified", "updated_at"])
+            item.status = "AVAILABLE"
+            item.save(update_fields=["is_verified", "status", "updated_at"])
 
             ItemHistory.objects.create(
                 item=item,

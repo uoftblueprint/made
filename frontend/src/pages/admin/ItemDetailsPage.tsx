@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Edit2, MapPin, Check, X, AlertTriangle, ShieldCheck, ArrowRightLeft } from 'lucide-react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
 import { requestsApi } from '../../api/requests.api';
 import { useItemRequests } from '../../actions/useRequests';
@@ -38,8 +38,8 @@ interface ItemDetails extends AdminCollectionItem {
 }
 
 const ItemDetailsPage: React.FC = () => {
-  const { isAdmin, isTrustedVolunteer } = useAuth();
-  const canEdit = isAdmin || isTrustedVolunteer;
+  const { isAdmin, isSeniorVolunteer } = useAuth();
+  const canEdit = isAdmin || isSeniorVolunteer;
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const isRequestView = searchParams.get('from') === 'request';
@@ -70,8 +70,7 @@ const ItemDetailsPage: React.FC = () => {
   const isInTransit = item?.status === 'IN_TRANSIT';
   const isUnverified = item?.is_verified === false;
 
-  const backLink = isRequestView ? '/admin' : '/admin/catalogue';
-  const backText = isRequestView ? 'Back to Dashboard' : 'Back to Catalogue';
+  const navigate = useNavigate();
 
   const fetchItem = useCallback(async () => {
     if (!id) return;
@@ -221,10 +220,9 @@ const ItemDetailsPage: React.FC = () => {
   if (isLoading) {
     return (
       <div className="item-details-layout">
-        <Link to={backLink} className="item-details-back">
-          <ArrowLeft size={16} />
-          {backText}
-        </Link>
+        <button onClick={() => navigate(-1)} className="item-details-back">
+          <ArrowLeft size={20} />
+        </button>
         <div className="item-details-loading">Loading item details...</div>
       </div>
     );
@@ -233,10 +231,9 @@ const ItemDetailsPage: React.FC = () => {
   if (error || !item) {
     return (
       <div className="item-details-layout">
-        <Link to={backLink} className="item-details-back">
-          <ArrowLeft size={16} />
-          {backText}
-        </Link>
+        <button onClick={() => navigate(-1)} className="item-details-back">
+          <ArrowLeft size={20} />
+        </button>
         <div className="item-details-error">{error || 'Item not found.'}</div>
       </div>
     );
@@ -394,7 +391,7 @@ const ItemDetailsPage: React.FC = () => {
 
         {/* Sidebar Actions */}
         <div className="item-details-sidebar">
-          {isAdmin && isRequestView && pendingRequests.length > 0 && (
+          {canEdit && isRequestView && pendingRequests.length > 0 && (
             <>
               <button
                 className="item-action-btn approve-request"
@@ -451,7 +448,7 @@ const ItemDetailsPage: React.FC = () => {
               {processingRequestId === activeTransitRequest.id ? 'Marking...' : 'Mark as Arrived'}
             </button>
           )}
-          {isAdmin && isUnverified && unverifiedRequests.length > 0 && (
+          {canEdit && isUnverified && unverifiedRequests.length > 0 && (
             <button
               className="item-action-btn verify"
               onClick={handleVerify}
@@ -603,7 +600,7 @@ const ItemDetailsPage: React.FC = () => {
               (moveDestinationType === 'box' && moveToBoxId === '')
             }
           >
-            {movingItem ? 'Submitting...' : 'Submit Move Request'}
+            {movingItem ? (canEdit ? 'Moving...' : 'Submitting...') : (canEdit ? 'Move Item' : 'Submit Move Request')}
           </Button>
         </div>
       </Modal>

@@ -8131,7 +8131,8 @@
       "is_staff": true,
       "is_superuser": true,
       "password": "admin123",
-      "access_expires_days": 365
+      "access_expires_days": 365,
+      "requires_move_approval": false
     },
     {
       "email": "volunteer@made.org",
@@ -8140,7 +8141,7 @@
       "is_active": true,
       "password": "volunteer123",
       "access_expires_days": 365,
-      "requires_move_approval": true
+      "requires_move_approval": false
     },
     {
       "email": "timothy.johnson@email.com",
@@ -8166,7 +8167,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 152
+      "access_expires_days": 152,
+      "requires_move_approval": false
     },
     {
       "email": "mark.johnson@email.com",
@@ -8183,7 +8185,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -14
+      "access_expires_days": -14,
+      "requires_move_approval": true
     },
     {
       "email": "nancy.lopez@email.com",
@@ -8191,7 +8194,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 125
+      "access_expires_days": 125,
+      "requires_move_approval": false
     },
     {
       "email": "ryan.smith@email.com",
@@ -8208,7 +8212,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -12
+      "access_expires_days": -12,
+      "requires_move_approval": true
     },
     {
       "email": "andrew.thompson@email.com",
@@ -8216,7 +8221,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 98
+      "access_expires_days": 98,
+      "requires_move_approval": false
     },
     {
       "email": "amanda.perez@email.com",
@@ -8224,7 +8230,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -85
+      "access_expires_days": -85,
+      "requires_move_approval": false
     },
     {
       "email": "brian.nelson@email.com",
@@ -8232,7 +8239,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -8
+      "access_expires_days": -8,
+      "requires_move_approval": true
     },
     {
       "email": "jacob.hernandez@email.com",
@@ -8240,7 +8248,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 154
+      "access_expires_days": 154,
+      "requires_move_approval": false
     },
     {
       "email": "edward.campbell@email.com",
@@ -8248,7 +8257,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -75
+      "access_expires_days": -75,
+      "requires_move_approval": false
     },
     {
       "email": "ronald.johnson@email.com",
@@ -8256,7 +8266,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 179
+      "access_expires_days": 179,
+      "requires_move_approval": true
     },
     {
       "email": "ryan.miller@email.com",
@@ -8264,7 +8275,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 35
+      "access_expires_days": 35,
+      "requires_move_approval": false
     },
     {
       "email": "kathleen.allen@email.com",
@@ -8272,7 +8284,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 164
+      "access_expires_days": 164,
+      "requires_move_approval": false
     },
     {
       "email": "andrew.mitchell@email.com",
@@ -8280,7 +8293,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 18
+      "access_expires_days": 18,
+      "requires_move_approval": true
     },
     {
       "email": "anthony.thomas@email.com",
@@ -8288,7 +8302,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 18
+      "access_expires_days": 18,
+      "requires_move_approval": false
     },
     {
       "email": "deborah.taylor@email.com",
@@ -8296,7 +8311,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -66
+      "access_expires_days": -66,
+      "requires_move_approval": false
     },
     {
       "email": "john.ramirez@email.com",
@@ -8304,7 +8320,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 140
+      "access_expires_days": 140,
+      "requires_move_approval": true
     },
     {
       "email": "mark.miller@email.com",
@@ -8312,7 +8329,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -42
+      "access_expires_days": -42,
+      "requires_move_approval": false
     },
     {
       "email": "patricia.martinez@email.com",
@@ -8320,7 +8338,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 21
+      "access_expires_days": 21,
+      "requires_move_approval": false
     },
     {
       "email": "thomas.torres@email.com",
@@ -8328,7 +8347,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 138
+      "access_expires_days": 138,
+      "requires_move_approval": true
     },
     {
       "email": "sharon.johnson@email.com",
@@ -8336,7 +8356,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -88
+      "access_expires_days": -88,
+      "requires_move_approval": false
     },
     {
       "email": "lisa.williams@email.com",
@@ -8344,7 +8365,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -16
+      "access_expires_days": -16,
+      "requires_move_approval": false
     },
     {
       "email": "jacob.lopez@email.com",
@@ -8352,7 +8374,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 180
+      "access_expires_days": 180,
+      "requires_move_approval": true
     },
     {
       "email": "michael.clark@email.com",
@@ -8360,7 +8383,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -28
+      "access_expires_days": -28,
+      "requires_move_approval": false
     },
     {
       "email": "george.campbell@email.com",
@@ -8368,7 +8392,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 1
+      "access_expires_days": 1,
+      "requires_move_approval": false
     },
     {
       "email": "steven.brown@email.com",
@@ -8376,7 +8401,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -4
+      "access_expires_days": -4,
+      "requires_move_approval": true
     },
     {
       "email": "jessica.williams@email.com",
@@ -8384,7 +8410,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 43
+      "access_expires_days": 43,
+      "requires_move_approval": false
     },
     {
       "email": "gary.harris@email.com",
@@ -8392,7 +8419,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 41
+      "access_expires_days": 41,
+      "requires_move_approval": false
     },
     {
       "email": "john.sanchez@email.com",
@@ -8400,7 +8428,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 120
+      "access_expires_days": 120,
+      "requires_move_approval": true
     },
     {
       "email": "karen.davis@email.com",
@@ -8408,7 +8437,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 163
+      "access_expires_days": 163,
+      "requires_move_approval": false
     },
     {
       "email": "sandra.lopez@email.com",
@@ -8416,7 +8446,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 174
+      "access_expires_days": 174,
+      "requires_move_approval": false
     },
     {
       "email": "sharon.harris@email.com",
@@ -8424,7 +8455,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -27
+      "access_expires_days": -27,
+      "requires_move_approval": true
     },
     {
       "email": "michelle.wright@email.com",
@@ -8432,7 +8464,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 80
+      "access_expires_days": 80,
+      "requires_move_approval": false
     },
     {
       "email": "joseph.martin@email.com",
@@ -8440,7 +8473,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 90
+      "access_expires_days": 90,
+      "requires_move_approval": false
     },
     {
       "email": "carol.lopez@email.com",
@@ -8448,7 +8482,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -15
+      "access_expires_days": -15,
+      "requires_move_approval": true
     },
     {
       "email": "richard.rivera@email.com",
@@ -8456,7 +8491,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 59
+      "access_expires_days": 59,
+      "requires_move_approval": false
     },
     {
       "email": "patricia.hall@email.com",
@@ -8464,7 +8500,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -20
+      "access_expires_days": -20,
+      "requires_move_approval": false
     },
     {
       "email": "ryan.jones@email.com",
@@ -8472,7 +8509,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": -12
+      "access_expires_days": -12,
+      "requires_move_approval": true
     },
     {
       "email": "ronald.torres@email.com",
@@ -8480,7 +8518,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 160
+      "access_expires_days": 160,
+      "requires_move_approval": false
     },
     {
       "email": "amanda.lewis@email.com",
@@ -8488,7 +8527,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 77
+      "access_expires_days": 77,
+      "requires_move_approval": false
     },
     {
       "email": "linda.jackson@email.com",
@@ -8496,7 +8536,8 @@
       "role": "VOLUNTEER",
       "is_active": false,
       "password": "volunteer123",
-      "access_expires_days": -34
+      "access_expires_days": -34,
+      "requires_move_approval": true
     },
     {
       "email": "matthew.allen@email.com",
@@ -8504,7 +8545,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 6
+      "access_expires_days": 6,
+      "requires_move_approval": false
     },
     {
       "email": "ronald.scott@email.com",
@@ -8512,7 +8554,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 72
+      "access_expires_days": 72,
+      "requires_move_approval": false
     },
     {
       "email": "kenneth.nelson@email.com",
@@ -8520,7 +8563,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 20
+      "access_expires_days": 20,
+      "requires_move_approval": true
     },
     {
       "email": "kimberly.hernandez@email.com",
@@ -8528,7 +8572,8 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 43
+      "access_expires_days": 43,
+      "requires_move_approval": false
     },
     {
       "email": "jason.allen@email.com",
@@ -8536,7 +8581,17 @@
       "role": "VOLUNTEER",
       "is_active": true,
       "password": "volunteer123",
-      "access_expires_days": 179
+      "access_expires_days": 179,
+      "requires_move_approval": false
+    },
+    {
+      "name": "Junior Volunteer",
+      "email": "junior@made.org",
+      "password": "volunteer123",
+      "role": "VOLUNTEER",
+      "is_active": true,
+      "requires_move_approval": true,
+      "access_expires_days": 90
     }
   ],
   "applications": [
@@ -8548,8 +8603,8 @@
       "status": "PENDING"
     },
     {
-      "name": "Amanda Allen",
-      "email": "amanda.allen@applicant.com",
+      "name": "Volunteer User",
+      "email": "volunteer@made.org",
       "phone_number": "647-555-0456",
       "motivation_text": "Photography enthusiast who can help document the collection.",
       "status": "APPROVED"
@@ -8562,8 +8617,8 @@
       "status": "PENDING"
     },
     {
-      "name": "George Nelson",
-      "email": "george.nelson@applicant.com",
+      "name": "Timothy Johnson",
+      "email": "timothy.johnson@email.com",
       "phone_number": "647-555-0567",
       "motivation_text": "History teacher who uses video games to engage students with technology history.",
       "status": "APPROVED"
@@ -8583,8 +8638,8 @@
       "status": "PENDING"
     },
     {
-      "name": "Jeffrey Jackson",
-      "email": "jeffrey.jackson@applicant.com",
+      "name": "Patricia Thompson",
+      "email": "patricia.thompson@email.com",
       "phone_number": "416-555-0678",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
       "status": "APPROVED"
@@ -8603,14 +8658,14 @@
       "status": "PENDING"
     },
     {
-      "name": "Donald Allen",
-      "email": "donald.allen@applicant.com",
+      "name": "Patricia Williams",
+      "email": "patricia.williams@email.com",
       "motivation_text": "Photography enthusiast who can help document the collection.",
       "status": "APPROVED"
     },
     {
-      "name": "Matthew Jones",
-      "email": "matthew.jones@applicant.com",
+      "name": "Mark Johnson",
+      "email": "mark.johnson@email.com",
       "motivation_text": "Data entry specialist with attention to detail and love for video games.",
       "status": "APPROVED"
     },
@@ -8633,8 +8688,8 @@
       "status": "PENDING"
     },
     {
-      "name": "Karen Sanchez",
-      "email": "karen.sanchez@applicant.com",
+      "name": "Matthew Baker",
+      "email": "matthew.baker@email.com",
       "motivation_text": "Photography enthusiast who can help document the collection.",
       "status": "APPROVED"
     },
@@ -8688,8 +8743,8 @@
       "status": "REJECTED"
     },
     {
-      "name": "Joseph Brown",
-      "email": "joseph.brown@applicant.com",
+      "name": "Nancy Lopez",
+      "email": "nancy.lopez@email.com",
       "motivation_text": "Recently retired and looking for meaningful volunteer work in the gaming space.",
       "status": "APPROVED"
     },
@@ -8742,15 +8797,15 @@
       "item_code": "24.0375",
       "from_location": "Archive Storage",
       "to_location": "Community Event Space",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "APPROVED",
+      "admin_comment": "Approved for transfer"
     },
     {
       "item_code": "24.0069",
       "from_location": "Offsite Storage A",
       "to_location": "Offsite Storage B",
-      "status": "WAITING_APPROVAL",
-      "admin_comment": ""
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed by senior volunteer"
     },
     {
       "item_code": "24.0051",
@@ -8905,6 +8960,85 @@
       "to_location": "Photography Studio",
       "status": "WAITING_APPROVAL",
       "admin_comment": ""
+    },
+    {
+      "item_code": "24.0011",
+      "from_location": "Main Storage",
+      "to_location": "Exhibit - Floor 1",
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Moved for display"
+    },
+    {
+      "item_code": "24.0016",
+      "from_location": "Archive Storage",
+      "to_location": "Exhibit - Floor 2",
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-completed"
+    },
+    {
+      "item_code": "24.0021",
+      "from_location": "Exhibit - Floor 1",
+      "to_location": "Main Storage",
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Returned to storage"
+    },
+    {
+      "item_code": "24.0026",
+      "from_location": "Main Storage",
+      "to_location": "Community Event Space",
+      "status": "APPROVED",
+      "admin_comment": "For gaming event"
+    },
+    {
+      "item_code": "24.0031",
+      "from_location": "Exhibit - Floor 2",
+      "to_location": "Restoration Lab",
+      "status": "APPROVED",
+      "admin_comment": "Needs repair"
+    }
+  ],
+  "box_movement_requests": [
+    {
+      "box_code": "24.01.A43",
+      "from_location": "Archive Storage",
+      "to_location": "Exhibit - Floor 1",
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Moved for new exhibit setup"
+    },
+    {
+      "box_code": "24.04.A72",
+      "from_location": "Exhibit - Floor 2",
+      "to_location": "Main Storage",
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
+    },
+    {
+      "box_code": "24.05.B09",
+      "from_location": "Temporary Exhibit B",
+      "to_location": "Archive Storage",
+      "status": "APPROVED",
+      "admin_comment": "Approved - temporary exhibit ending"
+    },
+    {
+      "box_code": "24.02.B45",
+      "from_location": "Main Storage",
+      "to_location": "Exhibit - Floor 1",
+      "status": "COMPLETED_UNVERIFIED",
+      "admin_comment": "Auto-moved by senior volunteer"
+    },
+    {
+      "box_code": "24.03.C07",
+      "from_location": "Main Storage",
+      "to_location": "Community Event Space",
+      "status": "WAITING_APPROVAL",
+      "admin_comment": ""
+    },
+    {
+      "box_code": "24.06.D03",
+      "from_location": "Offsite Storage A",
+      "to_location": "Restoration Lab",
+      "status": "REJECTED",
+      "admin_comment": "Items need to stay in climate-controlled storage"
     }
   ]
 }

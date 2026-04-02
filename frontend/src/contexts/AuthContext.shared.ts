@@ -7,8 +7,8 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isVolunteer: boolean;
-  isTrustedVolunteer: boolean;
-  isRestrictedVolunteer: boolean;
+  isSeniorVolunteer: boolean;
+  isJuniorVolunteer: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   loginError: string | null;
