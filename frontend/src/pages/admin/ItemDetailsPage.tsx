@@ -257,10 +257,6 @@ const ItemDetailsPage: React.FC = () => {
         Back
       </button>
 
-      {moveSuccessMessage && (
-        <div className="item-details-success-banner">{moveSuccessMessage}</div>
-      )}
-
       <div className="item-details-header mt-5 md:mt-0">
         <div className="item-details-header-left">
           <h1>{item.title || 'Untitled Item'}</h1>
@@ -292,6 +288,48 @@ const ItemDetailsPage: React.FC = () => {
           {(arrivalError) && (
             <div className="item-details-card">
               {arrivalError && <p className="item-arrival-error">{arrivalError}</p>}
+            </div>
+          )}
+
+          {/* Pending Move Request Info */}
+          {pendingRequests.length > 0 && (
+            <div className="item-details-card" style={{ borderColor: 'var(--color-warning-border)', background: 'var(--color-warning-bg)' }}>
+              <h3 style={{ color: '#92400e' }}>Move Request — Pending</h3>
+              <div className="item-details-grid">
+                <div className="item-field">
+                  <span className="item-field-label">From</span>
+                  <span className="item-field-value">{pendingRequests[0].from_location_name}</span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">To</span>
+                  <span className="item-field-value">{pendingRequests[0].to_location_name}</span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">Requested By</span>
+                  <span className="item-field-value">{pendingRequests[0].requested_by_username || '--'}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* In Transit Info */}
+          {isInTransit && (approvedRequests.length > 0 || unverifiedRequests.length > 0) && (
+            <div className="item-details-card" style={{ borderColor: 'var(--color-warning-border)', background: 'var(--color-warning-bg)' }}>
+              <h3 style={{ color: '#92400e' }}>In Transit — Awaiting Arrival</h3>
+              <div className="item-details-grid">
+                <div className="item-field">
+                  <span className="item-field-label">From</span>
+                  <span className="item-field-value">{(approvedRequests[0] || unverifiedRequests[0])?.from_location_name}</span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">To</span>
+                  <span className="item-field-value">{(approvedRequests[0] || unverifiedRequests[0])?.to_location_name}</span>
+                </div>
+                <div className="item-field">
+                  <span className="item-field-label">Moved By</span>
+                  <span className="item-field-value">{(approvedRequests[0] || unverifiedRequests[0])?.requested_by_username || '--'}</span>
+                </div>
+              </div>
             </div>
           )}
 
@@ -433,13 +471,17 @@ const ItemDetailsPage: React.FC = () => {
               Edit Record
             </button>
           )}
-          <button
-            className="item-action-btn secondary"
-            onClick={handleOpenMoveModal}
-          >
-            <ArrowRightLeft size={16} />
-            {canEdit ? 'Move Item' : 'Request Move'}
-          </button>
+          {moveSuccessMessage ? (
+            <div className="item-action-inline-success">{moveSuccessMessage}</div>
+          ) : (
+            <button
+              className="item-action-btn secondary"
+              onClick={handleOpenMoveModal}
+            >
+              <ArrowRightLeft size={16} />
+              {canEdit ? 'Move Item' : 'Request Move'}
+            </button>
+          )}
           {isInTransit && activeTransitRequest && (
             <button
               className="item-action-btn arrival"

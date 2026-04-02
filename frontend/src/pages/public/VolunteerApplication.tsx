@@ -10,6 +10,8 @@ const VolunteerApplication = () => {
     const [lastName, setLastName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [phoneNumber, setPhoneNumber] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [confirmPassword, setConfirmPassword] = useState<string>('');
     const [motivationText, setMotivationText] = useState<string>('');
     const [submitError, setSubmitError] = useState<string>('')
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -19,13 +21,19 @@ const VolunteerApplication = () => {
     
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const isValid = validEmail(email) && validName(firstName) && validName(lastName) && validPhoneNumber(phoneNumber) && motivationText.length > 0
+        const isValid = validEmail(email) && validName(firstName) && validName(lastName) && validPhoneNumber(phoneNumber) && motivationText.length > 0 && password.length >= 8 && password === confirmPassword
         if (!isValid) {
-            setSubmitError("Please fix the errors in the form above.");
+            if (password.length < 8) {
+                setSubmitError("Password must be at least 8 characters.");
+            } else if (password !== confirmPassword) {
+                setSubmitError("Passwords do not match.");
+            } else {
+                setSubmitError("Please fix the errors in the form above.");
+            }
             return;
         }
         const name = firstName + " " + lastName;
-        const applicationData = { name, email, "motivation_text": motivationText }
+        const applicationData = { name, email, password, "motivation_text": motivationText }
         setIsSubmitting(true)
         createVolunteerMutation.mutate(applicationData, {
             onSuccess: () => {
@@ -36,6 +44,8 @@ const VolunteerApplication = () => {
                 setLastName('');
                 setEmail('');
                 setPhoneNumber('');
+                setPassword('');
+                setConfirmPassword('');
                 setMotivationText('');
             },
             onError: (error: AxiosError) =>{
@@ -55,7 +65,7 @@ const VolunteerApplication = () => {
 
     useEffect(()=>{
         setSubmitError('')
-    },[firstName, lastName, email, phoneNumber, motivationText])
+    },[firstName, lastName, email, phoneNumber, password, confirmPassword, motivationText])
 
     if (isSuccess) {
         return (
@@ -107,6 +117,20 @@ const VolunteerApplication = () => {
                     <label htmlFor="phone-number">Phone Number</label>
                     <input type="tel" id="phone-number" className={styles.inputBox} value={phoneNumber} onChange={(e)=>setPhoneNumber(e.target.value)} />
                     {phoneNumber && !validPhoneNumber(phoneNumber) && <span className={styles.error}>Invalid phone number</span>}
+                </div>
+            </div>
+
+            <div className={styles.formRow}>
+                <div className={styles.inputContainer}>
+                    <label htmlFor="password">Password</label>
+                    <input type="password" id="password" className={styles.inputBox} value={password} onChange={(e)=>setPassword(e.target.value)} />
+                    {password && password.length < 8 && <span className={styles.error}>Must be at least 8 characters</span>}
+                </div>
+
+                <div className={styles.inputContainer}>
+                    <label htmlFor="confirm-password">Confirm Password</label>
+                    <input type="password" id="confirm-password" className={styles.inputBox} value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} />
+                    {confirmPassword && password !== confirmPassword && <span className={styles.error}>Passwords do not match</span>}
                 </div>
             </div>
 

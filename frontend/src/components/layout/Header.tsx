@@ -13,7 +13,7 @@ const Header = () => {
     <nav className="header-nav">
       <Link to="/" className="header-logo">
         <img src="/logo.png" alt="MADE" className="header-logo-img" />
-        <span className="header-logo-text">The MADE</span>
+        <span className="header-logo-text">Inventory Software</span>
       </Link>
       
       <div className="header-links">

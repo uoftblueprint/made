@@ -1,80 +1,77 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
+import { BrowserRouter } from "react-router-dom"
 import ManageVolunteers from "./ManageVolunteers"
-import type { Mock } from 'vitest'
-
-const useVolunteerApplicationsMock = vi.hoisted(()=>vi.fn())
-const useUpdateVolunteerStatusMock = vi.hoisted(()=>vi.fn())
-const useExtendVolunteerAccessMock = vi.hoisted(()=>vi.fn())
-const useVolunteerStatsMock = vi.hoisted(()=>vi.fn())
-const useVolunteerOptionsMock = vi.hoisted(()=>vi.fn())
-
-type VolunteerListProps = {
-  volunteers: unknown[]
-  onApprove: (id: number) => void
-  onReject: (id: number) => void
-  sortedBy: string
-  searchBy: string
-}
 
 vi.mock("../../actions/useVolunteers", () => ({
-  useVolunteerApplications: () => useVolunteerApplicationsMock(),
-  useUpdateVolunteerStatus: () => useUpdateVolunteerStatusMock(),
-  useExtendVolunteerAccess: () => useExtendVolunteerAccessMock(),
-  useVolunteerStats: () => useVolunteerStatsMock(),
-  useVolunteerOptions: () => useVolunteerOptionsMock(),
+  useVolunteerApplications: vi.fn(),
+  useUpdateVolunteerStatus: () => ({ mutate: vi.fn(), isPending: false }),
+  useExtendVolunteerAccess: () => ({ mutate: vi.fn(), isPending: false }),
+  useVolunteerStats: () => ({ data: { active_count: 2, expiring_soon_count: 0, expired_count: 0, total_count: 2, expiring_volunteers: [], warning_days: 7 } }),
+  useVolunteerOptions: () => ({ data: { roles: [], event_types: [], status_options: [] } }),
+  useToggleMoveApproval: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpdateVolunteer: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
-const VolunteerListMock: Mock = vi.hoisted(() => vi.fn())
-
-vi.mock("../../components/items/index.ts", () => ({
-  VolunteerList: (props: VolunteerListProps) => {
-    VolunteerListMock(props)
-    return <div data-testid="volunteer-list">VolunteerList rendered</div>
-  },
+vi.mock("../../contexts/AuthContext.shared", () => ({
+  useAuth: () => ({ isAdmin: true, isSeniorVolunteer: false, isJuniorVolunteer: false, isAuthenticated: true, isVolunteer: false }),
 }))
+
+const { useVolunteerApplications } = await import("../../actions/useVolunteers")
+const mockUseVolunteerApplications = useVolunteerApplications as ReturnType<typeof vi.fn>
 
 beforeEach(() => {
   vi.clearAllMocks()
-  useUpdateVolunteerStatusMock.mockReturnValue({ mutate: vi.fn(), isPending: false })
-  useExtendVolunteerAccessMock.mockReturnValue({ mutate: vi.fn(), isPending: false })
-  useVolunteerStatsMock.mockReturnValue({ data: { active_count: 0, expiring_soon_count: 0, expired_count: 0, total_count: 0, expiring_volunteers: [], warning_days: 7 } })
-  useVolunteerOptionsMock.mockReturnValue({ data: { roles: [], event_types: [], status_options: [] } })
 })
 
-describe("ManageVolunteers - core test #1", () => {
-  it("shows Loading... then renders VolunteerList with data", () => {
-    const mockVolunteers = [
-      { id: 1, name: "Carina", email: "cza@gmail.com" },
-      { id: 2, name: "Bob", email: "bob@gmail.com" },
-    ]
+function renderPage() {
+  return render(
+    <BrowserRouter>
+      <ManageVolunteers />
+    </BrowserRouter>
+  )
+}
 
-    useVolunteerApplicationsMock.mockReturnValueOnce({
-      data: undefined,
-      isLoading: true,
-      isError: false,
-    })
+describe("ManageVolunteers", () => {
+  it("shows loading state", () => {
+    mockUseVolunteerApplications.mockReturnValue({ data: undefined, isLoading: true, isError: false })
+    renderPage()
+    expect(screen.getByText("Loading volunteers...")).toBeInTheDocument()
+  })
 
-    const { rerender } = render(<ManageVolunteers />)
-
-    // expect(screen.getByText("Loading...")).toBeInTheDocument() removed until endpoint is set up 
-
-    // expect(screen.queryByTestId("volunteer-list")).toBeNull()
-
-    useVolunteerApplicationsMock.mockReturnValueOnce({
-      data: mockVolunteers,
+  it("shows volunteer data after loading", () => {
+    mockUseVolunteerApplications.mockReturnValue({
+      data: [
+        { id: 1, name: "Alice", email: "alice@test.com", status: "APPROVED", user_id: 10, requires_move_approval: false, created_at: "2024-01-01" },
+        { id: 2, name: "Bob", email: "bob@test.com", status: "PENDING", created_at: "2024-01-02" },
+      ],
       isLoading: false,
       isError: false,
     })
-
-    rerender(<ManageVolunteers />)
-
+    renderPage()
     expect(screen.getByText("Volunteer Management")).toBeInTheDocument()
+    // Default tab is "Current Volunteers" (APPROVED)
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+  })
 
-    // expect(screen.getByTestId("volunteer-list")).toBeInTheDocument() temporarily removed while not using api data
+  it("shows error state", () => {
+    mockUseVolunteerApplications.mockReturnValue({ data: [], isLoading: false, isError: true })
+    renderPage()
+    expect(screen.getByText("Failed to load volunteers. Please try again.")).toBeInTheDocument()
+  })
 
-    // expect(VolunteerListMock).toHaveBeenCalled()
-    // const propsPassed = VolunteerListMock.mock.calls.at(-1)?.[0]
-    // expect(propsPassed.volunteers).toEqual(mockVolunteers)
+  it("shows level badge for approved volunteers", () => {
+    mockUseVolunteerApplications.mockReturnValue({
+      data: [
+        { id: 1, name: "Alice Smith", email: "alice@test.com", status: "APPROVED", user_id: 10, requires_move_approval: false },
+        { id: 2, name: "Bob Jones", email: "bob@test.com", status: "APPROVED", user_id: 11, requires_move_approval: true },
+      ],
+      isLoading: false,
+      isError: false,
+    })
+    renderPage()
+    // Badge text for the two volunteers
+    expect(screen.getAllByText("Senior").length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText("Junior").length).toBeGreaterThanOrEqual(1)
   })
 })

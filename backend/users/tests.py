@@ -482,3 +482,51 @@ def test_volunteer_stats_includes_warning_days(client):
     res = client.get("/api/users/volunteer-stats/", HTTP_AUTHORIZATION=f"Bearer {token}")
     assert res.status_code == 200
     assert res.json()["warning_days"] == 7
+
+
+@pytest.mark.django_db
+def test_volunteer_signup_with_password(client):
+    """Volunteer sets password during application; account uses that password on approval."""
+    # 1. Submit application with password
+    resp = client.post("/api/users/volunteer-applications/", {
+        "name": "Password Vol",
+        "email": "pwdvol@example.com",
+        "password": "securepass123",
+        "motivation_text": "I want to help",
+    }, content_type="application/json")
+    assert resp.status_code == 201
+
+    app = VolunteerApplication.objects.get(email="pwdvol@example.com")
+    assert app.status == "PENDING"
+    assert app.password_hash != ""
+
+    # 2. Admin approves
+    token = _admin_token(client)
+    resp = client.patch(f"/api/users/volunteer-applications/{app.id}/",
+                        {"status": "APPROVED"},
+                        content_type="application/json",
+                        HTTP_AUTHORIZATION=f"Bearer {token}")
+    assert resp.status_code in (200, 202)
+
+    # 3. User can log in with their chosen password
+    user = User.objects.get(email="pwdvol@example.com")
+    assert user.role == "VOLUNTEER"
+    assert user.check_password("securepass123")
+
+    # 4. Actually login via API
+    login_resp = client.post("/api/auth/login/",
+                             {"email": "pwdvol@example.com", "password": "securepass123"},
+                             content_type="application/json")
+    assert login_resp.status_code == 200
+    assert "access" in login_resp.json()
+
+
+@pytest.mark.django_db
+def test_volunteer_signup_without_password_rejected(client):
+    """Application without password is rejected by the API."""
+    resp = client.post("/api/users/volunteer-applications/", {
+        "name": "No Password Vol",
+        "email": "nopwd@example.com",
+        "motivation_text": "Helping",
+    }, content_type="application/json")
+    assert resp.status_code == 400

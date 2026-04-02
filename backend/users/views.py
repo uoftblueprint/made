@@ -91,14 +91,14 @@ class VolunteerApplicationAPIView(viewsets.ModelViewSet):
         if conflicting_user:
             return
 
-        temp_password = secrets.token_urlsafe(12)
-        User.objects.create_user(
+        user = User(
             email=application.email,
             name=application.name,
-            password=temp_password,
             role="VOLUNTEER",
             access_expires_at=access_expires_at,
         )
+        user.password = application.password_hash
+        user.save()
 
     def list(self, request, *args, **kwargs):
         """List applications restricted to admins. Enrich APPROVED rows with user data."""

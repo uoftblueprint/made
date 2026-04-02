@@ -199,6 +199,11 @@ class Command(BaseCommand):
                 )
                 if created:
                     movements_created += 1
+                    # Set item status to match the request state
+                    if req_data.get("status") in ("APPROVED", "COMPLETED_UNVERIFIED"):
+                        item.status = "IN_TRANSIT"
+                        item.is_verified = False
+                        item.save(update_fields=["status", "is_verified", "updated_at"])
             except CollectionItem.DoesNotExist:
                 continue
         self.stdout.write(f"  Created {movements_created} movement requests")
@@ -228,6 +233,12 @@ class Command(BaseCommand):
                 )
                 if created:
                     box_movements_created += 1
+                    # Set all items in box to IN_TRANSIT
+                    if req_data.get("status") in ("APPROVED", "COMPLETED_UNVERIFIED"):
+                        for item in box.items.all():
+                            item.status = "IN_TRANSIT"
+                            item.is_verified = False
+                            item.save(update_fields=["status", "is_verified", "updated_at"])
             except Exception:
                 continue
         self.stdout.write(f"  Created {box_movements_created} box movement requests")

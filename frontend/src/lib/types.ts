@@ -28,6 +28,7 @@ export interface Volunteer {
 export interface VolunteerApplicationInput {
   name: string
   email: string
+  password: string
   motivation_text: string
 }
 export type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';

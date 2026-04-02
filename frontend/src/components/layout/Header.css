@@ -20,10 +20,12 @@
 }
 
 .header-logo-text {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 28px;
-    color: var(--color-primary);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-secondary);
 }
 
 .header-links {

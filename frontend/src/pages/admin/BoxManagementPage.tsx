@@ -1,11 +1,13 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown } from 'lucide-react';
+import { Archive, MapPin, Package, ChevronRight, ArrowRightLeft, Search, ChevronDown, Check, ShieldCheck } from 'lucide-react';
 import { useLocations, useLocationDetail, useCreateLocation } from '../../actions/useLocations';
 import { useBoxes, useBoxDetail, useCreateBox } from '../../actions/useBoxes';
+import { useBoxRequests } from '../../actions/useRequests';
 import type { CreateLocationData } from '../../api/locations.api';
-import type { BoxDetail } from '../../api/boxes.api';
+import type { BoxDetail, Box } from '../../api/boxes.api';
+import type { BoxMovementRequest } from '../../lib/types';
 import { boxesApi } from '../../api/boxes.api';
 import { boxRequestsApi } from '../../api/requests.api';
 import Button from '../../components/common/Button';
@@ -27,8 +29,11 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
 
+type BoxTransitStatus = 'available' | 'in_transit' | 'arrived';
+
 const BoxManagementPage: React.FC = () => {
-  const { isJuniorVolunteer } = useAuth();
+  const { isJuniorVolunteer, isAdmin, isSeniorVolunteer } = useAuth();
+  const canApprove = isAdmin || isSeniorVolunteer;
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedLocationId = searchParams.get('loc') ? Number(searchParams.get('loc')) : null;
@@ -94,6 +99,55 @@ const BoxManagementPage: React.FC = () => {
   const { boxes: allBoxes, loading: boxesLoading, refetch: refetchAllBoxes } = useBoxes();
   const { createLocation, creating: creatingLocation, error: createError } = useCreateLocation();
   const { createBox, creating: creatingBox, error: createBoxError } = useCreateBox();
+  const { requests: boxMoveRequests, completeArrival: markBoxArrived, verify: verifyBox } = useBoxRequests();
+  const [transitProcessingId, setTransitProcessingId] = useState<number | null>(null);
+
+  // Map boxId -> active movement request
+  const activeBoxRequests = useMemo(() => {
+    const map = new Map<number, BoxMovementRequest>();
+    for (const req of boxMoveRequests) {
+      if (req.status === 'APPROVED' || req.status === 'COMPLETED_UNVERIFIED') {
+        map.set(req.box, req);
+      }
+    }
+    return map;
+  }, [boxMoveRequests]);
+
+  const getBoxTransitStatus = useCallback((boxId: number): BoxTransitStatus => {
+    const req = activeBoxRequests.get(boxId);
+    if (!req) return 'available';
+    if (req.items_status === 'IN_TRANSIT') return 'in_transit';
+    if (!req.items_verified) return 'arrived';
+    return 'available';
+  }, [activeBoxRequests]);
+
+  // Inbound boxes for a location (boxes moving TO this location)
+  const getInboundBoxes = useCallback((locationId: number) => {
+    return boxMoveRequests.filter(req =>
+      req.to_location === locationId &&
+      (req.status === 'APPROVED' || req.status === 'COMPLETED_UNVERIFIED')
+    );
+  }, [boxMoveRequests]);
+
+  const handleMarkBoxArrived = async (requestId: number) => {
+    setTransitProcessingId(requestId);
+    try {
+      await markBoxArrived(requestId);
+      await Promise.all([refetchLocations(), refetchAllBoxes()]);
+      if (selectedLocationId) refetchSelectedLocation();
+    } catch (err) { console.error('Failed to mark arrived:', err); }
+    finally { setTransitProcessingId(null); }
+  };
+
+  const handleVerifyBox = async (requestId: number) => {
+    setTransitProcessingId(requestId);
+    try {
+      await verifyBox(requestId);
+      await Promise.all([refetchLocations(), refetchAllBoxes()]);
+      if (selectedLocationId) refetchSelectedLocation();
+    } catch (err) { console.error('Failed to verify:', err); }
+    finally { setTransitProcessingId(null); }
+  };
 
   // Add Box modal state
   const [showAddBoxModal, setShowAddBoxModal] = useState(false);
@@ -317,12 +371,11 @@ const BoxManagementPage: React.FC = () => {
         </button>
       </div>
 
-      {moveBoxSuccessMessage && (
-        <div className="box-management-success-banner">{moveBoxSuccessMessage}</div>
-      )}
-
       {activeTab === 'containers' ? (
         <div className="all-containers-view">
+          {moveBoxSuccessMessage && (
+            <div className="box-management-inline-success">{moveBoxSuccessMessage}</div>
+          )}
           <div className="all-containers-search-row">
             <div className="all-containers-search-wrapper">
               <Search size={16} className="all-containers-search-icon" />
@@ -354,11 +407,15 @@ const BoxManagementPage: React.FC = () => {
                   <SortableHeader label="Box Code" sortKey="box_code" sortConfig={boxSortConfig} onSort={requestBoxSort} />
                   <SortableHeader label="Label" sortKey="label" sortConfig={boxSortConfig} onSort={requestBoxSort} />
                   <SortableHeader label="Location" sortKey="location" sortConfig={boxSortConfig} onSort={requestBoxSort} />
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedBoxes.map((box) => (
+                {sortedBoxes.map((box) => {
+                  const transitStatus = getBoxTransitStatus(box.id);
+                  const activeReq = activeBoxRequests.get(box.id);
+                  return (
                   <React.Fragment key={box.id}>
                     <tr
                       className={`all-containers-row ${expandedBoxId === box.id ? 'expanded' : ''}`}
@@ -372,24 +429,43 @@ const BoxManagementPage: React.FC = () => {
                       </td>
                       <td><strong>{box.box_code}</strong></td>
                       <td>{box.label || '--'}</td>
-                      <td>{locationMap.get(box.location) || 'Unknown'}</td>
                       <td>
-                        <Button
-                          variant="outline-black"
-                          size="xs"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenMoveBoxModal(box.id, box.box_code, box.location);
-                          }}
-                          title="Move Box"
-                        >
-                          <ArrowRightLeft size={14} />
-                        </Button>
+                        {transitStatus === 'in_transit' && activeReq ? (
+                          <span>{locationMap.get(activeReq.from_location) || '?'} → {locationMap.get(activeReq.to_location) || '?'}</span>
+                        ) : transitStatus === 'arrived' && activeReq ? (
+                          <span>{locationMap.get(activeReq.to_location) || '?'} <span className="box-transit-label">(Inbound)</span></span>
+                        ) : (
+                          locationMap.get(box.location) || 'Unknown'
+                        )}
+                      </td>
+                      <td>
+                        {transitStatus === 'in_transit' && <span className="box-status-badge in-transit">In Transit</span>}
+                        {transitStatus === 'arrived' && <span className="box-status-badge arrived">Arrived</span>}
+                        {transitStatus === 'available' && <span className="box-status-badge available">Available</span>}
+                      </td>
+                      <td>
+                        <div className="box-actions-row">
+                          {transitStatus === 'in_transit' && activeReq && (
+                            <Button variant="outline-black" size="xs" onClick={(e) => { e.stopPropagation(); handleMarkBoxArrived(activeReq.id); }} disabled={transitProcessingId === activeReq.id} title="Mark Arrived">
+                              <Check size={14} />
+                            </Button>
+                          )}
+                          {transitStatus === 'arrived' && activeReq && canApprove && (
+                            <Button variant="outline-black" size="xs" onClick={(e) => { e.stopPropagation(); handleVerifyBox(activeReq.id); }} disabled={transitProcessingId === activeReq.id} title="Verify">
+                              <ShieldCheck size={14} />
+                            </Button>
+                          )}
+                          {transitStatus === 'available' && (
+                            <Button variant="outline-black" size="xs" onClick={(e) => { e.stopPropagation(); handleOpenMoveBoxModal(box.id, box.box_code, box.location); }} title="Move Box">
+                              <ArrowRightLeft size={14} />
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                     {expandedBoxId === box.id && (
                       <tr className="all-containers-detail-row">
-                        <td colSpan={5}>
+                        <td colSpan={6}>
                           <div className="all-containers-detail-content">
                             {expandedBoxLoading ? (
                               <p className="all-containers-detail-loading">Loading items...</p>
@@ -440,7 +516,8 @@ const BoxManagementPage: React.FC = () => {
                       </tr>
                     )}
                   </React.Fragment>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -499,6 +576,9 @@ const BoxManagementPage: React.FC = () => {
           </div>
 
           <div className="box-management-main">
+            {moveBoxSuccessMessage && (
+              <div className="box-management-inline-success">{moveBoxSuccessMessage}</div>
+            )}
             {!selectedLocationId ? (
               <div className="box-management-placeholder">
                 <MapPin size={48} />
@@ -526,41 +606,81 @@ const BoxManagementPage: React.FC = () => {
                   </Button>
                 </div>
 
-                {selectedLocation.boxes?.length === 0 ? (
-                  <div className="box-management-empty-boxes">
-                    <Package size={32} />
-                    <p>No boxes in this location</p>
-                  </div>
-                ) : (
-                  <div className="box-management-boxes-grid">
-                    {selectedLocation.boxes?.map((box) => (
-                      <div
-                        key={box.id}
-                        className={`box-card ${selectedBoxId === box.id ? 'active' : ''}`}
-                        onClick={() => handleBoxClick(box.id)}
-                      >
-                        <div className="box-card-header">
-                          <Package size={20} />
-                          <span className="box-card-code">{box.box_code}</span>
-                          <Button
-                            variant="outline-black"
-                            size="xs"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenMoveBoxModal(box.id, box.box_code, selectedLocation!.id);
-                            }}
-                            title="Move Box"
-                            style={{ marginLeft: 'auto' }}
+                {(() => {
+                  const inboundReqs = selectedLocationId ? getInboundBoxes(selectedLocationId) : [];
+                  const locationBoxes = selectedLocation.boxes || [];
+                  const hasBoxes = locationBoxes.length > 0 || inboundReqs.length > 0;
+
+                  if (!hasBoxes) return (
+                    <div className="box-management-empty-boxes">
+                      <Package size={32} />
+                      <p>No boxes in this location</p>
+                    </div>
+                  );
+
+                  return (
+                    <div className="box-management-boxes-grid">
+                      {locationBoxes.map((box) => {
+                        const transitStatus = getBoxTransitStatus(box.id);
+                        const activeReq = activeBoxRequests.get(box.id);
+                        const isOutbound = transitStatus !== 'available' && activeReq?.from_location === selectedLocationId;
+                        return (
+                          <div
+                            key={box.id}
+                            className={`box-card ${selectedBoxId === box.id ? 'active' : ''} ${transitStatus !== 'available' ? 'transit' : ''}`}
+                            onClick={() => handleBoxClick(box.id)}
                           >
-                            <ArrowRightLeft size={14} />
-                          </Button>
+                            <div className="box-card-header">
+                              <Package size={20} />
+                              <span className="box-card-code">{box.box_code}</span>
+                              {transitStatus === 'available' && (
+                                <Button variant="outline-black" size="xs" onClick={(e) => { e.stopPropagation(); handleOpenMoveBoxModal(box.id, box.box_code, selectedLocation!.id); }} title="Move Box" className="box-card-action">
+                                  <ArrowRightLeft size={14} />
+                                </Button>
+                              )}
+                              {transitStatus === 'in_transit' && activeReq && (
+                                <Button variant="outline-black" size="xs" onClick={(e) => { e.stopPropagation(); handleMarkBoxArrived(activeReq.id); }} disabled={transitProcessingId === activeReq.id} title="Mark Arrived" className="box-card-action">
+                                  <Check size={14} />
+                                </Button>
+                              )}
+                              {transitStatus === 'arrived' && activeReq && canApprove && (
+                                <Button variant="outline-black" size="xs" onClick={(e) => { e.stopPropagation(); handleVerifyBox(activeReq.id); }} disabled={transitProcessingId === activeReq.id} title="Verify" className="box-card-action">
+                                  <ShieldCheck size={14} />
+                                </Button>
+                              )}
+                            </div>
+                            {box.label && <p className="box-card-label">{box.label}</p>}
+                            {isOutbound && activeReq && (
+                              <span className="box-status-badge in-transit">Outbound → {locationMap.get(activeReq.to_location) || '?'}</span>
+                            )}
+                            {transitStatus === 'arrived' && !isOutbound && (
+                              <span className="box-status-badge arrived">Arrived — Verify</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {inboundReqs.map((req) => (
+                        <div key={`inbound-${req.id}`} className="box-card transit">
+                          <div className="box-card-header">
+                            <Package size={20} />
+                            <span className="box-card-code">{req.box_code}</span>
+                            {req.items_status === 'IN_TRANSIT' && (
+                              <Button variant="outline-black" size="xs" onClick={() => handleMarkBoxArrived(req.id)} disabled={transitProcessingId === req.id} title="Mark Arrived" className="box-card-action">
+                                <Check size={14} />
+                              </Button>
+                            )}
+                            {req.items_status !== 'IN_TRANSIT' && !req.items_verified && canApprove && (
+                              <Button variant="outline-black" size="xs" onClick={() => handleVerifyBox(req.id)} disabled={transitProcessingId === req.id} title="Verify" className="box-card-action">
+                                <ShieldCheck size={14} />
+                              </Button>
+                            )}
+                          </div>
+                          <span className="box-status-badge in-transit">Inbound ← {locationMap.get(req.from_location) || '?'}</span>
                         </div>
-                        {box.label && <p className="box-card-label">{box.label}</p>}
-                        {box.description && <p className="box-card-description">{box.description}</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 {/* Box Details */}
                 {selectedBoxId && (

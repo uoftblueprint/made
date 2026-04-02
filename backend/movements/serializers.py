@@ -28,8 +28,8 @@ from inventory.models import ItemHistory
 
 
 class ItemMovementRequestSerializer(serializers.ModelSerializer):
-    requested_by_username = serializers.CharField(source="requested_by.username", read_only=True)
-    admin_username = serializers.CharField(source="admin.username", read_only=True)
+    requested_by_username = serializers.CharField(source="requested_by.name", read_only=True)
+    admin_username = serializers.CharField(source="admin.name", read_only=True)
     item_code = serializers.CharField(source="item.item_code", read_only=True)
     item_title = serializers.CharField(source="item.title", read_only=True)
     item_platform = serializers.CharField(source="item.platform", read_only=True)
@@ -83,8 +83,8 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
 
 
 class BoxMovementRequestSerializer(serializers.ModelSerializer):
-    requested_by_username = serializers.CharField(source="requested_by.username", read_only=True)
-    admin_username = serializers.CharField(source="admin.username", read_only=True, default=None)
+    requested_by_username = serializers.CharField(source="requested_by.name", read_only=True)
+    admin_username = serializers.CharField(source="admin.name", read_only=True, default=None)
     box_code = serializers.CharField(source="box.box_code", read_only=True)
     box_label = serializers.CharField(source="box.label", read_only=True)
     from_location_name = serializers.CharField(source="from_location.name", read_only=True)
@@ -114,16 +114,6 @@ class BoxMovementRequestSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-    def get_items_status(self, obj):
-        """Return IN_TRANSIT if any item in the box is in transit, else AVAILABLE."""
-        if obj.box.items.filter(status="IN_TRANSIT").exists():
-            return "IN_TRANSIT"
-        return "AVAILABLE"
-
-    def get_items_verified(self, obj):
-        """Return True only if all items in the box are verified."""
-        return not obj.box.items.filter(is_verified=False).exists()
         read_only_fields = [
             "id",
             "requested_by",
@@ -134,5 +124,12 @@ class BoxMovementRequestSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
-    def create(self, validated_data):
-        return super().create(validated_data)
+    def get_items_status(self, obj):
+        """Return IN_TRANSIT if any item in the box is in transit, else AVAILABLE."""
+        if obj.box.items.filter(status="IN_TRANSIT").exists():
+            return "IN_TRANSIT"
+        return "AVAILABLE"
+
+    def get_items_verified(self, obj):
+        """Return True only if all items in the box are verified."""
+        return not obj.box.items.filter(is_verified=False).exists()

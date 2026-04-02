@@ -43,7 +43,7 @@ beforeEach(() => {
 describe('AuthContext', () => {
   it('session persists when accessToken exists', async () => {
     localStorage.setItem('accessToken', 'access123');
-    mockedAuthApi.getCurrentUser.mockResolvedValue({ id: 3, email: 'x@y.com', name: 'User', role: 'VOLUNTEER', created_at: 'now' });
+    mockedAuthApi.getCurrentUser.mockResolvedValue({ id: 3, email: 'x@y.com', name: 'User', role: 'VOLUNTEER', created_at: 'now', requires_move_approval: false });
 
     const { result } = renderAuthHook();
     await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
@@ -53,7 +53,7 @@ describe('AuthContext', () => {
   it('logout clears tokens', async () => {
     localStorage.setItem('accessToken', 'access123');
     localStorage.setItem('refreshToken', 'refresh123');
-    mockedAuthApi.getCurrentUser.mockResolvedValue({ id: 3, email: 'x@y.com', name: 'User', role: 'VOLUNTEER', created_at: 'now' });
+    mockedAuthApi.getCurrentUser.mockResolvedValue({ id: 3, email: 'x@y.com', name: 'User', role: 'VOLUNTEER', created_at: 'now', requires_move_approval: false });
     mockedAuthApi.logout.mockResolvedValue(undefined);
 
     const { result } = renderAuthHook();
@@ -65,5 +65,47 @@ describe('AuthContext', () => {
 
     expect(localStorage.getItem('accessToken')).toBeNull();
     expect(localStorage.getItem('refreshToken')).toBeNull();
+  });
+
+  it('identifies senior volunteer correctly', async () => {
+    localStorage.setItem('accessToken', 'token');
+    mockedAuthApi.getCurrentUser.mockResolvedValue({
+      id: 1, email: 'senior@test.com', name: 'Senior', role: 'VOLUNTEER',
+      created_at: 'now', requires_move_approval: false,
+    });
+
+    const { result } = renderAuthHook();
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    expect(result.current.isSeniorVolunteer).toBe(true);
+    expect(result.current.isJuniorVolunteer).toBe(false);
+    expect(result.current.isAdmin).toBe(false);
+  });
+
+  it('identifies junior volunteer correctly', async () => {
+    localStorage.setItem('accessToken', 'token');
+    mockedAuthApi.getCurrentUser.mockResolvedValue({
+      id: 2, email: 'junior@test.com', name: 'Junior', role: 'VOLUNTEER',
+      created_at: 'now', requires_move_approval: true,
+    });
+
+    const { result } = renderAuthHook();
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    expect(result.current.isSeniorVolunteer).toBe(false);
+    expect(result.current.isJuniorVolunteer).toBe(true);
+  });
+
+  it('admin is not flagged as volunteer', async () => {
+    localStorage.setItem('accessToken', 'token');
+    mockedAuthApi.getCurrentUser.mockResolvedValue({
+      id: 3, email: 'admin@test.com', name: 'Admin', role: 'ADMIN',
+      created_at: 'now', requires_move_approval: false,
+    });
+
+    const { result } = renderAuthHook();
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    expect(result.current.isAdmin).toBe(true);
+    expect(result.current.isVolunteer).toBe(false);
+    expect(result.current.isSeniorVolunteer).toBe(false);
+    expect(result.current.isJuniorVolunteer).toBe(false);
   });
 });

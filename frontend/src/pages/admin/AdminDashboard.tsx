@@ -37,7 +37,13 @@ const AdminDashboard: React.FC = () => {
 
   const { stats, loading: statsLoading } = useDashboardStats();
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<{ text: string; section: 'my' | 'all' } | null>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+  const showActionMessage = (msg: string, section: 'my' | 'all') => {
+    setActionMessage({ text: msg, section });
+    setTimeout(() => setActionMessage(null), 4000);
+  };
   type RequestTab = 'pending' | 'in_transit' | 'arrived' | 'rejected';
   const [myTabParam, setMyTab] = useQueryState('myTab', 'in_transit');
   const myTab = myTabParam as RequestTab;
@@ -125,6 +131,7 @@ const AdminDashboard: React.FC = () => {
     try {
       if (request.type === 'item') await approveItem(request.id);
       else await approveBox(request.id);
+      showActionMessage(`"${request.title}" approved — now in transit`, 'all');
     } catch (error) {
       console.error('Failed to approve request:', error);
     } finally {
@@ -137,6 +144,7 @@ const AdminDashboard: React.FC = () => {
     try {
       if (request.type === 'item') await rejectItem(request.id);
       else await rejectBox(request.id);
+      showActionMessage(`"${request.title}" rejected`, 'all');
     } catch (error) {
       console.error('Failed to reject request:', error);
     } finally {
@@ -154,6 +162,7 @@ const AdminDashboard: React.FC = () => {
         if (request.type === 'item') await arriveItem(request.id);
         else await arriveBox(request.id);
       }
+      showActionMessage(`"${request.title}" marked as arrived — awaiting verification`, isMine ? 'my' : 'all');
     } catch (error) {
       console.error('Failed to mark as arrived:', error);
     } finally {
@@ -171,6 +180,7 @@ const AdminDashboard: React.FC = () => {
         if (request.type === 'item') await verifyItem(request.id);
         else await verifyBox(request.id);
       }
+      showActionMessage(`"${request.title}" verified`, isMine ? 'my' : 'all');
     } catch (error) {
       console.error('Failed to verify request:', error);
     } finally {
@@ -215,6 +225,9 @@ const AdminDashboard: React.FC = () => {
         <div className="admin-review-header">
           <h3>Your Activity</h3>
         </div>
+        {actionMessage?.section === 'my' && (
+          <div className="admin-action-banner">{actionMessage.text}</div>
+        )}
         <div className="admin-request-tabs">
           {([
             { key: 'in_transit' as const, label: 'In Transit', count: filterByTab(myRequests, 'in_transit').length },
@@ -282,6 +295,9 @@ const AdminDashboard: React.FC = () => {
           <div className="admin-review-header">
             <h3>All Activity</h3>
           </div>
+          {actionMessage?.section === 'all' && (
+            <div className="admin-action-banner">{actionMessage.text}</div>
+          )}
           <div className="admin-request-tabs">
             {([
               { key: 'pending' as const, label: 'Pending', count: filterByTab(allRequests, 'pending').length },

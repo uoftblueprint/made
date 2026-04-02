@@ -3,6 +3,7 @@ import React from "react"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { BrowserRouter } from "react-router-dom"
 
 import VolunteerApplication from "./VolunteerApplication"
 
@@ -25,7 +26,7 @@ function renderWithQueryClient(ui: React.ReactElement) {
     },
   })
 
-  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>)
+  return render(<QueryClientProvider client={queryClient}><BrowserRouter>{ui}</BrowserRouter></QueryClientProvider>)
 }
 
 it("does not submit when form is invalid", async () => {

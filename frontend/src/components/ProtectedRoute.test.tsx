@@ -35,7 +35,7 @@ type MockedAuthApi = {
 };
 const mockedAuthApi = authApi as unknown as MockedAuthApi;
 
-function renderProtectedRoute(children: React.ReactNode, requiredRole?: 'ADMIN' | 'VOLUNTEER') {
+function renderProtectedRoute(children: React.ReactNode, requiredRole?: 'ADMIN' | 'VOLUNTEER' | 'SENIOR_VOLUNTEER') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={client}>
@@ -59,73 +59,76 @@ beforeEach(() => {
 describe('ProtectedRoute', () => {
   it('redirects to /login when not authenticated', () => {
     mockedAuthApi.getCurrentUser.mockResolvedValue(null);
-
-    renderProtectedRoute(<div>Protected Content</div>);
-
+    renderProtectedRoute(<div>Protected</div>);
     expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
   });
 
   it('shows loading state while checking authentication', () => {
-    localStorage.setItem('accessToken', 'token123');
+    localStorage.setItem('accessToken', 'token');
     mockedAuthApi.getCurrentUser.mockImplementation(
       () => new Promise((resolve) => setTimeout(() => resolve(null), 1000))
     );
-
-    renderProtectedRoute(<div>Protected Content</div>);
-
+    renderProtectedRoute(<div>Content</div>);
     expect(screen.getByText('Loading...')).toBeTruthy();
   });
 
-  it('redirects VOLUNTEER to / when ADMIN role required', async () => {
-    localStorage.setItem('accessToken', 'token123');
+  it('allows ADMIN to access ADMIN route', async () => {
+    localStorage.setItem('accessToken', 'token');
     mockedAuthApi.getCurrentUser.mockResolvedValue({
-      id: 2,
-      email: 'volunteer@example.com',
-      name: 'Volunteer',
-      role: 'VOLUNTEER',
-      created_at: 'now',
+      id: 1, email: 'admin@test.com', name: 'Admin', role: 'ADMIN',
+      created_at: 'now', requires_move_approval: false,
     });
-
-    renderProtectedRoute(<div>Admin Content</div>, 'ADMIN');
-
-    await vi.waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
-    });
+    renderProtectedRoute(<div>Admin Page</div>, 'ADMIN');
+    await vi.waitFor(() => expect(screen.getByText('Admin Page')).toBeTruthy());
   });
 
-  it('allows ADMIN to access content when ADMIN role required', async () => {
-    localStorage.setItem('accessToken', 'token123');
+  it('blocks VOLUNTEER from ADMIN route', async () => {
+    localStorage.setItem('accessToken', 'token');
     mockedAuthApi.getCurrentUser.mockResolvedValue({
-      id: 1,
-      email: 'admin@example.com',
-      name: 'Admin',
-      role: 'ADMIN',
-      created_at: 'now',
+      id: 2, email: 'vol@test.com', name: 'Vol', role: 'VOLUNTEER',
+      created_at: 'now', requires_move_approval: false,
     });
-
-    renderProtectedRoute(<div>Admin Dashboard</div>, 'ADMIN');
-
-    await vi.waitFor(() => {
-      expect(screen.getByText('Admin Dashboard')).toBeTruthy();
-    });
-    expect(mockNavigate).not.toHaveBeenCalled();
+    renderProtectedRoute(<div>Admin Page</div>, 'ADMIN');
+    await vi.waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true }));
   });
 
-  it('allows VOLUNTEER to access content when VOLUNTEER role required', async () => {
-    localStorage.setItem('accessToken', 'token123');
+  it('allows senior volunteer to access SENIOR_VOLUNTEER route', async () => {
+    localStorage.setItem('accessToken', 'token');
     mockedAuthApi.getCurrentUser.mockResolvedValue({
-      id: 2,
-      email: 'volunteer@example.com',
-      name: 'Volunteer',
-      role: 'VOLUNTEER',
-      created_at: 'now',
+      id: 3, email: 'senior@test.com', name: 'Senior', role: 'VOLUNTEER',
+      created_at: 'now', requires_move_approval: false,
     });
+    renderProtectedRoute(<div>Senior Page</div>, 'SENIOR_VOLUNTEER');
+    await vi.waitFor(() => expect(screen.getByText('Senior Page')).toBeTruthy());
+  });
 
-    renderProtectedRoute(<div>Welcome to the Collection Catalog</div>, 'VOLUNTEER');
-
-    await vi.waitFor(() => {
-      expect(screen.getByText('Welcome to the Collection Catalog')).toBeTruthy();
+  it('blocks junior volunteer from SENIOR_VOLUNTEER route', async () => {
+    localStorage.setItem('accessToken', 'token');
+    mockedAuthApi.getCurrentUser.mockResolvedValue({
+      id: 4, email: 'junior@test.com', name: 'Junior', role: 'VOLUNTEER',
+      created_at: 'now', requires_move_approval: true,
     });
-    expect(mockNavigate).not.toHaveBeenCalled();
+    renderProtectedRoute(<div>Senior Page</div>, 'SENIOR_VOLUNTEER');
+    await vi.waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true }));
+  });
+
+  it('allows any volunteer to access VOLUNTEER route', async () => {
+    localStorage.setItem('accessToken', 'token');
+    mockedAuthApi.getCurrentUser.mockResolvedValue({
+      id: 5, email: 'junior@test.com', name: 'Junior', role: 'VOLUNTEER',
+      created_at: 'now', requires_move_approval: true,
+    });
+    renderProtectedRoute(<div>Catalogue</div>, 'VOLUNTEER');
+    await vi.waitFor(() => expect(screen.getByText('Catalogue')).toBeTruthy());
+  });
+
+  it('allows ADMIN to access VOLUNTEER route', async () => {
+    localStorage.setItem('accessToken', 'token');
+    mockedAuthApi.getCurrentUser.mockResolvedValue({
+      id: 1, email: 'admin@test.com', name: 'Admin', role: 'ADMIN',
+      created_at: 'now', requires_move_approval: false,
+    });
+    renderProtectedRoute(<div>Catalogue</div>, 'VOLUNTEER');
+    await vi.waitFor(() => expect(screen.getByText('Catalogue')).toBeTruthy());
   });
 });

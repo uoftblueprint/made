@@ -9,6 +9,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
     """
 
     reviewed_by = serializers.StringRelatedField(read_only=True)
+    password = serializers.CharField(write_only=True, required=True, min_length=8)
 
     class Meta:
         model = VolunteerApplication
@@ -17,6 +18,7 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
             "name",
             "email",
             "phone_number",
+            "password",
             "motivation_text",
             "status",
             "created_at",
@@ -27,7 +29,12 @@ class VolunteerApplicationSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         """Create a new volunteer application with PENDING status."""
+        from django.contrib.auth.hashers import make_password
+
         validated_data["status"] = "PENDING"
+        raw_password = validated_data.pop("password", None)
+        if raw_password:
+            validated_data["password_hash"] = make_password(raw_password)
         return super().create(validated_data)
 
 
