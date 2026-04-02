@@ -8,4 +8,7 @@ export interface ItemFilter {
   item_type?: ItemType;
   status?: ItemStatus;
   location_type?: LocationInfo['location_type'];
+  box?: number;
+  box__box_code?: string;
+  working_condition?: boolean | null;
 }

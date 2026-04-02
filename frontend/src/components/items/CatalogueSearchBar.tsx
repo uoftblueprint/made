@@ -62,7 +62,7 @@ const CatalogueSearchBar: React.FC<SearchBarProps> = ({ filters, setFilters }) =
         <input
           id="catalogue-search-input"
           type="text"
-          placeholder="Search items..."
+          placeholder="Search by title, platform, MADE ID..."
           value={searchValue}
           onChange={handleSearchChange}
           style={{

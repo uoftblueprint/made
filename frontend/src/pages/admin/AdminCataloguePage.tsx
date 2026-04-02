@@ -94,6 +94,12 @@ const statusOptions = [
   { value: 'MAINTENANCE', label: 'Maintenance' },
 ] as const;
 
+const workingConditionOptions = [
+  { value: '', label: 'All Conditions' },
+  { value: 'true', label: 'Working' },
+  { value: 'false', label: 'Not Working' },
+] as const;
+
 type MobileFilterGroupProps = {
   label: string;
   value: string;
@@ -152,6 +158,9 @@ const AdminCataloguePage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('');
   const [locationFilter, setLocationFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [workingConditionFilter, setWorkingConditionFilter] = useState<string>('');
+  const [boxCodeFilter, setBoxCodeFilter] = useState<string>('');
+  const [debouncedBoxCode, setDebouncedBoxCode] = useState<string>('');
 
   // Debounce search query
   useEffect(() => {
@@ -161,12 +170,31 @@ const AdminCataloguePage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Debounce box code filter
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedBoxCode(boxCodeFilter);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [boxCodeFilter]);
+
   // Fetch items from API
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const apiItems = await itemsApi.getAll({ search: debouncedSearch || undefined });
+      const params: import('../../lib/filters').ItemFilter = {
+        search: debouncedSearch || undefined,
+        item_type: (typeFilter as import('../../lib/types').ItemType) || undefined,
+        status: (statusFilter as import('../../lib/types').ItemStatus) || undefined,
+        location_type: (locationFilter as import('../../lib/types').LocationInfo['location_type']) || undefined,
+        box__box_code: debouncedBoxCode || undefined,
+        working_condition:
+          workingConditionFilter === 'true' ? true :
+          workingConditionFilter === 'false' ? false :
+          undefined,
+      };
+      const apiItems = await itemsApi.getAll(params);
       setItems(apiItems || []);
     } catch (err) {
       console.error('Failed to fetch items:', err);
@@ -174,7 +202,7 @@ const AdminCataloguePage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [debouncedSearch]);
+  }, [debouncedSearch, typeFilter, statusFilter, locationFilter, debouncedBoxCode, workingConditionFilter]);
 
   useEffect(() => {
     fetchItems();
@@ -212,12 +240,8 @@ const AdminCataloguePage: React.FC = () => {
     total: inventoryItems.length,
   };
 
-  const filteredItems = inventoryItems.filter(({ display }) => {
-    if (typeFilter && display.item_type !== typeFilter) return false;
-    if (locationFilter && display.location_type !== locationFilter) return false;
-    if (statusFilter && display.status !== statusFilter) return false;
-    return true;
-  });
+  // Filtering is now handled server-side via API query params
+  const filteredItems = inventoryItems;
 
   return (
     <div className="catalogue-layout">
@@ -269,7 +293,7 @@ const AdminCataloguePage: React.FC = () => {
           <input
             type="text"
             className="catalogue-search"
-            placeholder="Search by Title, MADE ID, or Location..."
+            placeholder="Search by title, MADE ID, system type, box ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -306,6 +330,25 @@ const AdminCataloguePage: React.FC = () => {
             </select>
             <ChevronDown size={14} className="dropdown-icon" />
           </div>
+          <div className="catalogue-filter-dropdown">
+            <select
+              value={workingConditionFilter}
+              onChange={(e) => setWorkingConditionFilter(e.target.value)}
+              className="catalogue-filter-select"
+            >
+              {workingConditionOptions.map((option) => (
+                <option key={option.value || 'all'} value={option.value}>{option.label}</option>))}
+            </select>
+            <ChevronDown size={14} className="dropdown-icon" />
+          </div>
+          <input
+            type="text"
+            className="catalogue-search"
+            placeholder="Filter by Box ID..."
+            value={boxCodeFilter}
+            onChange={(e) => setBoxCodeFilter(e.target.value)}
+            style={{ maxWidth: '160px' }}
+          />
           <Button className="catalogue-export-mobile-hide" variant="outline-black" size="sm" icon="download" onClick={() => setIsExportModalOpen(true)}>
             Export CSV
           </Button>
@@ -315,7 +358,7 @@ const AdminCataloguePage: React.FC = () => {
           <input
             type="text"
             className="catalogue-search"
-            placeholder="Search by Title, MADE ID, or Location..."
+            placeholder="Search by title, MADE ID, system type, box ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -356,6 +399,25 @@ const AdminCataloguePage: React.FC = () => {
                   onChange={setStatusFilter}
                 />
 
+                <MobileFilterGroup
+                  label="Working Condition"
+                  value={workingConditionFilter}
+                  options={workingConditionOptions}
+                  onChange={setWorkingConditionFilter}
+                />
+
+                <div className="catalogue-mobile-filter-group">
+                  <div className="catalogue-mobile-filter-label">Box ID</div>
+                  <input
+                    type="text"
+                    className="catalogue-search"
+                    placeholder="Filter by Box ID..."
+                    value={boxCodeFilter}
+                    onChange={(e) => setBoxCodeFilter(e.target.value)}
+                    style={{ fontSize: '14px', padding: '8px 10px' }}
+                  />
+                </div>
+
                 <button
                   type="button"
                   className="catalogue-clear-filters"
@@ -363,6 +425,8 @@ const AdminCataloguePage: React.FC = () => {
                     setTypeFilter('');
                     setLocationFilter('');
                     setStatusFilter('');
+                    setWorkingConditionFilter('');
+                    setBoxCodeFilter('');
                   }}
                 >
                   Clear Filters
