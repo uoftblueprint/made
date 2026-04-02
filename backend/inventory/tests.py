@@ -1059,7 +1059,6 @@ class BoxEndpointsTest(TestCase):
         self.item_b.refresh_from_db()
         assert self.item_b.box_id == self.box_b.id
 
-<<<<<<< HEAD
     def test_mark_box_arrived_updates_box_and_items(self):
         response = self.client.post(
             f"/api/boxes/{self.box_a.id}/mark-arrived/",
