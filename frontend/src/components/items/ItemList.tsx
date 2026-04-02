@@ -7,10 +7,11 @@ interface ItemListProps {
     items: PublicCollectionItem[];
 }
 
-const ItemList: React.FC<ItemListProps> = ({items}) => {
+const ItemList: React.FC<ItemListProps> = ({ items }) => {
+  const list = Array.isArray(items) ? items : [];
   return (
     <div className="item-list">
-      {items.map((item) => (
+      {list.map((item) => (
         <ItemCard key={item.id} item={item} />
       ))}
     </div>

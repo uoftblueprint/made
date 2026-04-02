@@ -19,7 +19,9 @@ export const itemsApi = {
     queryParams.page_size = '10000';
 
     const response = await apiClient.get('/inventory/public/items/', { params: queryParams });
-    return response.data.results ?? response.data;
+    const data = response?.data;
+    const raw = data?.results ?? data;
+    return Array.isArray(raw) ? raw : [];
   },
 
   getById: async (id: string | number): Promise<PublicCollectionItem> => {

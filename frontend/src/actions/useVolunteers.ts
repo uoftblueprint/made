@@ -16,23 +16,45 @@ export const useVolunteerApplications = () => {
 export const useUpdateVolunteerStatus = (onSuccessCallback?: () => void, onErrorCallback?: (error: unknown) => void) => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, action }: { id: number; action: 'APPROVED' | 'REJECTED' }) => {
-      await apiClient.patch(`/api/users/volunteer-applications/${id}/`, { status: action });
+    mutationFn: async ({ id, action, access_expires_at }: { id: number; action: 'APPROVED' | 'REJECTED'; access_expires_at?: string | null }) => {
+      const body: Record<string, unknown> = { status: action };
+      if (action === 'APPROVED') {
+        body.access_expires_at = access_expires_at ?? null;
+      }
+      await apiClient.patch(`/users/volunteer-applications/${id}/`, body);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['volunteerStats'] });
       onSuccessCallback?.();
     },
     onError: (error) => {
-      onErrorCallback?.(error)
-    }
+      onErrorCallback?.(error);
+    },
+  });
+};
+
+export const useExtendVolunteerAccess = (onSuccessCallback?: () => void, onErrorCallback?: (error: unknown) => void) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, access_expires_at }: { userId: number; access_expires_at: string | null }) => {
+      await apiClient.patch(`/users/${userId}/`, { access_expires_at });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['volunteerApplications'] });
+      queryClient.invalidateQueries({ queryKey: ['volunteerStats'] });
+      onSuccessCallback?.();
+    },
+    onError: (error) => {
+      onErrorCallback?.(error);
+    },
   });
 };
 
 export const useCreateVolunteer = (onSuccessCallback?: () => void, onErrorCallback?: (error: AxiosError) => void) => {
   return useMutation<void, AxiosError, VolunteerApplicationInput>({
     mutationFn: async (applicationData) => {
-      await apiClient.post('/api/users/volunteer-applications/', applicationData);
+      await apiClient.post('/users/volunteer-applications/', applicationData);
     },
     onSuccess: () => {
       onSuccessCallback?.();

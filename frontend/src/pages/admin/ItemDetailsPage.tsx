@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { ArrowLeft, Edit2, MapPin, ExternalLink, Trash2, Check, X, Clock, ArrowRight } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { itemsApi } from '../../api/items.api';
 import { useItemRequests } from '../../actions/useRequests';
 import type { PublicCollectionItem, MovementRequest } from '../../lib/types';
 import './ItemDetailsPage.css';
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as { detail?: unknown } | undefined;
+    if (typeof data?.detail === 'string') {
+      return data.detail;
+    }
+  }
+
+  return error instanceof Error ? error.message : fallback;
+}
 
 interface ItemDetails extends PublicCollectionItem {
   cataloger?: string;
@@ -24,30 +36,35 @@ const ItemDetailsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingRequestId, setProcessingRequestId] = useState<number | null>(null);
+  const [arrivalError, setArrivalError] = useState<string | null>(null);
   
-  const { requests: movementRequests, loading: requestsLoading, approve, reject } = useItemRequests(id ? parseInt(id) : undefined);
+  const { requests: movementRequests, loading: requestsLoading, approve, reject, completeArrival } = useItemRequests(id ? parseInt(id) : undefined);
   const pendingRequests = movementRequests.filter(r => r.status === 'WAITING_APPROVAL');
+  const approvedRequests = movementRequests.filter(r => r.status === 'APPROVED');
+  const activeTransitRequest = approvedRequests[0] ?? null;
+  const isInTransit = item?.status === 'IN_TRANSIT';
   
   const backLink = isRequestView ? '/admin' : '/admin/catalogue';
   const backText = isRequestView ? 'Back to Dashboard' : 'Back to Catalogue';
 
-  useEffect(() => {
-    const fetchItem = async () => {
-      if (!id) return;
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await itemsApi.getById(id);
-        setItem(data as ItemDetails);
-      } catch (err) {
-        console.error('Failed to fetch item:', err);
-        setError('Failed to load item details.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchItem();
+  const fetchItem = useCallback(async () => {
+    if (!id) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await itemsApi.getById(id);
+      setItem(data as ItemDetails);
+    } catch (err) {
+      console.error('Failed to fetch item:', err);
+      setError('Failed to load item details.');
+    } finally {
+      setIsLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchItem();
+  }, [fetchItem]);
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '--';
@@ -74,8 +91,10 @@ const ItemDetailsPage: React.FC = () => {
 
   const handleApprove = async (request: MovementRequest) => {
     setProcessingRequestId(request.id);
+    setArrivalError(null);
     try {
       await approve(request.id);
+      await fetchItem();
     } catch (err) {
       console.error('Failed to approve request:', err);
     } finally {
@@ -85,10 +104,30 @@ const ItemDetailsPage: React.FC = () => {
 
   const handleReject = async (request: MovementRequest) => {
     setProcessingRequestId(request.id);
+    setArrivalError(null);
     try {
       await reject(request.id);
+      await fetchItem();
     } catch (err) {
       console.error('Failed to reject request:', err);
+    } finally {
+      setProcessingRequestId(null);
+    }
+  };
+
+  const handleMarkArrived = async () => {
+    if (!activeTransitRequest) {
+      return;
+    }
+    setProcessingRequestId(activeTransitRequest.id);
+    setArrivalError(null);
+    try {
+      await completeArrival(activeTransitRequest.id, {
+        comment: `Marked as arrived from item details for ${item?.item_code ?? 'item'}.`
+      });
+      await fetchItem();
+    } catch (err) {
+      setArrivalError(getApiErrorMessage(err, 'Failed to mark item as arrived.'));
     } finally {
       setProcessingRequestId(null);
     }
@@ -136,12 +175,21 @@ const ItemDetailsPage: React.FC = () => {
           {isRequestView && pendingRequests.length > 0 && (
             <span className="item-badge move-requested">Move Requested</span>
           )}
+          {isInTransit && (
+            <span className="item-badge in-transit">In Transit</span>
+          )}
           <span className="item-badge type">{item.platform || 'Software'}</span>
         </div>
       </div>
 
       <div className="item-details-content">
         <div className="item-details-main">
+          {(arrivalError) && (
+            <div className="item-details-card">
+              {arrivalError && <p className="item-arrival-error">{arrivalError}</p>}
+            </div>
+          )}
+
           {/* Required Information */}
           <div className="item-details-card">
             <h3>Required Information</h3>
@@ -317,6 +365,16 @@ const ItemDetailsPage: React.FC = () => {
             <MapPin size={16} />
             Update Location
           </button>
+          {isInTransit && activeTransitRequest && (
+            <button
+              className="item-action-btn arrival"
+              onClick={handleMarkArrived}
+              disabled={processingRequestId === activeTransitRequest.id}
+            >
+              <Check size={16} />
+              {processingRequestId === activeTransitRequest.id ? 'Marking...' : 'Mark as Arrived'}
+            </button>
+          )}
           <button className="item-action-btn secondary">
             <ExternalLink size={16} />
             View in Google Sheets

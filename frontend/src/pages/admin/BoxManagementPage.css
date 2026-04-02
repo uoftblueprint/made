@@ -342,6 +342,34 @@
     border-top: 1px solid var(--color-border);
 }
 
+.box-arrival-panel {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.box-arrival-panel p {
+    margin: 0 0 var(--spacing-sm);
+}
+
+.box-arrival-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--spacing-sm);
+}
+
+.box-arrival-controls select,
+.box-arrival-controls input {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-md);
+    font-size: 13px;
+}
+
+.box-arrival-error {
+    color: #b91c1c;
+    font-size: 13px;
+}
+
 /* Items Table */
 .box-management-items-table {
     width: 100%;
@@ -551,6 +579,10 @@
 /* Responsive */
 @media (max-width: 768px) {
     .box-management-content {
+        grid-template-columns: 1fr;
+    }
+
+    .box-arrival-controls {
         grid-template-columns: 1fr;
     }
 

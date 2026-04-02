@@ -1,29 +1,78 @@
-import { useVolunteerApplications, useUpdateVolunteerStatus, useVolunteerStats, useVolunteerOptions } from '../../actions/useVolunteers';
+import { useVolunteerApplications, useUpdateVolunteerStatus, useExtendVolunteerAccess, useVolunteerStats, useVolunteerOptions } from '../../actions/useVolunteers';
 import { useState, useMemo } from 'react'
 import { AlertCircle, Mail, Trash2, CheckCircle, Clock, XCircle, ExternalLink, ChevronDown } from 'lucide-react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
+import type { Volunteer } from '../../lib/types';
 import './ManageVolunteers.css';
 
 const DEFAULT_STATUS_OPTIONS = [
     { value: '', label: 'All Status' },
 ];
 
+const plusDays = (days: number, from?: string | null) => {
+    const base = from ? new Date(from) : new Date();
+    base.setDate(base.getDate() + days);
+    return base.toISOString().slice(0, 10);
+};
+
+/** HTML date input is YYYY-MM-DD; API expects a full ISO datetime. */
+const dateToEndOfDayIso = (dateStr: string): string =>
+    new Date(`${dateStr}T23:59:59`).toISOString();
+
 const ManageVolunteers = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
+
+    type ExpiryModal =
+        | { mode: 'approve'; applicationId: number }
+        | { mode: 'extend'; volunteer: Volunteer }
+        | null;
+
+    const [expiryModal, setExpiryModal] = useState<ExpiryModal>(null);
+    const [expiryDate, setExpiryDate] = useState('');
+    const [noExpiry, setNoExpiry] = useState(false);
+    const [renewModalOpen, setRenewModalOpen] = useState(false);
+
     const { data = [], isLoading, isError } = useVolunteerApplications();
     const { data: stats } = useVolunteerStats();
     const { data: options } = useVolunteerOptions();
-    const mutation = useUpdateVolunteerStatus();
-    
-    const onApprove = (id: number) => {
-        mutation.mutate({id, action: "APPROVED"})
-    }
+    const approveMutation = useUpdateVolunteerStatus();
+    const extendMutation = useExtendVolunteerAccess();
+
+    const openExpiryModal = (next: ExpiryModal) => {
+        if (!next) return;
+        const currentExpiry = next.mode === 'extend' ? next.volunteer.expires_at : null;
+        setExpiryDate(plusDays(30, currentExpiry));
+        setNoExpiry(false);
+        setRenewModalOpen(false);
+        setExpiryModal(next);
+    };
+
+    const closeExpiryModal = () => setExpiryModal(null);
+
+    const submitExpiryModal = () => {
+        const expiry =
+            noExpiry ? null : expiryDate ? dateToEndOfDayIso(expiryDate) : null;
+        if (expiryModal?.mode === 'approve') {
+            approveMutation.mutate(
+                { id: expiryModal.applicationId, action: 'APPROVED', access_expires_at: expiry },
+                { onSuccess: closeExpiryModal }
+            );
+        } else if (expiryModal?.mode === 'extend' && expiryModal.volunteer.user_id) {
+            extendMutation.mutate(
+                { userId: expiryModal.volunteer.user_id, access_expires_at: expiry },
+                { onSuccess: closeExpiryModal }
+            );
+        }
+    };
+
     const onReject = (id: number) => {
-        mutation.mutate({id, action: "REJECTED"})
-    }
+        approveMutation.mutate({ id, action: 'REJECTED' });
+    };
+
+    const isPending = approveMutation.isPending || extendMutation.isPending;
 
     const activeCount = stats?.active_count ?? 0;
     const expiringSoonCount = stats?.expiring_soon_count ?? 0;
@@ -148,7 +197,7 @@ const ManageVolunteers = () => {
                             {expiringSoonCount} volunteer{expiringSoonCount > 1 ? 's' : ''} expiring within {warningDays} days: {expiringVolunteers.map(v => v.name).join(', ')}
                         </span>
                     </div>
-                    <button className="volunteers-renew-btn">Renew Access</button>
+                    <button className="volunteers-renew-btn" onClick={() => setRenewModalOpen(true)}>Renew Access</button>
                 </div>
             )}
 
@@ -202,7 +251,7 @@ const ManageVolunteers = () => {
                                         <span className="volunteer-expires-date">
                                             {volunteer.expires_at ? new Date(volunteer.expires_at).toLocaleDateString('en-CA') : '-'}
                                         </span>
-                                        {volunteer.days_remaining !== undefined && volunteer.days_remaining > 0 && (
+                                        {volunteer.days_remaining != null && volunteer.days_remaining > 0 && (
                                             <span className="volunteer-expires-remaining">
                                                 {volunteer.days_remaining} days remaining
                                             </span>
@@ -221,7 +270,7 @@ const ManageVolunteers = () => {
                                     <div className="volunteers-actions">
                                         {volunteer.status === 'PENDING' && (
                                             <>
-                                                <Button variant="success" size="xs" onClick={() => onApprove(volunteer.id)}>
+                                                <Button variant="success" size="xs" className="!text-black !border !border-border" onClick={() => openExpiryModal({ mode: 'approve', applicationId: volunteer.id })}>
                                                     Approve
                                                 </Button>
                                                 <Button variant="danger" size="xs" onClick={() => onReject(volunteer.id)}>
@@ -234,7 +283,7 @@ const ManageVolunteers = () => {
                                                 <button className="volunteers-action-btn icon-btn">
                                                     <ExternalLink size={14} />
                                                 </button>
-                                                <button className="volunteers-action-btn extend">Extend</button>
+                                                <button className="volunteers-action-btn extend" onClick={() => openExpiryModal({ mode: 'extend', volunteer })}>Extend</button>
                                                 <button className="volunteers-action-btn delete">
                                                     <Trash2 size={14} />
                                                 </button>
@@ -245,7 +294,7 @@ const ManageVolunteers = () => {
                                                 <button className="volunteers-action-btn icon-btn">
                                                     <ExternalLink size={14} />
                                                 </button>
-                                                <button className="volunteers-action-btn renew" onClick={() => onApprove(volunteer.id)}>
+                                                <button className="volunteers-action-btn renew" onClick={() => openExpiryModal({ mode: 'approve', applicationId: volunteer.id })}>
                                                     Renew
                                                 </button>
                                                 <button className="volunteers-action-btn delete">
@@ -267,6 +316,85 @@ const ManageVolunteers = () => {
                     <p>No volunteers found. Click "Add Volunteer" to add a new volunteer.</p>
                 </div>
             )}
+
+            {/* Approve / Extend shared modal */}
+            <Modal
+                open={expiryModal !== null}
+                onClose={closeExpiryModal}
+                title={expiryModal?.mode === 'approve' ? 'Approve Volunteer' : 'Extend Access'}
+            >
+                {expiryModal?.mode === 'extend' && expiryModal.volunteer.expires_at && (
+                    <p className="modal-subtitle">
+                        Current expiry for <strong>{expiryModal.volunteer.name}</strong>:{' '}
+                        {new Date(expiryModal.volunteer.expires_at).toLocaleDateString('en-CA')}
+                    </p>
+                )}
+                <div className="modal-form">
+                    <div className="modal-field">
+                        <label>Expiry Date</label>
+                        <input
+                            type="date"
+                            value={expiryDate}
+                            min={new Date().toISOString().slice(0, 10)}
+                            disabled={noExpiry}
+                            onChange={(e) => setExpiryDate(e.target.value)}
+                        />
+                    </div>
+                    <div className="modal-field modal-checkbox-field">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={noExpiry}
+                                onChange={(e) => setNoExpiry(e.target.checked)}
+                            />
+                            No expiry
+                        </label>
+                    </div>
+                </div>
+                <div className="modal-actions">
+                    <Button
+                        variant={expiryModal?.mode === 'approve' ? 'success' : 'primary'}
+                        size="md"
+                        onClick={submitExpiryModal}
+                        disabled={isPending || (expiryModal?.mode === 'extend' && !expiryModal.volunteer.user_id)}
+                        className="!text-black"
+                    >
+                        {isPending
+                            ? expiryModal?.mode === 'approve' ? 'Approving…' : 'Extending…'
+                            : expiryModal?.mode === 'approve' ? 'Approve & Set Expiry' : 'Extend Access'}
+                    </Button>
+                    <Button variant="outline-gray" size="md" onClick={closeExpiryModal}>Cancel</Button>
+                </div>
+            </Modal>
+
+            {/* Renew Access Banner Modal */}
+            <Modal open={renewModalOpen} onClose={() => setRenewModalOpen(false)} title="Renew Access">
+                <p className="modal-subtitle">Volunteers expiring within {warningDays} days.</p>
+                <div className="volunteers-renew-list">
+                    {expiringVolunteers.map((v) => {
+                        const appRow = data.find((a) => a.email === v.email);
+                        return (
+                            <div key={v.id} className="volunteers-renew-item">
+                                <div>
+                                    <strong>{v.name}</strong>
+                                    <span className="volunteers-renew-expiry"> — expires {new Date(v.access_expires_at).toLocaleDateString('en-CA')}</span>
+                                </div>
+                                <Button
+                                    variant="outline-gray"
+                                    size="xs"
+                                    onClick={() => appRow && openExpiryModal({ mode: 'extend', volunteer: appRow })}
+                                    disabled={!appRow?.user_id}
+                                >
+                                    Extend
+                                </Button>
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="modal-actions">
+                    <Button variant="outline-gray" size="md" onClick={() => setRenewModalOpen(false)}>Close</Button>
+                </div>
+            </Modal>
 
             {/* Add Volunteer Modal */}
             <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="Grant Access to New Volunteer">

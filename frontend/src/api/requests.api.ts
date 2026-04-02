@@ -16,6 +16,10 @@ export interface ReviewRequestInput {
   comment?: string;
 }
 
+export interface CompleteArrivalInput {
+  comment?: string;
+}
+
 export const requestsApi = {
   getAll: async (params?: MovementRequestFilter): Promise<MovementRequest[]> => {
     const queryParams: Record<string, string> = {};
@@ -56,6 +60,11 @@ export const requestsApi = {
 
   reject: async (id: number, data?: ReviewRequestInput): Promise<MovementRequest> => {
     const response = await apiClient.post(`/movements/movement-requests/${id}/reject/`, data ?? {});
+    return response.data;
+  },
+
+  completeArrival: async (id: number, data?: CompleteArrivalInput): Promise<MovementRequest> => {
+    const response = await apiClient.post(`/movements/movement-requests/${id}/complete-arrival/`, data ?? {});
     return response.data;
   },
 };

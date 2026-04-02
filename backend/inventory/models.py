@@ -68,25 +68,24 @@ class Box(models.Model):
             self.save(update_fields=["location", "updated_at"])
 
             destination_is_floor = destination_location.location_type == "FLOOR"
-            # Fetch only the fields we actually need to avoid loading full model instances
-            items_data = list(self.items.values_list("id", "current_location_id"))
-            item_ids = [item_id for item_id, _ in items_data]
+            # Fetch only fields needed to batch-write item state and history.
+            items_data = list(self.items.values_list("id", "current_location_id", "status"))
+            items_to_update = []
             history_entries = []
 
-            if item_ids:
+            if items_data:
                 now = timezone.now()
-                CollectionItem.objects.filter(id__in=item_ids).update(
-                    current_location=destination_location,
-                    is_on_floor=destination_is_floor,
-                    status=models.Case(
-                        models.When(status="IN_TRANSIT", then=models.Value("AVAILABLE")),
-                        default=models.F("status"),
-                        output_field=models.CharField(max_length=20),
-                    ),
-                    updated_at=now,
-                )
-
-            for item_id, from_location_id in items_data:
+                for item_id, from_location_id, status in items_data:
+                    items_to_update.append(
+                        CollectionItem(
+                            id=item_id,
+                            current_location_id=destination_location.id,
+                            is_on_floor=destination_is_floor,
+                            status="AVAILABLE" if status == "IN_TRANSIT" else status,
+                            updated_at=now,
+                        )
+                    )
+            for item_id, from_location_id, _ in items_data:
                 history_entries.append(
                     ItemHistory(
                         item_id=item_id,
@@ -96,6 +95,11 @@ class Box(models.Model):
                         acted_by=user,
                         notes=comment or f"Box {self.box_code} arrived at {destination_location.name}",
                     )
+                )
+            if items_to_update:
+                CollectionItem.objects.bulk_update(
+                    items_to_update,
+                    ["current_location", "is_on_floor", "status", "updated_at"],
                 )
             if history_entries:
                 ItemHistory.objects.bulk_create(history_entries)
