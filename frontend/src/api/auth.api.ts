@@ -6,6 +6,7 @@ export interface User {
   name: string;
   role: 'ADMIN' | 'VOLUNTEER';
   created_at: string;
+  requires_move_approval: boolean;
 }
 
 export const authApi = {

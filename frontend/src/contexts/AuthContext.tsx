@@ -10,6 +10,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'ADMIN';
   const isVolunteer = user?.role === 'VOLUNTEER';
+  const isTrustedVolunteer = isVolunteer && !user?.requires_move_approval;
+  const isRestrictedVolunteer = isVolunteer && !!user?.requires_move_approval;
 
   const login = async (email: string, password: string) => {
     await loginMutation.mutateAsync({ email, password });
@@ -31,6 +33,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated,
     isAdmin,
     isVolunteer,
+    isTrustedVolunteer,
+    isRestrictedVolunteer,
     login,
     logout,
     loginError: loginMutation.error ? getErrorMessage(loginMutation.error) : null,

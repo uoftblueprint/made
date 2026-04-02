@@ -33,7 +33,16 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const destination = user.role === 'ADMIN' ? '/admin' : '/catalogue';
+      let destination = '/admin/catalogue';
+      if (user.role === 'ADMIN') {
+        destination = '/admin';
+      } else if (user.role === 'VOLUNTEER' && !user.requires_move_approval) {
+        // Trusted volunteer
+        destination = '/admin';
+      } else {
+        // Restricted volunteer
+        destination = '/admin/catalogue';
+      }
       // replace: true prevents the user from going "back" into the login redirect loop
       navigate(destination, { replace: true });
     }

@@ -6,6 +6,7 @@ import { useDashboardStats } from '../../actions/useStats';
 import type { MovementRequest } from '../../lib/types';
 import Button from '../../components/common/Button';
 import { ExportModal } from '../../components/items';
+import { useAuth } from '../../contexts';
 import './AdminDashboard.css';
 
 function formatTimeAgo(dateString: string): string {
@@ -23,6 +24,7 @@ function formatTimeAgo(dateString: string): string {
 }
 
 const AdminDashboard: React.FC = () => {
+  const { isAdmin } = useAuth();
   const { requests: allRequests, loading, approve, reject } = useRequests();
   const { stats, loading: statsLoading } = useDashboardStats();
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -156,22 +158,26 @@ const AdminDashboard: React.FC = () => {
                       >
                         Review
                       </Link>
-                      <button
-                        className="admin-review-btn-icon admin-review-btn-approve"
-                        onClick={() => handleApprove(request)}
-                        disabled={processingId === request.id}
-                        title="Approve"
-                      >
-                        <Check size={16} />
-                      </button>
-                      <button
-                        className="admin-review-btn-icon admin-review-btn-reject"
-                        onClick={() => handleReject(request)}
-                        disabled={processingId === request.id}
-                        title="Reject"
-                      >
-                        <X size={16} />
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <button
+                            className="admin-review-btn-icon admin-review-btn-approve"
+                            onClick={() => handleApprove(request)}
+                            disabled={processingId === request.id}
+                            title="Approve"
+                          >
+                            <Check size={16} />
+                          </button>
+                          <button
+                            className="admin-review-btn-icon admin-review-btn-reject"
+                            onClick={() => handleReject(request)}
+                            disabled={processingId === request.id}
+                            title="Reject"
+                          >
+                            <X size={16} />
+                          </button>
+                        </>
+                      )}
                     </>
                   )}
                   {requestTab === 'in_transit' && (

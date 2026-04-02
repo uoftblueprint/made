@@ -1,13 +1,15 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts';
 
+type RequiredRole = 'ADMIN' | 'TRUSTED_VOLUNTEER' | 'VOLUNTEER';
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'ADMIN' | 'VOLUNTEER';
+  requiredRole?: RequiredRole;
 }
 
 const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin, isTrustedVolunteer } = useAuth();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -17,9 +19,16 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (requiredRole === 'ADMIN' && !isAdmin) {
     return <Navigate to="/" replace />;
   }
+
+  if (requiredRole === 'TRUSTED_VOLUNTEER' && !isAdmin && !isTrustedVolunteer) {
+    return <Navigate to="/" replace />;
+  }
+
+  // 'VOLUNTEER' means any authenticated user (admin or volunteer of either tier)
+  // No additional check needed beyond isAuthenticated
 
   return <>{children}</>;
 };

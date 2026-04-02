@@ -4,7 +4,7 @@ import { User } from 'lucide-react';
 import './Header.css';
 
 const Header = () => {
-  const { isAuthenticated, isAdmin, isVolunteer, user } = useAuth();
+  const { isAuthenticated, isAdmin, isVolunteer, isTrustedVolunteer, isRestrictedVolunteer, user } = useAuth();
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -14,38 +14,65 @@ const Header = () => {
       <Link to="/" className="header-logo">MADE</Link>
       
       <div className="header-links">
-        {/* Volunteer navigation */}
-        {isAuthenticated && isVolunteer && !isAdmin && (
+        {/* Restricted volunteer navigation - catalogue only */}
+        {isAuthenticated && isRestrictedVolunteer && (
           <>
-            <Link to="/catalogue" className={`header-link ${isActive('/catalogue') ? 'active' : ''}`}>
-              Catalogue
-            </Link>
-          </>
-        )}
-
-        {/* Admin navigation */}
-        {isAuthenticated && isAdmin && (
-          <>
-            <Link 
-              to="/admin" 
-              className={`header-link ${isActive('/admin') && !isActive('/admin/catalogue') && !isActive('/admin/volunteers') && !isActive('/admin/boxes') ? 'active-dashboard' : ''}`}
-            >
-              Dashboard
-            </Link>
-            <Link 
-              to="/admin/catalogue" 
+            <Link
+              to="/admin/catalogue"
               className={`header-link ${isActive('/admin/catalogue') ? 'active' : ''}`}
             >
               Item Catalogue
             </Link>
-            <Link 
-              to="/admin/boxes" 
+          </>
+        )}
+
+        {/* Trusted volunteer navigation - everything except Volunteer Management */}
+        {isAuthenticated && isTrustedVolunteer && (
+          <>
+            <Link
+              to="/admin"
+              className={`header-link ${isActive('/admin') && !isActive('/admin/catalogue') && !isActive('/admin/boxes') ? 'active-dashboard' : ''}`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/admin/catalogue"
+              className={`header-link ${isActive('/admin/catalogue') ? 'active' : ''}`}
+            >
+              Item Catalogue
+            </Link>
+            <Link
+              to="/admin/boxes"
               className={`header-link ${isActive('/admin/boxes') ? 'active' : ''}`}
             >
               Box Management
             </Link>
-            <Link 
-              to="/admin/volunteers" 
+          </>
+        )}
+
+        {/* Admin navigation - everything */}
+        {isAuthenticated && isAdmin && (
+          <>
+            <Link
+              to="/admin"
+              className={`header-link ${isActive('/admin') && !isActive('/admin/catalogue') && !isActive('/admin/volunteers') && !isActive('/admin/boxes') ? 'active-dashboard' : ''}`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/admin/catalogue"
+              className={`header-link ${isActive('/admin/catalogue') ? 'active' : ''}`}
+            >
+              Item Catalogue
+            </Link>
+            <Link
+              to="/admin/boxes"
+              className={`header-link ${isActive('/admin/boxes') ? 'active' : ''}`}
+            >
+              Box Management
+            </Link>
+            <Link
+              to="/admin/volunteers"
               className={`header-link ${isActive('/admin/volunteers') ? 'active' : ''}`}
             >
               Volunteer Management

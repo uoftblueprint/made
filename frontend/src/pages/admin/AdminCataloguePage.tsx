@@ -5,6 +5,7 @@ import type { AdminCollectionItem, ItemType, ItemStatus } from '../../lib/types'
 import { Link } from 'react-router-dom';
 import { Eye, Edit2, ChevronDown, ChevronRight, MapPin, Check, AlertTriangle } from 'lucide-react';
 import Button from '../../components/common/Button';
+import { useAuth } from '../../contexts';
 import './AdminCataloguePage.css';
 
 interface InventoryItem {
@@ -139,6 +140,8 @@ const MobileFilterGroup: React.FC<MobileFilterGroupProps> = ({
 };
 
 const AdminCataloguePage: React.FC = () => {
+  const { isAdmin, isTrustedVolunteer } = useAuth();
+  const canEdit = isAdmin || isTrustedVolunteer;
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [items, setItems] = useState<AdminCollectionItem[]>([]);
@@ -252,15 +255,17 @@ const AdminCataloguePage: React.FC = () => {
 
         <h1 className="catalogue-header-mobile">Search Items</h1>
 
-        <Button
-          hideMobile={true}
-          variant="primary"
-          size="md"
-          icon="plus"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          Add New Item
-        </Button>
+        {canEdit && (
+          <Button
+            hideMobile={true}
+            variant="primary"
+            size="md"
+            icon="plus"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            Add New Item
+          </Button>
+        )}
       </div>
 
       {/* Main Content */}
@@ -347,9 +352,11 @@ const AdminCataloguePage: React.FC = () => {
             onChange={(e) => setBoxCodeFilter(e.target.value)}
             style={{ maxWidth: '160px' }}
           />
-          <Button className="catalogue-export-mobile-hide" variant="outline-black" size="sm" icon="download" onClick={() => setIsExportModalOpen(true)}>
-            Export CSV
-          </Button>
+          {canEdit && (
+            <Button className="catalogue-export-mobile-hide" variant="outline-black" size="sm" icon="download" onClick={() => setIsExportModalOpen(true)}>
+              Export CSV
+            </Button>
+          )}
         </div>
 
         <div className="catalogue-filters-mobile">
@@ -504,13 +511,15 @@ const AdminCataloguePage: React.FC = () => {
                       >
                         <Eye size={14} />
                       </Link>
-                      <button
-                        className="catalogue-action-btn"
-                        onClick={() => handleEditClick(raw)}
-                        title="Edit"
-                      >
-                        <Edit2 size={14} />
-                      </button>
+                      {canEdit && (
+                        <button
+                          className="catalogue-action-btn"
+                          onClick={() => handleEditClick(raw)}
+                          title="Edit"
+                        >
+                          <Edit2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

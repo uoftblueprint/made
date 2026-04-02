@@ -8,6 +8,7 @@ import { useItemRequests } from '../../actions/useRequests';
 import { useLocations } from '../../actions/useLocations';
 import { useBoxes } from '../../actions/useBoxes';
 import type { AdminCollectionItem, MovementRequest } from '../../lib/types';
+import { useAuth } from '../../contexts';
 import './ItemDetailsPage.css';
 import { ItemDetailsCard } from '../../components/items/ItemDetailCard';
 import EditItemModal from '../../components/items/EditItemModal';
@@ -37,6 +38,8 @@ interface ItemDetails extends AdminCollectionItem {
 }
 
 const ItemDetailsPage: React.FC = () => {
+  const { isAdmin, isTrustedVolunteer } = useAuth();
+  const canEdit = isAdmin || isTrustedVolunteer;
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const isRequestView = searchParams.get('from') === 'request';
@@ -391,7 +394,7 @@ const ItemDetailsPage: React.FC = () => {
 
         {/* Sidebar Actions */}
         <div className="item-details-sidebar">
-          {isRequestView && pendingRequests.length > 0 && (
+          {isAdmin && isRequestView && pendingRequests.length > 0 && (
             <>
               <button
                 className="item-action-btn approve-request"
@@ -422,19 +425,21 @@ const ItemDetailsPage: React.FC = () => {
             />
           </div>
 
-          <button
-            className="item-action-btn primary"
-            onClick={() => setIsEditModalOpen(true)}
-          >
-            <Edit2 size={16} />
-            Edit Record
-          </button>
+          {canEdit && (
+            <button
+              className="item-action-btn primary"
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              <Edit2 size={16} />
+              Edit Record
+            </button>
+          )}
           <button
             className="item-action-btn secondary"
             onClick={handleOpenMoveModal}
           >
             <ArrowRightLeft size={16} />
-            Move Item
+            {canEdit ? 'Move Item' : 'Request Move'}
           </button>
           {isInTransit && activeTransitRequest && (
             <button
@@ -446,7 +451,7 @@ const ItemDetailsPage: React.FC = () => {
               {processingRequestId === activeTransitRequest.id ? 'Marking...' : 'Mark as Arrived'}
             </button>
           )}
-          {isUnverified && unverifiedRequests.length > 0 && (
+          {isAdmin && isUnverified && unverifiedRequests.length > 0 && (
             <button
               className="item-action-btn verify"
               onClick={handleVerify}

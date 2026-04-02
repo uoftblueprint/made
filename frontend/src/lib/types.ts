@@ -4,6 +4,7 @@ export interface User {
   email: string;
   role: 'ADMIN' | 'VOLUNTEER';
   access_expiry_date: string | null;
+  requires_move_approval: boolean;
 }
 
 export interface Volunteer {
