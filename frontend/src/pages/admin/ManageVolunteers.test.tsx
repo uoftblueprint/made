@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen } from "@testing-library/react"
 import { BrowserRouter } from "react-router-dom"
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import ManageVolunteers from "./ManageVolunteers"
 
 vi.mock("../../actions/useVolunteers", () => ({
@@ -11,6 +12,7 @@ vi.mock("../../actions/useVolunteers", () => ({
   useVolunteerOptions: () => ({ data: { roles: [], event_types: [], status_options: [] } }),
   useToggleMoveApproval: () => ({ mutate: vi.fn(), isPending: false }),
   useUpdateVolunteer: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateVolunteer: () => ({ mutate: vi.fn(), isPending: false }),
 }))
 
 vi.mock("../../contexts/AuthContext.shared", () => ({
@@ -25,10 +27,13 @@ beforeEach(() => {
 })
 
 function renderPage() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <BrowserRouter>
-      <ManageVolunteers />
-    </BrowserRouter>
+    <QueryClientProvider client={client}>
+      <BrowserRouter>
+        <ManageVolunteers />
+      </BrowserRouter>
+    </QueryClientProvider>
   )
 }
 
