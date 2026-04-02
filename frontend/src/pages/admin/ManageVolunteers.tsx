@@ -514,7 +514,7 @@ const ManageVolunteers = () => {
                         onClick={submitEditModal}
                         disabled={updateVolunteerMutation.isPending || !editName.trim() || !editEmail.trim()}
                     >
-                        {updateVolunteerMutation.isPending ? 'Saving…' : 'Save Changes'}
+                        {updateVolunteerMutation.isPending ? 'Saving...' : 'Save Changes'}
                     </Button>
                     <Button variant="outline-gray" size="md" onClick={closeEditModal}>Cancel</Button>
                 </div>
