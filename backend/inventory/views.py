@@ -250,7 +250,14 @@ def export_items(request):
             )
 
     if box_id:
-        queryset = queryset.filter(box__id=box_id)
+        try:
+            box_id_int = int(box_id)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Invalid box_id. Must be an integer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        queryset = queryset.filter(box__id=box_id_int)
 
     if record_type:
         queryset = queryset.filter(item_type=record_type)
