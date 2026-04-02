@@ -741,7 +741,7 @@ const BoxManagementPage: React.FC = () => {
       <Modal open={showMoveBoxModal} onClose={handleCloseMoveBoxModal} title={`Move Box: ${moveBoxCode}`}>
         <div className="modal-form">
           {moveBoxError && (
-            <div className="box-management-modal-error">{moveBoxError}</div>
+            <div className="add-item-error">{moveBoxError}</div>
           )}
           <div className="modal-field">
             <label>Current Location</label>
@@ -792,12 +792,12 @@ const BoxManagementPage: React.FC = () => {
 
       {/* Add Location Modal */}
       <Modal open={showAddModal} onClose={handleCloseModal} title="Add New Location">
-        <div className="box-management-modal-body">
+        <div className="modal-form">
           {createError && (
-            <div className="box-management-modal-error">{createError}</div>
+            <div className="add-item-error">{createError}</div>
           )}
-          <div className="box-management-form-group">
-            <label htmlFor="location-name">Name *</label>
+          <div className="modal-field">
+            <label htmlFor="location-name">Name <span className="required">*</span></label>
             <input
               id="location-name"
               type="text"
@@ -807,8 +807,8 @@ const BoxManagementPage: React.FC = () => {
               disabled={creatingLocation}
             />
           </div>
-          <div className="box-management-form-group">
-            <label htmlFor="location-type">Type *</label>
+          <div className="modal-field">
+            <label htmlFor="location-type">Type <span className="required">*</span></label>
             <select
               id="location-type"
               value={newLocationType}
@@ -821,7 +821,7 @@ const BoxManagementPage: React.FC = () => {
               <option value="OTHER">Other</option>
             </select>
           </div>
-          <div className="box-management-form-group">
+          <div className="modal-field">
             <label htmlFor="location-description">Description</label>
             <textarea
               id="location-description"
@@ -833,7 +833,7 @@ const BoxManagementPage: React.FC = () => {
             />
           </div>
         </div>
-        <div className="box-management-modal-footer">
+        <div className="modal-actions">
           <Button 
             variant="outline-gray" 
             size="md"
@@ -855,11 +855,11 @@ const BoxManagementPage: React.FC = () => {
 
       {/* Add Box Modal */}
       <Modal open={showAddBoxModal} onClose={() => setShowAddBoxModal(false)} title="Add New Box">
-        <div className="box-management-modal-body">
+        <div className="modal-form">
           {createBoxError && (
-            <div className="box-management-modal-error">{createBoxError}</div>
+            <div className="add-item-error">{createBoxError}</div>
           )}
-          <div className="box-management-form-group">
+          <div className="modal-field">
             <label htmlFor="box-code">Box Code <span className="required">*</span></label>
             <input
               id="box-code"
@@ -870,7 +870,7 @@ const BoxManagementPage: React.FC = () => {
               disabled={creatingBox}
             />
           </div>
-          <div className="box-management-form-group">
+          <div className="modal-field">
             <label htmlFor="box-label">Label</label>
             <input
               id="box-label"
@@ -881,7 +881,7 @@ const BoxManagementPage: React.FC = () => {
               disabled={creatingBox}
             />
           </div>
-          <div className="box-management-form-group">
+          <div className="modal-field">
             <label htmlFor="box-location">Location <span className="required">*</span></label>
             <select
               id="box-location"
@@ -897,7 +897,7 @@ const BoxManagementPage: React.FC = () => {
               ))}
             </select>
           </div>
-          <div className="box-management-form-group">
+          <div className="modal-field">
             <label htmlFor="box-description">Description</label>
             <textarea
               id="box-description"
@@ -909,7 +909,7 @@ const BoxManagementPage: React.FC = () => {
             />
           </div>
         </div>
-        <div className="box-management-modal-footer">
+        <div className="modal-actions">
           <Button
             variant="outline-gray"
             size="md"

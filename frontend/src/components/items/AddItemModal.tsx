@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import { itemsApi, type CreateItemData } from '../../api/items.api';
+import { useLocations } from '../../actions/useLocations';
+import { useBoxes } from '../../actions/useBoxes';
 import './AddItemModal.css';
 
 type ItemType = 'SOFTWARE' | 'HARDWARE' | 'NON_ELECTRONIC';
@@ -83,13 +85,16 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
     const [apiError, setApiError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const { locations, loading: locationsLoading, error: locationsError } = useLocations();
+    const { boxes, loading: boxesLoading, error: boxesError } = useBoxes();
+
     if (!isOpen) return null;
 
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
         if (!formData.item_code.trim()) newErrors.item_code = 'MADE ID is required';
         if (!formData.title.trim()) newErrors.title = 'Item name is required';
-        if (!formData.current_location.trim()) newErrors.current_location = 'Location is required';
+        if (!formData.current_location) newErrors.current_location = 'Location is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -229,9 +234,27 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
                         )}
                         <div className="modal-field">
                             <label>Location <span className="required">*</span></label>
-                            <input type="text" name="current_location" value={formData.current_location} onChange={handleChange}
-                                placeholder="Enter location" className={errors.current_location ? 'error' : ''} />
+                            <select
+                                name="current_location"
+                                value={formData.current_location}
+                                onChange={handleChange}
+                                className={errors.current_location ? 'error' : ''}
+                                disabled={locationsLoading}
+                            >
+                                <option value="">
+                                    {locationsLoading ? 'Loading locations...' : 'Select a location'}
+                                </option>
+                                {locations.map((location) => (
+                                    <option key={location.id} value={location.id}>
+                                        {location.name}
+                                        {'location_type_display' in location && location.location_type_display
+                                            ? ` (${location.location_type_display})`
+                                            : ''}
+                                    </option>
+                                ))}
+                            </select>
                             {errors.current_location && <span className="modal-field-error">{errors.current_location}</span>}
+                            {locationsError && <span className="modal-field-error">{locationsError}</span>}
                         </div>
                         <div className="modal-field">
                             <label>Date of Entry</label>
@@ -241,15 +264,39 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
 
                     {/* Box */}
                     <div className="modal-field">
-                        <label>Box ID</label>
-                        <input type="text" name="box" value={formData.box} onChange={handleChange}
-                            placeholder="Enter box ID (optional)" />
+                        <label>Box</label>
+                        <select
+                            name="box"
+                            value={formData.box}
+                            onChange={handleChange}
+                            disabled={boxesLoading}
+                        >
+                            <option value="">
+                                {boxesLoading ? 'Loading boxes...' : 'No box'}
+                            </option>
+                            {boxes.map((box) => (
+                                <option key={box.id} value={box.id}>
+                                    {'box_code' in box && box.box_code
+                                        ? box.box_code
+                                        : `Box #${box.id}`}
+                                    {'label' in box && box.label ? ` - ${box.label}` : ''}
+                                </option>
+                            ))}
+                        </select>
+                        {boxesError && <span className="modal-field-error">{boxesError}</span>}
+                    </div>
+
+                    {/* Description */}
+                    <div className="modal-field">
+                        <label>Description</label>
+                        <textarea name="description" value={formData.description} onChange={handleChange}
+                            placeholder="Add notes about the item" />
                     </div>
 
                     {/* Type-specific fields */}
                     {formData.item_type === 'SOFTWARE' && (
-                        <div className="add-item-section">
-                            <div className="add-item-section-title">Additional Information (Optional)</div>
+                        <>
+                            <h3>Software Details</h3>
                             <div className="modal-row">
                                 <div className="modal-field">
                                     <label>Creator/Publisher</label>
@@ -270,12 +317,12 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
                                     <input type="text" name="media_type" value={formData.media_type} onChange={handleChange} placeholder="e.g., CD, Cartridge, Digital" />
                                 </div>
                             </div>
-                        </div>
+                        </>
                     )}
 
                     {formData.item_type === 'HARDWARE' && (
-                        <div className="add-item-section">
-                            <div className="add-item-section-title">Additional Information (Optional)</div>
+                        <>
+                            <h3>Hardware Details</h3>
                             <div className="modal-row">
                                 <div className="modal-field">
                                     <label>Manufacturer</label>
@@ -300,15 +347,15 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
                                 <label>Hardware Type</label>
                                 <input type="text" name="hardware_type" value={formData.hardware_type} onChange={handleChange} placeholder="e.g., Console, Controller, Peripheral" />
                             </div>
-                        </div>
+                        </>
                     )}
 
                     {formData.item_type === 'NON_ELECTRONIC' && (
-                        <div className="add-item-section">
-                            <div className="add-item-section-title">Additional Information (Optional)</div>
+                        <>
+                            <h3>Non-Electronic Details</h3>
                             <div className="modal-row">
                                 <div className="modal-field">
-                                    <label>Item Type</label>
+                                    <label>Item Subtype</label>
                                     <input type="text" name="item_subtype" value={formData.item_subtype} onChange={handleChange} placeholder="e.g., Book, Magazine, Board Game" />
                                 </div>
                                 <div className="modal-field">
@@ -330,43 +377,33 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSuccess,
                                 <label>ISBN/Catalogue Number</label>
                                 <input type="text" name="isbn_catalogue_number" value={formData.isbn_catalogue_number} onChange={handleChange} placeholder="Enter ISBN or catalogue number" />
                             </div>
-                        </div>
+                        </>
                     )}
 
-                    {/* Condition */}
-                    <div className="add-item-section">
+                    {/* Condition & Completeness */}
+                    <h3>Item Condition</h3>
+                    <div className="modal-row">
                         <div className="modal-field">
                             <label>Condition</label>
-                            <div className="add-item-radio-group">
-                                {(['EXCELLENT', 'GOOD', 'FAIR', 'POOR'] as Condition[]).map((c) => (
-                                    <label key={c} className="modal-radio-label">
-                                        <input type="radio" name="condition" value={c} checked={formData.condition === c} onChange={handleChange} />
-                                        {c.charAt(0) + c.slice(1).toLowerCase()}
-                                    </label>
-                                ))}
-                            </div>
+                            <select name="condition" value={formData.condition} onChange={handleChange}>
+                                <option value="EXCELLENT">Excellent</option>
+                                <option value="GOOD">Good</option>
+                                <option value="FAIR">Fair</option>
+                                <option value="POOR">Poor</option>
+                            </select>
                         </div>
-
                         <div className="modal-field">
-                            <label>{formData.item_type === 'HARDWARE' ? 'Is the item functional?' : 'Is the item complete?'}</label>
-                            <div className="add-item-radio-group">
-                                {(['YES', 'NO', 'UNKNOWN'] as Completeness[]).map((c) => (
-                                    <label key={c} className="modal-radio-label">
-                                        <input type="radio" name={formData.item_type === 'HARDWARE' ? 'is_functional' : 'is_complete'}
-                                            value={c} checked={(formData.item_type === 'HARDWARE' ? formData.is_functional : formData.is_complete) === c}
-                                            onChange={handleChange} />
-                                        {c.charAt(0) + c.slice(1).toLowerCase()}
-                                    </label>
-                                ))}
-                            </div>
+                            <label>{formData.item_type === 'HARDWARE' ? 'Functional' : 'Complete'}</label>
+                            <select
+                                name={formData.item_type === 'HARDWARE' ? 'is_functional' : 'is_complete'}
+                                value={formData.item_type === 'HARDWARE' ? formData.is_functional : formData.is_complete}
+                                onChange={handleChange}
+                            >
+                                <option value="YES">Yes</option>
+                                <option value="NO">No</option>
+                                <option value="UNKNOWN">Unknown</option>
+                            </select>
                         </div>
-                    </div>
-
-                    {/* Description */}
-                    <div className="modal-field">
-                        <label>Description</label>
-                        <textarea name="description" value={formData.description} onChange={handleChange}
-                            placeholder="Additional notes about this item" />
                     </div>
                 </div>
 
