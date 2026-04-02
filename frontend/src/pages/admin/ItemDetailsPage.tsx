@@ -299,46 +299,52 @@ const ItemDetailsPage: React.FC = () => {
           )}
 
           {/* Pending Move Request Info */}
-          {pendingRequests.length > 0 && (
+          {pendingRequests.length > 0 && (() => {
+            const req = pendingRequests[0];
+            return (
             <div className="item-details-card item-details-warning-card">
               <h3>Move Request — Pending</h3>
               <div className="item-details-grid">
                 <div className="item-field">
                   <span className="item-field-label">From</span>
-                  <span className="item-field-value">{pendingRequests[0].from_location_name}</span>
+                  <span className="item-field-value">{req.from_location_name}{req.from_box_code ? ` / ${req.from_box_code}` : ''}</span>
                 </div>
                 <div className="item-field">
                   <span className="item-field-label">To</span>
-                  <span className="item-field-value">{pendingRequests[0].to_location_name}</span>
+                  <span className="item-field-value">{req.to_location_name}{req.to_box_code ? ` / ${req.to_box_code}` : ''}</span>
                 </div>
                 <div className="item-field">
                   <span className="item-field-label">Requested By</span>
-                  <span className="item-field-value">{pendingRequests[0].requested_by_username || '--'}</span>
+                  <span className="item-field-value">{req.requested_by_username || '--'}</span>
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* In Transit Info */}
-          {isInTransit && (approvedRequests.length > 0 || unverifiedRequests.length > 0) && (
+          {isInTransit && (approvedRequests.length > 0 || unverifiedRequests.length > 0) && (() => {
+            const req = approvedRequests[0] || unverifiedRequests[0];
+            return (
             <div className="item-details-card item-details-warning-card">
               <h3>In Transit — Awaiting Arrival</h3>
               <div className="item-details-grid">
                 <div className="item-field">
                   <span className="item-field-label">From</span>
-                  <span className="item-field-value">{(approvedRequests[0] || unverifiedRequests[0])?.from_location_name}</span>
+                  <span className="item-field-value">{req?.from_location_name}{req?.from_box_code ? ` / ${req.from_box_code}` : ''}</span>
                 </div>
                 <div className="item-field">
                   <span className="item-field-label">To</span>
-                  <span className="item-field-value">{(approvedRequests[0] || unverifiedRequests[0])?.to_location_name}</span>
+                  <span className="item-field-value">{req?.to_location_name}{req?.to_box_code ? ` / ${req.to_box_code}` : ''}</span>
                 </div>
                 <div className="item-field">
                   <span className="item-field-label">Moved By</span>
-                  <span className="item-field-value">{(approvedRequests[0] || unverifiedRequests[0])?.requested_by_username || '--'}</span>
+                  <span className="item-field-value">{req?.requested_by_username || '--'}</span>
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* Required Information */}
           <div className="item-details-card hidden md:block">
