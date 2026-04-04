@@ -300,3 +300,205 @@ def export_items(request):
         )
 
     return response
+
+
+# ---------------------------------------------------------------------------
+# Column → model field mapping tables per item type
+# ---------------------------------------------------------------------------
+
+# Common fields shared across all item types
+COMMON_FIELD_MAP = {
+    "made id": "item_code",
+    "title": "title",
+    "game title": "title",         # alternate header (software legacy)
+    "name": "title",               # alternate header (hardware legacy)
+    "item type": None,             # handled separately
+    "condition": "condition",
+    "description": "description",
+    "notes": "description",
+    "date of entry": "date_of_entry",
+}
+
+SOFTWARE_FIELD_MAP = {
+    **COMMON_FIELD_MAP,
+    "platform": "platform",
+    "system": "platform",           # alternate header
+    "creator/publisher": "creator_publisher",
+    "creator publisher": "creator_publisher",
+    "release year": "release_year",
+    "version/edition": "version_edition",
+    "version edition": "version_edition",
+    "media type": "media_type",
+}
+
+HARDWARE_FIELD_MAP = {
+    **COMMON_FIELD_MAP,
+    "manufacturer": "manufacturer",
+    "model number": "model_number",
+    "year manufactured": "year_manufactured",
+    "serial number": "serial_number",
+    "hardware type": "hardware_type",
+}
+
+NON_ELECTRONIC_FIELD_MAP = {
+    **COMMON_FIELD_MAP,
+    "item subtype": "item_subtype",
+    "date published": "date_published",
+    "publisher": "publisher",
+    "volume number": "volume_number",
+    "isbn/catalogue number": "isbn_catalogue_number",
+    "isbn catalogue number": "isbn_catalogue_number",
+}
+
+ITEM_TYPE_MAP = {
+    "software": "SOFTWARE",
+    "hardware": "HARDWARE",
+    "non-electronic": "NON_ELECTRONIC",
+    "non electronic": "NON_ELECTRONIC",
+    "nonelectronic": "NON_ELECTRONIC",
+}
+
+TYPE_FIELD_MAPS = {
+    "SOFTWARE": SOFTWARE_FIELD_MAP,
+    "HARDWARE": HARDWARE_FIELD_MAP,
+    "NON_ELECTRONIC": NON_ELECTRONIC_FIELD_MAP,
+}
+
+CONDITION_MAP = {
+    "excellent": "EXCELLENT",
+    "good": "GOOD",
+    "fair": "FAIR",
+    "poor": "POOR",
+}
+
+
+def _get_default_location():
+    """Return a fallback storage location, or None if none exists."""
+    return (
+        Location.objects.filter(location_type="STORAGE").first()
+        or Location.objects.first()
+    )
+
+
+@api_view(["POST"])
+@permission_classes([IsVolunteer])
+def import_items(request):
+    """
+    Import collection items from a CSV file.
+
+    Expects multipart/form-data with a 'file' field containing a CSV.
+
+    The CSV must include:
+      - 'MADE ID'    (required, unique)
+      - 'Item Type'  (Software | Hardware | Non-Electronic)
+      - Other columns per item type (all optional)
+
+    Returns JSON:
+      { "imported": N, "skipped": ["MADE001", ...], "errors": ["row 3: ..."] }
+    """
+    if "file" not in request.FILES:
+        return Response(
+            {"error": "No file provided. Send a CSV as 'file' in multipart/form-data."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    csv_file = request.FILES["file"]
+
+    # Decode the uploaded file
+    try:
+        decoded = csv_file.read().decode("utf-8-sig")  # strip BOM if present
+    except UnicodeDecodeError:
+        return Response(
+            {"error": "File encoding not supported. Please upload a UTF-8 CSV."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    reader = csv.DictReader(decoded.splitlines())
+
+    if not reader.fieldnames:
+        return Response(
+            {"error": "CSV file is empty or has no headers."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Normalise header names for lookup (lowercase, stripped)
+    normalised_headers = {h.strip().lower(): h for h in reader.fieldnames}
+
+    def get_cell(row, *keys):
+        """Look up a cell value by any of several normalised key names."""
+        for k in keys:
+            orig = normalised_headers.get(k.lower())
+            if orig and orig in row:
+                return (row[orig] or "").strip()
+        return ""
+
+    default_location = _get_default_location()
+
+    imported = 0
+    skipped = []
+    errors = []
+
+    for row_num, row in enumerate(reader, start=2):  # row 1 = headers
+        made_id = get_cell(row, "made id")
+        if not made_id:
+            skipped.append(f"row {row_num}: missing MADE ID")
+            continue
+
+        # Skip duplicates
+        if CollectionItem.objects.filter(item_code=made_id).exists():
+            skipped.append(made_id)
+            continue
+
+        # Determine item type
+        raw_type = get_cell(row, "item type").lower()
+        item_type = ITEM_TYPE_MAP.get(raw_type, "SOFTWARE")  # default SOFTWARE
+
+        field_map = TYPE_FIELD_MAPS[item_type]
+
+        # Build kwargs for CollectionItem
+        kwargs: dict = {
+            "item_code": made_id,
+            "item_type": item_type,
+            "needs_review": True,
+        }
+
+        for header_lower, field_name in field_map.items():
+            if field_name is None:
+                continue  # handled separately (e.g. "item type")
+            value = get_cell(row, header_lower)
+            if not value:
+                continue
+
+            # Special handling for certain fields
+            if field_name == "condition":
+                value = CONDITION_MAP.get(value.lower(), "GOOD")
+            elif field_name == "date_of_entry":
+                for fmt in ("%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y", "%Y.%m.%d"):
+                    try:
+                        value = datetime.strptime(value, fmt).date()
+                        break
+                    except ValueError:
+                        value = None
+                if value is None:
+                    continue  # skip unparseable dates
+
+            kwargs[field_name] = value
+
+        # Ensure required FK: current_location
+        if default_location is None:
+            errors.append(f"row {row_num} ({made_id}): no Location exists in database; cannot import.")
+            continue
+
+        kwargs.setdefault("current_location", default_location)
+        kwargs.setdefault("title", made_id)  # title is required; use MADE ID as fallback
+
+        try:
+            CollectionItem.objects.create(**kwargs)
+            imported += 1
+        except Exception as exc:
+            errors.append(f"row {row_num} ({made_id}): {exc}")
+
+    return Response(
+        {"imported": imported, "skipped": skipped, "errors": errors},
+        status=status.HTTP_200_OK,
+    )

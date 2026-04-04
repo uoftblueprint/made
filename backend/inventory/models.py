@@ -191,6 +191,7 @@ class CollectionItem(models.Model):
 
     is_public_visible = models.BooleanField(default=True, help_text="For public catalogue")
     is_on_floor = models.BooleanField(default=False, help_text="Redundant but fast for queries")
+    needs_review = models.BooleanField(default=False, help_text="Flagged for admin review (e.g. imported from legacy CSV)")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

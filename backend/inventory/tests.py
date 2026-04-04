@@ -1,3 +1,4 @@
+import csv
 import json
 import pytest
 
@@ -1277,3 +1278,189 @@ class TestExportItems:
             HTTP_AUTHORIZATION=f"Bearer {token}",
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+# ============================================================================
+# TESTS FOR POST /api/inventory/import/ (CSV Import)
+# ============================================================================
+
+
+def _make_csv(*rows):
+    """Helper: build a CSV string from a list of dicts."""
+    import io as _io
+    fieldnames = list(rows[0].keys())
+    buf = _io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fieldnames)
+    writer.writeheader()
+    for row in rows:
+        writer.writerow(row)
+    return buf.getvalue()
+
+
+@pytest.mark.django_db
+class TestImportItems:
+    """Tests for the CSV import endpoint."""
+
+    IMPORT_URL = "/api/inventory/import/"
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client, admin_user, volunteer_user, floor_location, storage_location):
+        self.client = client
+        self.admin_user = admin_user
+        self.volunteer_user = volunteer_user
+        self.floor_location = floor_location
+        self.storage_location = storage_location
+
+    def _get_admin_token(self):
+        return get_admin_token(self.client)
+
+    def _post_csv(self, token, csv_content):
+        """Post a CSV string as a multipart file upload."""
+        import io as _io
+        f = _io.BytesIO(csv_content.encode("utf-8"))
+        f.name = "test.csv"
+        return self.client.post(
+            self.IMPORT_URL,
+            {"file": f},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            format="multipart",
+        )
+
+    # ------------------------------------------------------------------
+    # Auth / basic validation
+    # ------------------------------------------------------------------
+
+    def test_unauthenticated_returns_401(self):
+        response = self.client.post(self.IMPORT_URL)
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_no_file_returns_400(self):
+        token = self._get_admin_token()
+        response = self.client.post(
+            self.IMPORT_URL, {},
+            HTTP_AUTHORIZATION=f"Bearer {token}",
+            format="multipart",
+        )
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_empty_csv_returns_400(self):
+        token = self._get_admin_token()
+        response = self._post_csv(token, "")
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    # ------------------------------------------------------------------
+    # Per-type field mapping
+    # ------------------------------------------------------------------
+
+    def test_import_software_item(self):
+        csv_content = _make_csv({
+            "MADE ID": "IMP001", "Title": "Test Game", "Item Type": "Software",
+            "Platform": "SNES", "Condition": "Good", "Creator/Publisher": "Nintendo",
+            "Release Year": "1990",
+        })
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["imported"] == 1
+
+        item = CollectionItem.objects.get(item_code="IMP001")
+        assert item.title == "Test Game"
+        assert item.platform == "SNES"
+        assert item.item_type == "SOFTWARE"
+        assert item.creator_publisher == "Nintendo"
+        assert item.release_year == "1990"
+        assert item.condition == "GOOD"
+        assert item.needs_review is True
+
+    def test_import_hardware_item(self):
+        csv_content = _make_csv({
+            "MADE ID": "IMP002", "Title": "Test Console", "Item Type": "Hardware",
+            "Manufacturer": "Sony", "Model Number": "PS1-001", "Serial Number": "SN12345",
+        })
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 1
+
+        item = CollectionItem.objects.get(item_code="IMP002")
+        assert item.item_type == "HARDWARE"
+        assert item.manufacturer == "Sony"
+        assert item.model_number == "PS1-001"
+        assert item.serial_number == "SN12345"
+        assert item.needs_review is True
+
+    def test_import_non_electronic_item(self):
+        csv_content = _make_csv({
+            "MADE ID": "IMP003", "Title": "Test Book", "Item Type": "Non-Electronic",
+            "Publisher": "Acme Press", "ISBN/Catalogue Number": "978-3-16-148410-0",
+        })
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 1
+
+        item = CollectionItem.objects.get(item_code="IMP003")
+        assert item.item_type == "NON_ELECTRONIC"
+        assert item.publisher == "Acme Press"
+        assert item.isbn_catalogue_number == "978-3-16-148410-0"
+        assert item.needs_review is True
+
+    # ------------------------------------------------------------------
+    # Skipping / duplicates
+    # ------------------------------------------------------------------
+
+    def test_duplicate_made_id_is_skipped(self):
+        CollectionItem.objects.create(
+            item_code="DUP001", title="Existing", item_type="SOFTWARE",
+            current_location=self.storage_location,
+        )
+        csv_content = _make_csv({"MADE ID": "DUP001", "Title": "New", "Item Type": "Software"})
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 0
+        assert "DUP001" in response.data["skipped"]
+
+    def test_row_missing_made_id_is_skipped(self):
+        csv_content = _make_csv({"MADE ID": "", "Title": "No ID", "Item Type": "Software"})
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 0
+        assert len(response.data["skipped"]) == 1
+
+    # ------------------------------------------------------------------
+    # Alternate headers + multi-type
+    # ------------------------------------------------------------------
+
+    def test_alternate_headers_mapped_correctly(self):
+        """'Game Title' and 'System' should map to title and platform."""
+        csv_content = _make_csv({
+            "MADE ID": "ALT001", "Game Title": "Alt Game",
+            "Item Type": "Software", "System": "NES",
+        })
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 1
+        item = CollectionItem.objects.get(item_code="ALT001")
+        assert item.title == "Alt Game"
+        assert item.platform == "NES"
+
+    def test_mixed_type_csv_imports_all(self):
+        csv_content = _make_csv(
+            {"MADE ID": "MIX001", "Title": "Game",    "Item Type": "Software"},
+            {"MADE ID": "MIX002", "Title": "Console", "Item Type": "Hardware"},
+            {"MADE ID": "MIX003", "Title": "Book",    "Item Type": "Non-Electronic"},
+        )
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 3
+        assert CollectionItem.objects.get(item_code="MIX001").item_type == "SOFTWARE"
+        assert CollectionItem.objects.get(item_code="MIX002").item_type == "HARDWARE"
+        assert CollectionItem.objects.get(item_code="MIX003").item_type == "NON_ELECTRONIC"
+
+    def test_volunteer_can_import(self):
+        token = get_volunteer_token(self.client)
+        csv_content = _make_csv({"MADE ID": "VOL001", "Title": "Vol Item", "Item Type": "Software"})
+        response = self._post_csv(token, csv_content)
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_all_imported_items_need_review(self):
+        csv_content = _make_csv(
+            {"MADE ID": "NR001", "Title": "A", "Item Type": "Software"},
+            {"MADE ID": "NR002", "Title": "B", "Item Type": "Hardware"},
+        )
+        response = self._post_csv(self._get_admin_token(), csv_content)
+        assert response.data["imported"] == 2
+        for code in ("NR001", "NR002"):
+            assert CollectionItem.objects.get(item_code=code).needs_review is True
+

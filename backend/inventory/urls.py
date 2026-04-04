@@ -6,6 +6,7 @@ from .views import (
     AdminCollectionItemViewSet,
     dashboard_stats,
     export_items,
+    import_items,
 )
 
 # from .views import InventoryItemViewSet
@@ -46,4 +47,5 @@ urlpatterns = [
     path("public/", include(public_router.urls)),
     path("stats/", dashboard_stats, name="dashboard-stats"),
     path("export/", export_items, name="export-items"),
+    path("import/", import_items, name="import-items"),
 ]

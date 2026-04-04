@@ -110,3 +110,75 @@
         margin: var(--spacing-md);
     }
 }
+
+/* ── Import Modal extras ─────────────────────────────── */
+
+.file-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    background: #fafafa;
+    box-sizing: border-box;
+}
+
+.file-name-hint {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #555;
+}
+
+.import-results {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.import-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+.import-stat--success { background: #e8f5e9; }
+.import-stat--warning { background: #fff8e1; }
+.import-stat--error   { background: #fdecea; }
+
+.import-stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    min-width: 36px;
+    text-align: center;
+}
+
+.import-stat--success .import-stat-number { color: #2e7d32; }
+.import-stat--warning .import-stat-number { color: #f57f17; }
+.import-stat--error   .import-stat-number { color: #c62828; }
+
+.import-stat-label { color: #444; }
+
+.import-skipped {
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 13px;
+}
+
+.import-skipped ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    color: #555;
+}
+
+.import-review-note {
+    font-size: 13px;
+    color: #777;
+    font-style: italic;
+    margin: 4px 0 0;
+}
+
