@@ -16,6 +16,11 @@ class ItemMovementRequest(models.Model):
         ("CANCELLED", "Cancelled"),
     ]
 
+    REVIEW_STATUS_CHOICES = [
+        ("PENDING", "Pending"),
+        ("APPROVED", "Approved"),
+    ]
+
     item = models.ForeignKey(CollectionItem, on_delete=models.CASCADE, related_name="movement_requests")
     requested_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -27,6 +32,11 @@ class ItemMovementRequest(models.Model):
     to_location = models.ForeignKey(Location, on_delete=models.PROTECT, related_name="movement_requests_to")
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="WAITING_APPROVAL")
+    review_status = models.CharField(
+        max_length=10,
+        choices=REVIEW_STATUS_CHOICES,
+        default="PENDING",
+    )
 
     admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,

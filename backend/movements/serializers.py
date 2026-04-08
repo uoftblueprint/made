@@ -51,6 +51,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "to_location",
             "to_location_name",
             "status",
+            "review_status",
             "admin",
             "admin_username",
             "admin_comment",
@@ -61,6 +62,7 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
             "id",
             "requested_by",
             "status",
+            "review_status",
             "admin",
             "admin_comment",
             "created_at",
@@ -68,5 +70,9 @@ class ItemMovementRequestSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        # Volunteer is the logged-in user.
+        validated_data["review_status"] = "PENDING"
         return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data["review_status"] = "PENDING"
+        return super().update(instance, validated_data)
